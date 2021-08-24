@@ -1,0 +1,140 @@
+<UserControl x:Class="Panoptes.Avalonia.Views.Charts.OxyPlotSelectionControl"
+			 xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:charts="clr-namespace:Panoptes.Avalonia.Views.Charts"
+			 xmlns:oxy="http://oxyplot.org/avalonia"
+             mc:Ignorable="d"
+			 d:DesignHeight="450" d:DesignWidth="800">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<StackPanel Margin="4" Orientation="Horizontal">
+			<Label Content="Series"></Label>
+			<ComboBox MinWidth="100" Items="{Binding PlotModels}" SelectedItem="{Binding SelectedSeries, Mode=TwoWay}" IsTextSearchEnabled="True"/>
+		</StackPanel>
+
+		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+				Padding="10" MinWidth="80" MinHeight="80" Focusable="False" IsEnabled="False" Opacity="230">
+			<DrawingPresenter VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+				<!--Placeholder logo-->
+				<DrawingPresenter.Drawing>
+					<DrawingGroup>
+						<GeometryDrawing Brush="#FF000000" Geometry="F1 M300,300z M0,0z M8.5,150L291.5,150 291.5,250C291.5,273.5,273.5,291.5,250,291.5L50,291.5C26.5,291.5,8.5,273.5,8.5,250z"/>
+						<DrawingGroup Opacity="1">
+							<DrawingGroup Opacity="1" Transform="1,0,0,1,150,150">
+								<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z">
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="38.0086" LineCap="Flat" LineJoin="Miter" />
+									</GeometryDrawing.Pen>
+								</GeometryDrawing>
+								<DrawingGroup Transform="0.707106781186548,0.707106781186547,-0.707106781186547,0.707106781186548,0,0">
+									<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z">
+										<GeometryDrawing.Pen>
+											<Pen Brush="#FF000000" Thickness="38.0086" LineCap="Flat" LineJoin="Miter" />
+										</GeometryDrawing.Pen>
+									</GeometryDrawing>
+								</DrawingGroup>
+								<DrawingGroup Transform="6.12303176911189E-17,1,-1,6.12303176911189E-17,0,0">
+									<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z">
+										<GeometryDrawing.Pen>
+											<Pen Brush="#FF000000" Thickness="38.0086" LineCap="Flat" LineJoin="Miter" />
+										</GeometryDrawing.Pen>
+									</GeometryDrawing>
+								</DrawingGroup>
+								<DrawingGroup Transform="-0.707106781186547,0.707106781186548,-0.707106781186548,-0.707106781186547,0,0">
+									<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z">
+										<GeometryDrawing.Pen>
+											<Pen Brush="#FF000000" Thickness="38.0086" LineCap="Flat" LineJoin="Miter" />
+										</GeometryDrawing.Pen>
+									</GeometryDrawing>
+								</DrawingGroup>
+								<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z">
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="38.0086" LineCap="Flat" LineJoin="Miter" />
+									</GeometryDrawing.Pen>
+								</GeometryDrawing>
+							</DrawingGroup>
+						</DrawingGroup>
+						<DrawingGroup Opacity="1" Transform="1,0,0,1,150,150">
+							<DrawingGroup Transform="0.707106781186548,0.707106781186547,-0.707106781186547,0.707106781186548,0,0">
+								<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z"/>
+							</DrawingGroup>
+							<DrawingGroup Transform="6.12303176911189E-17,1,-1,6.12303176911189E-17,0,0">
+								<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z"/>
+							</DrawingGroup>
+							<DrawingGroup Transform="-0.707106781186547,0.707106781186548,-0.707106781186548,-0.707106781186547,0,0">
+								<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z"/>
+							</DrawingGroup>
+							<GeometryDrawing Brush="#FFFFB13B" Geometry="F1 M300,300z M0,0z M-84.1487,-15.8513A22.4171,22.4171,0,1,0,-84.1487,15.8513L84.1487,15.8513A22.4171,22.4171,0,1,0,84.1487,-15.8513z"/>
+						</DrawingGroup>
+						<GeometryDrawing Brush="#FF000000" Geometry="F1 M300,300z M0,0z M8.5,150L291.5,150 291.5,250C291.5,273.5,273.5,291.5,250,291.5L50,291.5C26.5,291.5,8.5,273.5,8.5,250z"/>
+						<DrawingGroup Opacity="1" Transform="2,0,0,2,40,158">
+							<GeometryDrawing Brush="#FFFFFFFF" Geometry="F1 M300,300z M0,0z M5.482,31.319C2.163,28.001 0.109,23.419 0.109,18.358 0.109,8.232 8.322,0.024 18.443,0.024 28.569,0.024 36.782,8.232 36.782,18.358
+											 L26.042,18.358C26.042,14.164 22.638,10.765 18.443,10.765 14.249,10.765 10.85,14.164 10.85,18.358 10.85,20.453 11.701,22.351 13.07,23.721
+											 L13.075,23.721C14.45,25.101,15.595,25.5,18.443,25.952L18.443,25.952C23.509,26.479,28.091,28.006,31.409,31.324L31.409,31.324
+											 C34.728,34.643 36.782,39.225 36.782,44.286 36.782,54.412 28.569,62.625 18.443,62.625 8.322,62.625 0.109,54.412 0.109,44.286
+											 L10.85,44.286C10.85,48.48 14.249,51.884 18.443,51.884 22.638,51.884 26.042,48.48 26.042,44.286 26.042,42.191 25.191,40.298 23.821,38.923
+											 L23.816,38.923C22.441,37.548,20.468,37.074,18.443,36.697L18.443,36.692C13.533,35.939,8.8,34.638,5.482,31.319L5.482,31.319 5.482,31.319z"/>
+							<GeometryDrawing Brush="#FFFFFFFF" Geometry="F1 M300,300z M0,0z M73.452,0.024L60.482,62.625 49.742,62.625 36.782,0.024 47.522,0.024 55.122,36.687 62.712,0.024 73.452,0.024z" />
+							<GeometryDrawing Brush="#FFFFFFFF" Geometry="F1 M300,300z M0,0z M91.792,25.952L110.126,25.952 110.126,44.286 110.131,44.286
+											 C110.131,54.413 101.918,62.626 91.792,62.626 81.665,62.626 73.458,54.413 73.458,44.286L73.458,44.286 73.458,18.359 73.453,18.359
+											 C73.453,8.233 81.665,0.025 91.792,0.025 101.913,0.025 110.126,8.233 110.126,18.359L99.385,18.359C99.385,14.169 95.981,10.765 91.792,10.765 87.597,10.765 84.198,
+											 14.169 84.198,18.359L84.198,44.286 84.198,44.286C84.198,48.481 87.597,51.88 91.792,51.88 95.981,51.88 99.38,48.481 99.385,44.291
+											 L99.385,44.286 99.385,36.698 91.792,36.698 91.792,25.952 91.792,25.952z" />
+						</DrawingGroup>
+						<GeometryDrawing Brush="#FF000000" Geometry="F1 M300,300z M0,0z M8.5,150L291.5,150 291.5,250C291.5,273.5,273.5,291.5,250,291.5L50,291.5C26.5,291.5,8.5,273.5,8.5,250z" />
+					</DrawingGroup>
+				</DrawingPresenter.Drawing>
+			</DrawingPresenter>
+		</Border>
+
+		<!--https://github.com/oxyplot/oxyplot-avalonia/blob/master/Source/OxyPlot.Avalonia/Themes/Default.xaml-->
+		<oxy:PlotView Model="{Binding SelectedSeries}" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+					  Background="Transparent" Foreground="#323539">
+			<oxy:PlotView.Controller>
+				<charts:PanoptesPlotController/>
+			</oxy:PlotView.Controller>
+
+			<oxy:PlotView.ZoomRectangleTemplate>
+				<ControlTemplate>
+					<Rectangle Fill="#40507B89" Stroke="White" />
+				</ControlTemplate>
+			</oxy:PlotView.ZoomRectangleTemplate>
+			
+			<oxy:PlotView.DefaultTrackerTemplate>
+				<ControlTemplate>
+					<charts:AxisTrackerControl Position="{Binding Position}" IsVertical="True"
+											   LineExtents="{Binding PlotModel.PlotArea}"
+                                               ShowPointer="True" VerticalLineVisibility="False">
+						<charts:AxisTrackerControl.Content>
+							<TextBlock Text="{Binding DataPoint.Y, StringFormat='{}{0:0.0}'}"/>
+						</charts:AxisTrackerControl.Content>
+					</charts:AxisTrackerControl>
+				</ControlTemplate>
+			</oxy:PlotView.DefaultTrackerTemplate>
+			
+			<oxy:PlotView.TrackerDefinitions>
+				<oxy:TrackerDefinition TrackerKey="TrackerHorizontal">
+					<oxy:TrackerDefinition.TrackerTemplate>
+						<ControlTemplate>
+							<charts:AxisTrackerControl Position="{Binding Position}" IsVertical="False"
+													   LineExtents="{Binding PlotModel.PlotArea}"
+													   ShowPointer="False" HorizontalLineVisibility="False">
+								<charts:AxisTrackerControl.Content>
+									<TextBlock Text="{Binding DataPoint.X, Converter={StaticResource DateConverter}}" Margin="1"/>
+								</charts:AxisTrackerControl.Content>
+							</charts:AxisTrackerControl>
+						</ControlTemplate>
+					</oxy:TrackerDefinition.TrackerTemplate>
+				</oxy:TrackerDefinition>
+			</oxy:PlotView.TrackerDefinitions>
+		</oxy:PlotView>
+		
+		<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1" Grid.RowSpan="2"/>
+	</Grid>
+</UserControl>

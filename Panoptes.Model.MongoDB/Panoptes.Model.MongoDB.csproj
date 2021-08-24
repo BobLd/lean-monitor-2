@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.13.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Panoptes.Model\Panoptes.Model.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="QuantConnect.Common">
+      <HintPath>..\..\Lean\Common\bin\Release\QuantConnect.Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
