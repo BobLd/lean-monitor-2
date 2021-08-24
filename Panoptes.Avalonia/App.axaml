@@ -1,0 +1,54 @@
+<Application x:Class="Panoptes.Avalonia.App"
+			 xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="clr-namespace:Panoptes.Avalonia"
+			 xmlns:charts="clr-namespace:Panoptes.Avalonia.Views.Charts"
+			 xmlns:converters="clr-namespace:Panoptes.Avalonia.Views.Converters"
+			 xmlns:panels="clr-namespace:Panoptes.Avalonia.Views.Panels">
+    <Application.Styles>
+		<StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>
+		<StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseDark.xaml"/>
+		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Default.xaml"/>		
+		<StyleInclude Source="avares://Panoptes.Avalonia/Resources/TablerIcons.axaml"/>
+		<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>
+		
+		<Style Selector="charts|AxisTrackerControl">
+			<Setter Property="Background" Value="#F2C6E6FF" />
+			<Setter Property="LineStroke" Value="#B3C6E6FF"/>
+			<Setter Property="BorderBrush" Value="Black" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="HorizontalLineVisibility" Value="True" />
+			<Setter Property="VerticalLineVisibility" Value="True" />
+			<Setter Property="Distance" Value="5" />
+			<Setter Property="ShowPointer" Value="False" />
+			<Setter Property="Template">				
+				<ControlTemplate TargetType="{x:Type charts:AxisTrackerControl}">
+					<Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+						<Line Name="PART_HorizontalLine" IsVisible="{TemplateBinding HorizontalLineVisibility}"
+								Stroke="{TemplateBinding LineStroke}"
+								StrokeDashArray="{TemplateBinding LineDashArray}"/>
+						<Line Name="PART_VerticalLine" IsVisible="{TemplateBinding VerticalLineVisibility}"
+								Stroke="{TemplateBinding LineStroke}"
+								StrokeDashArray="{TemplateBinding LineDashArray}"/>
+						<Panel Name="PART_ContentContainer">
+							<Path Name="PART_Path" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="0"/>
+							<ContentPresenter Name="PART_Content" Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+						</Panel>
+					</Canvas>
+				</ControlTemplate>
+			</Setter>
+		</Style>
+    </Application.Styles>
+	
+	<Application.Resources>
+		<ResourceDictionary>
+			<local:ViewModelLocator x:Key="Locator"/>
+			<charts:DateConverter x:Key="DateConverter"/>
+			<converters:SymbolConverter x:Key="SymbolConverter"/>
+			<converters:TradesColorConverter x:Key="TradesColorConverter"/>
+			<converters:StatusBarColorConverter x:Key="StatusBarColorConverter"/>
+			<converters:LogPanelLogoTypeConverter x:Key="LogPanelLogoTypeConverter"/>
+			<converters:PositiveNegativeNumberConverter x:Key="PositiveNegativeNumberConverter"/>
+		</ResourceDictionary>
+	</Application.Resources>
+</Application>

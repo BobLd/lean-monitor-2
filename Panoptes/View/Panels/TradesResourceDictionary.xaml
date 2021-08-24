@@ -1,0 +1,126 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:qc="clr-namespace:QuantConnect.Orders;assembly=QuantConnect.Common">
+
+
+
+    <!--Taken from Themes/Expression.xaml-->
+    <!--https://coolors.co/3d3d3d-666666-999999-efefef-f45b69-e53d00-fa824c-0bd55c-->
+    <!--    <Style BasedOn="{StaticResource {x:Type Control}}" TargetType="{x:Type TextBox}">-->
+    <Style TargetType="DataGridCell" x:Key="TradeDirectionDataGridCellStyle">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="5,0,5,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type DataGridCell}">
+                    <Border x:Name="Border" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Background="{TemplateBinding Background}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                          VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="Black"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static DataGrid.FocusBorderBrushKey}}"/>
+            </Trigger>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsSelected" Value="true"/>
+                    <Condition Property="Selector.IsSelectionActive" Value="false"/>
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource DataGridRowSelectedBrush}"/>
+            </MultiTrigger>
+            <Trigger Property="IsEnabled" Value="false">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+            </Trigger>
+
+            <DataTrigger Binding="{Binding Direction}" Value="{x:Static qc:OrderDirection.Sell }">
+                <Setter Property="Foreground" Value="#E53D00"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Direction}" Value="{x:Static qc:OrderDirection.Buy}">
+                <Setter Property="Foreground" Value="#0BD55C"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style TargetType="DataGridCell" x:Key="TradesStatusDataGridCellStyle">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="5,0,5,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type DataGridCell}">
+                    <Border x:Name="Border" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Background="{TemplateBinding Background}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                          VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="Black"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static DataGrid.FocusBorderBrushKey}}"/>
+            </Trigger>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsSelected" Value="true"/>
+                    <Condition Property="Selector.IsSelectionActive" Value="false"/>
+                </MultiTrigger.Conditions>
+                <Setter Property="Background" Value="{StaticResource DataGridRowSelectedBrush}"/>
+            </MultiTrigger>
+            <Trigger Property="IsEnabled" Value="false">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+            </Trigger>
+
+            <DataTrigger Binding="{Binding Status}" Value="{x:Static qc:OrderStatus.Invalid}">
+                <Setter Property="Foreground" Value="#E53D00"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="{x:Static qc:OrderStatus.Canceled}">
+                <Setter Property="Foreground" Value="#FA824C"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="{x:Static qc:OrderStatus.CancelPending}">
+                <Setter Property="Foreground" Value="#FA824C"/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding Status}" Value="{x:Static qc:OrderStatus.New}">
+                <Setter Property="Foreground" Value="LightGray"/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding Status}" Value="{x:Static qc:OrderStatus.Submitted}">
+                <Setter Property="Foreground" Value="LightBlue"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="{x:Static qc:OrderStatus.UpdateSubmitted}">
+                <Setter Property="Foreground" Value="LightBlue"/>
+            </DataTrigger>
+
+            <DataTrigger Binding="{Binding Status}" Value="{x:Static qc:OrderStatus.PartiallyFilled}">
+                <Setter Property="Foreground" Value="#0BD55C"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Status}" Value="{x:Static qc:OrderStatus.Filled}">
+                <Setter Property="Foreground" Value="#0BD55C"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

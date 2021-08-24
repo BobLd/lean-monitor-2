@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OxyPlot.Core" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" />
+    <ProjectReference Include="..\Panoptes.Model.MongoDB\Panoptes.Model.MongoDB.csproj" />
+    <ProjectReference Include="..\Panoptes.Model\Panoptes.Model.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="QuantConnect.Common">
+      <HintPath>..\..\Lean\Common\bin\Release\QuantConnect.Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

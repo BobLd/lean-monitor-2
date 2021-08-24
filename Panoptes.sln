@@ -1,0 +1,60 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes", "Panoptes\Panoptes.csproj", "{6FA426EA-231B-42FF-90BD-601E54F9563B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.Model", "Panoptes.Model\Panoptes.Model.csproj", "{515FC703-20E0-4658-8433-5F06A68F4B75}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.Model.MongoDB", "Panoptes.Model.MongoDB\Panoptes.Model.MongoDB.csproj", "{657B25B8-2638-4823-BA45-C2B6E65BA517}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.Model.Mock", "Panoptes.Model.Mock\Panoptes.Model.Mock.csproj", "{3DB71FE5-D600-4509-A644-4F5511F6E5DB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.ViewModels", "Panoptes.ViewModels\Panoptes.ViewModels.csproj", "{BCF4ABDF-0749-4D8A-9417-6CA06906788B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.Avalonia", "Panoptes.Avalonia\Panoptes.Avalonia.csproj", "{30599783-77F7-48A5-A26E-8EE4F705DCC1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BB810953-B530-450F-A1A3-0FE0863C608F}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6FA426EA-231B-42FF-90BD-601E54F9563B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FA426EA-231B-42FF-90BD-601E54F9563B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FA426EA-231B-42FF-90BD-601E54F9563B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FA426EA-231B-42FF-90BD-601E54F9563B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{515FC703-20E0-4658-8433-5F06A68F4B75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{515FC703-20E0-4658-8433-5F06A68F4B75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{515FC703-20E0-4658-8433-5F06A68F4B75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{515FC703-20E0-4658-8433-5F06A68F4B75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{657B25B8-2638-4823-BA45-C2B6E65BA517}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{657B25B8-2638-4823-BA45-C2B6E65BA517}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{657B25B8-2638-4823-BA45-C2B6E65BA517}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{657B25B8-2638-4823-BA45-C2B6E65BA517}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DB71FE5-D600-4509-A644-4F5511F6E5DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DB71FE5-D600-4509-A644-4F5511F6E5DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DB71FE5-D600-4509-A644-4F5511F6E5DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DB71FE5-D600-4509-A644-4F5511F6E5DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCF4ABDF-0749-4D8A-9417-6CA06906788B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCF4ABDF-0749-4D8A-9417-6CA06906788B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCF4ABDF-0749-4D8A-9417-6CA06906788B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCF4ABDF-0749-4D8A-9417-6CA06906788B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30599783-77F7-48A5-A26E-8EE4F705DCC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30599783-77F7-48A5-A26E-8EE4F705DCC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30599783-77F7-48A5-A26E-8EE4F705DCC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30599783-77F7-48A5-A26E-8EE4F705DCC1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D9E2C6CE-547B-4368-A884-A4464E7B2951}
+	EndGlobalSection
+EndGlobal
