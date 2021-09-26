@@ -2,7 +2,7 @@
 
 namespace Panoptes.Model.Messages
 {
-    public class SessionClosedMessage : ValueChangedMessage<string>
+    public sealed class SessionClosedMessage : ValueChangedMessage<string>
     {
         public SessionClosedMessage() : base("Close")
         {

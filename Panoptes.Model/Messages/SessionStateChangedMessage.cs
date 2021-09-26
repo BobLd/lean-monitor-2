@@ -3,7 +3,7 @@ using Panoptes.Model.Sessions;
 
 namespace Panoptes.Model.Messages
 {
-    public class SessionStateChangedMessage : ValueChangedMessage<SessionState>
+    public sealed class SessionStateChangedMessage : ValueChangedMessage<SessionState>
     {
         public SessionStateChangedMessage(SessionState state) : base(state)
         { }

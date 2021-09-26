@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Panoptes.Model.Sessions.File
 {
-    public class FileSession : ISession, IDisposable
+    public sealed class FileSession : ISession, IDisposable
     {
         private readonly IResultSerializer _resultSerializer;
         private readonly ISessionHandler _sessionHandler;

@@ -2,7 +2,7 @@
 
 namespace Panoptes.Model.Messages
 {
-    public class ShowNewSessionWindowMessage : ValueChangedMessage<string>
+    public sealed class ShowNewSessionWindowMessage : ValueChangedMessage<string>
     {
         public ShowNewSessionWindowMessage() : base("New")
         { }

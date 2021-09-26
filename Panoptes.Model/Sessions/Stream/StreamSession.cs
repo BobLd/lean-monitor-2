@@ -7,7 +7,7 @@ using System.ComponentModel;
 
 namespace Panoptes.Model.Sessions.Stream
 {
-    public class StreamSession : BaseStreamSession
+    public sealed class StreamSession : BaseStreamSession
     {
         public StreamSession(ISessionHandler sessionHandler, IResultConverter resultConverter, StreamSessionParameters parameters)
            : base(sessionHandler, resultConverter, parameters)
@@ -35,8 +35,6 @@ namespace Panoptes.Model.Sessions.Stream
 
                         HandlePacketEventsListener(payload, packet.Type);
                     }
-
-                    pullSocket.Close();
                 }
             }
             catch (Exception)

@@ -3,7 +3,7 @@ using System;
 
 namespace Panoptes.Model.Messages
 {
-    public class GridRequestMessage : ValueChangedMessage<string>
+    public sealed class GridRequestMessage : ValueChangedMessage<string>
     {
         public GridRequestMessage(string key) : base(key)
         {

@@ -2,7 +2,7 @@
 
 namespace Panoptes.Model.Messages
 {
-    public class SessionOpenedMessage : ValueChangedMessage<string>
+    public sealed class SessionOpenedMessage : ValueChangedMessage<string>
     {
         public SessionOpenedMessage() : base("Open")
         {

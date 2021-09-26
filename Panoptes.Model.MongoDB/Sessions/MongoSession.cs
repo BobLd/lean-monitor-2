@@ -8,7 +8,7 @@ using System.ComponentModel;
 
 namespace Panoptes.Model.MongoDB.Sessions
 {
-    public class MongoSession : BaseStreamSession
+    public sealed class MongoSession : BaseStreamSession
     {
         private readonly MongoClient _client;
         private IMongoDatabase _database;

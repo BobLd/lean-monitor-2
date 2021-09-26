@@ -3,7 +3,7 @@ using QuantConnect.Packets;
 
 namespace Panoptes.Model.Messages
 {
-    public class AlgorithmStatusMessage : ValueChangedMessage<AlgorithmStatusPacket>
+    public sealed class AlgorithmStatusMessage : ValueChangedMessage<AlgorithmStatusPacket>
     {
         public AlgorithmStatusMessage(AlgorithmStatusPacket algorithmStatus)
             : base(algorithmStatus)

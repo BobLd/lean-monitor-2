@@ -3,7 +3,7 @@
     /// <summary>
     /// Parameters used for the FileSession
     /// </summary>
-    public class FileSessionParameters : ISessionParameters
+    public sealed class FileSessionParameters : ISessionParameters
     {     /// <summary>
           /// The JSON fileName to open
           /// </summary>

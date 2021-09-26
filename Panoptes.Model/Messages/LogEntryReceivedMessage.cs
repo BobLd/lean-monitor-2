@@ -3,7 +3,7 @@ using System;
 
 namespace Panoptes.Model.Messages
 {
-    public class LogEntryReceivedMessage : ValueChangedMessage<object>
+    public sealed class LogEntryReceivedMessage : ValueChangedMessage<object>
     {
         public LogEntryReceivedMessage(object obj) : base(obj)
         { }
