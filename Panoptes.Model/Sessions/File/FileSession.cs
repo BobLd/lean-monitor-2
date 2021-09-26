@@ -20,8 +20,15 @@ namespace Panoptes.Model.Sessions.File
 
         public FileSession(ISessionHandler resultHandler, IResultSerializer resultSerializer, FileSessionParameters parameters)
         {
-            if (parameters == null) throw new ArgumentNullException(nameof(parameters));
-            if (string.IsNullOrWhiteSpace(parameters.FileName)) throw new ArgumentException("FileName is required.", nameof(parameters));
+            if (parameters == null)
+            {
+                throw new ArgumentNullException(nameof(parameters));
+            }
+
+            if (string.IsNullOrWhiteSpace(parameters.FileName))
+            {
+                throw new ArgumentException("FileName is required.", nameof(parameters));
+            }
 
             _watchFile = parameters.Watch;
             _syncContext = SynchronizationContext.Current;

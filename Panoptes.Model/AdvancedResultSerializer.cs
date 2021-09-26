@@ -22,7 +22,7 @@ namespace Panoptes.Model
         public Result Deserialize(string pathToResult)
         {
             List<OrderEvent> orderEvents = null;
-            string orederEvents = Path.Combine(Path.GetDirectoryName(pathToResult), Path.ChangeExtension($"{Path.GetFileNameWithoutExtension(pathToResult)}-order-events", Path.GetExtension(pathToResult)));
+            string orederEvents = GetOrderEvents(pathToResult);
             if (File.Exists(orederEvents))
             {
                 using (var s = File.Open(orederEvents, FileMode.Open))
@@ -68,6 +68,12 @@ namespace Panoptes.Model
                 default:
                     throw new ArgumentException($"Unknown ResultType of type {result.ResultType}.", nameof(result));
             }
+        }
+
+        private static string GetOrderEvents(string pathToResult)
+        {
+            return Path.Combine(Path.GetDirectoryName(pathToResult),
+                                Path.ChangeExtension($"{Path.GetFileNameWithoutExtension(pathToResult)}-order-events", Path.GetExtension(pathToResult)));
         }
     }
 }

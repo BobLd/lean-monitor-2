@@ -13,7 +13,11 @@ namespace Panoptes.ViewModels.NewSession
         private readonly ISessionService _sessionService;
         private readonly FileSessionParameters _fileSessionParameters = new FileSessionParameters
         {
+#if DEBUG
+            FileName = @"D:\qc\results\BasicTemplateCryptoAlgorithm.json",
+#else
             FileName = "",
+#endif
             Watch = true
         };
 
@@ -73,7 +77,7 @@ namespace Panoptes.ViewModels.NewSession
 
         public RelayCommand OpenCommand { get; }
 
-        public string Header { get; } = "From file";
+        public string Header { get; } = "File";
 
         public string Error { get; }
 

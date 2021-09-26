@@ -4,9 +4,10 @@
     /// Parameters used for the FileSession
     /// </summary>
     public sealed class FileSessionParameters : ISessionParameters
-    {     /// <summary>
-          /// The JSON fileName to open
-          /// </summary>
+    {
+        /// <summary>
+        /// The JSON fileName to open
+        /// </summary>
         public string FileName { get; set; }
 
         /// <summary>

@@ -88,7 +88,7 @@ namespace Panoptes.ViewModels.NewSession
 
         public RelayCommand OpenCommand { get; }
 
-        public string Header { get; } = "From MongoDB";
+        public string Header { get; } = "MongoDB";
 
         public string this[string columnName]
         {
@@ -105,7 +105,7 @@ namespace Panoptes.ViewModels.NewSession
                         if (!int.TryParse(Port, out _)) return "Port should be numeric";
                         break;
 
-                        //TODO password and usernaem
+                        //TODO password and username
                 }
 
                 return string.Empty;

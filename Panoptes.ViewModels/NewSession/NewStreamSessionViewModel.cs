@@ -65,7 +65,7 @@ namespace Panoptes.ViewModels.NewSession
 
         public RelayCommand OpenCommand { get; }
 
-        public string Header { get; } = "From Stream";
+        public string Header { get; } = "Stream";
 
         public string this[string columnName]
         {
