@@ -164,7 +164,7 @@ namespace Panoptes.ViewModels.Panels
 
         private struct QueueElement
         {
-           public object Element { get; set; }
+            public object Element { get; set; }
         }
     }
 }

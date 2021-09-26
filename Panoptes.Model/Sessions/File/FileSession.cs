@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QuantConnect.Packets;
+using System;
 using System.IO;
 using System.Threading;
 
@@ -64,6 +65,10 @@ namespace Panoptes.Model.Sessions.File
                 Progress = 1
             };
 
+            // Send order events
+            result.OrderEvents.ForEach(oe => _sessionHandler.HandleOrderEvent(new OrderEventPacket() { Event = oe, Type = PacketType.OrderEvent }));
+
+            // Send results
             _sessionHandler.HandleResult(context);
         }
 
