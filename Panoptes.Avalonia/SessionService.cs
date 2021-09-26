@@ -1,7 +1,6 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
-using Panoptes.Model.Mock.Sessions;
 using Panoptes.Model.MongoDB.Sessions;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
@@ -186,7 +185,7 @@ namespace Panoptes.Avalonia
 
                 // Open a new session and open it
 #if DEBUG
-                var session = new MockStreamSession(this, _resultConverter, streamParameters);
+                var session = new Model.Mock.Sessions.MockStreamSession(this, _resultConverter, streamParameters);
 #else
                 var session = new StreamSession(this, _resultConverter, streamParameters);
 #endif

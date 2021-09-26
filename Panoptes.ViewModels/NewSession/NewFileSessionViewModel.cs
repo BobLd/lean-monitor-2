@@ -25,7 +25,19 @@ namespace Panoptes.ViewModels.NewSession
 
         private void Open()
         {
-            _sessionService.Open(_fileSessionParameters);
+            try
+            {
+                // TODO: start waiting icon
+                _sessionService.Open(_fileSessionParameters);
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                // 
+            }
         }
 
         private bool CanOpen()
