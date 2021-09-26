@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31515.178
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes", "Panoptes\Panoptes.csproj", "{6FA426EA-231B-42FF-90BD-601E54F9563B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.Model", "Panoptes.Model\Panoptes.Model.csproj", "{515FC703-20E0-4658-8433-5F06A68F4B75}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.Model.MongoDB", "Panoptes.Model.MongoDB\Panoptes.Model.MongoDB.csproj", "{657B25B8-2638-4823-BA45-C2B6E65BA517}"
@@ -26,10 +24,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6FA426EA-231B-42FF-90BD-601E54F9563B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FA426EA-231B-42FF-90BD-601E54F9563B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FA426EA-231B-42FF-90BD-601E54F9563B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FA426EA-231B-42FF-90BD-601E54F9563B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{515FC703-20E0-4658-8433-5F06A68F4B75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{515FC703-20E0-4658-8433-5F06A68F4B75}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{515FC703-20E0-4658-8433-5F06A68F4B75}.Release|Any CPU.ActiveCfg = Release|Any CPU
