@@ -41,7 +41,7 @@
 		<TextBox Margin="0,0,0,4" Grid.Row="3" Grid.Column="1" PasswordChar="*" Text="{Binding Password}"/><!--<PasswordBox Margin="0,0,0,4" Grid.Row="3" Grid.Column="1" PasswordChar="*" PasswordChanged="PasswordChanged"/>-->
 
 		<Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">
-			<TextBlock TextWrapping="Wrap">Configure LEAN to use the 'StreamingMessageHandler' implementation. You can start this program to connect automatically to localhost by passing the port as a commandline parameter.</TextBlock>
+			<TextBlock TextWrapping="Wrap"></TextBlock>
 		</Label>
 	</Grid>
 </UserControl>

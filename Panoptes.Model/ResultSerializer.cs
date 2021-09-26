@@ -22,9 +22,13 @@ namespace Panoptes.Model
             };
         }
 
-        public Result Deserialize(string serializedResult)
+        public Result Deserialize(string pathToResult)
         {
-            if (string.IsNullOrWhiteSpace(serializedResult)) throw new ArgumentNullException(nameof(serializedResult));
+            var serializedResult = System.IO.File.ReadAllText(pathToResult);
+            if (string.IsNullOrWhiteSpace(serializedResult))
+            {
+                throw new ArgumentNullException(nameof(serializedResult));
+            }
 
             // TODO: It expects BacktestResult. Should have a mechanism to detect the result type
             // i.e. based upon specific live / backtest result known fielts (i.e. Holdings, RollingWindow)

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes.Model.Sessions.File
 {
-    public class FileSession : ISession
+    public class FileSession : ISession, IDisposable
     {
         private readonly IResultSerializer _resultSerializer;
         private readonly ISessionHandler _sessionHandler;
@@ -20,7 +21,7 @@ namespace Panoptes.Model.Sessions.File
         public FileSession(ISessionHandler resultHandler, IResultSerializer resultSerializer, FileSessionParameters parameters)
         {
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
-            if (string.IsNullOrWhiteSpace(parameters.FileName)) throw new ArgumentException(@"FileName is required.", nameof(parameters));
+            if (string.IsNullOrWhiteSpace(parameters.FileName)) throw new ArgumentException("FileName is required.", nameof(parameters));
 
             _watchFile = parameters.Watch;
             _syncContext = SynchronizationContext.Current;
@@ -55,8 +56,7 @@ namespace Panoptes.Model.Sessions.File
                 throw new FileNotFoundException($"File '{Name}' does not exist");
             }
 
-            var file = System.IO.File.ReadAllText(Name);
-            var result = _resultSerializer.Deserialize(file);
+            var result = _resultSerializer.Deserialize(Name);
 
             var context = new ResultContext
             {
@@ -80,16 +80,18 @@ namespace Panoptes.Model.Sessions.File
 
             var directoryName = Path.GetDirectoryName(Name);
             if (directoryName != null)
+            {
                 _watcher = new FileSystemWatcher(directoryName)
                 {
                     EnableRaisingEvents = _watchFile
                 };
+            }
 
             _watcher.Changed += (sender, args) =>
             {
                 if (args.Name == Path.GetFileName(Name))
                 {
-                    _syncContext.Post(o => ReadFromFile(), null);
+                    _syncContext.Post(_ => ReadFromFile(), null);
                 }
             };
         }
@@ -105,7 +107,11 @@ namespace Panoptes.Model.Sessions.File
             }
 
             _watcher.EnableRaisingEvents = false;
+        }
 
+        public void Dispose()
+        {
+            _watcher.Dispose();
         }
 
         public SessionState State

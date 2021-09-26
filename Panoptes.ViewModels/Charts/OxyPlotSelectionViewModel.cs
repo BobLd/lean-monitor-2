@@ -221,6 +221,7 @@ namespace Panoptes.ViewModels.Charts
                                     plot.Series.Add(s);
                                     break;
 
+                                case SeriesType.Treemap: // todo
                                 case SeriesType.Scatter:
                                     s = new ScatterSeries()
                                     {
@@ -286,9 +287,8 @@ namespace Panoptes.ViewModels.Charts
                             case SeriesType.Pie:
                             case SeriesType.StackedArea:
                             default:
-#pragma warning disable RCS1079 // Throwing of new NotImplementedException.
-                                throw new NotImplementedException();
-#pragma warning restore RCS1079 // Throwing of new NotImplementedException.
+                                continue; // TODO
+                                //throw new NotImplementedException();
                         }
                     }
                 }

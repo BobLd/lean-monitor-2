@@ -2,7 +2,8 @@
 {
     public interface IResultSerializer
     {
-        Result Deserialize(string serializedResult);
+        Result Deserialize(string pathToResult);
+
         string Serialize(Result result);
     }
 }

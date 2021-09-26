@@ -53,7 +53,7 @@ namespace Panoptes.Avalonia
 
             // Results
             services.AddSingleton<IResultConverter, ResultConverter>();
-            services.AddSingleton<IResultSerializer, ResultSerializer>();
+            services.AddSingleton<IResultSerializer, AdvancedResultSerializer>();
             services.AddSingleton<IResultMutator, BenchmarkResultMutator>();
             services.AddSingleton<IStatisticsFormatter, StatisticsFormatter>();
 
