@@ -24,7 +24,8 @@ namespace Panoptes.Model
                 ProfitLoss = new Dictionary<DateTime, decimal>(backtestResult.ProfitLoss ?? new Dictionary<DateTime, decimal>()),
                 Statistics = new Dictionary<string, string>(backtestResult.Statistics ?? new Dictionary<string, string>()),
                 RuntimeStatistics = new Dictionary<string, string>(backtestResult.RuntimeStatistics ?? new Dictionary<string, string>()),
-                RollingWindow = new Dictionary<string, AlgorithmPerformance>(backtestResult.RollingWindow ?? new Dictionary<string, AlgorithmPerformance>())
+                RollingWindow = new Dictionary<string, AlgorithmPerformance>(backtestResult.RollingWindow ?? new Dictionary<string, AlgorithmPerformance>()),
+                OrderEvents = backtestResult.OrderEvents
             };
         }
 
@@ -37,7 +38,8 @@ namespace Panoptes.Model
                 Orders = new Dictionary<int, Order>(liveResult.Orders ?? new Dictionary<int, Order>()),
                 ProfitLoss = new Dictionary<DateTime, decimal>(liveResult.ProfitLoss ?? new Dictionary<DateTime, decimal>()),
                 Statistics = new Dictionary<string, string>(liveResult.Statistics ?? new Dictionary<string, string>()),
-                RuntimeStatistics = new Dictionary<string, string>(liveResult.RuntimeStatistics ?? new Dictionary<string, string>())
+                RuntimeStatistics = new Dictionary<string, string>(liveResult.RuntimeStatistics ?? new Dictionary<string, string>()),
+                OrderEvents = liveResult.OrderEvents
             };
         }
 

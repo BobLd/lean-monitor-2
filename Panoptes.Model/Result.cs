@@ -16,6 +16,8 @@ namespace Panoptes.Model
         public Dictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
         public Dictionary<string, AlgorithmPerformance> RollingWindow = new Dictionary<string, AlgorithmPerformance>();
 
+        public List<OrderEvent> OrderEvents = new List<OrderEvent>();
+
         public ResultType ResultType { get; set; }
 
         public void Add(Result result)

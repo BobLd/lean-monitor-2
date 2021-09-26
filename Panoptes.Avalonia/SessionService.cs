@@ -37,7 +37,10 @@ namespace Panoptes.Avalonia
 
         public void HandleResult(ResultContext resultContext)
         {
-            if (resultContext == null) throw new ArgumentNullException(nameof(resultContext));
+            if (resultContext == null)
+            {
+                throw new ArgumentNullException(nameof(resultContext));
+            }
 
             if (_session == null)
             {
