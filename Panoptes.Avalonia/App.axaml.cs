@@ -67,6 +67,7 @@ namespace Panoptes.Avalonia
 
             services.AddSingleton<INewSessionViewModel, NewStreamSessionViewModel>();
             services.AddSingleton<INewSessionViewModel, NewMongoSessionViewModel>();
+            services.AddSingleton<INewSessionViewModel, NewFileSessionViewModel>();
 
             // Viewmodels
             services.AddTransient<NewSessionWindowViewModel>();

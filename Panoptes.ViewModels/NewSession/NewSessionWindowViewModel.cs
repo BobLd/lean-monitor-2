@@ -15,6 +15,7 @@ namespace Panoptes.ViewModels.NewSession
             {
                 return _newSessionViewModels;
             }
+
             set
             {
                 _newSessionViewModels = value;

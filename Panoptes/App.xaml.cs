@@ -25,8 +25,7 @@ namespace Panoptes
         public App()
         {
             Services = ConfigureServices();
-
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         protected override void OnStartup(StartupEventArgs e)
@@ -73,6 +72,7 @@ namespace Panoptes
 
             services.AddSingleton<INewSessionViewModel, NewStreamSessionViewModel>();
             services.AddSingleton<INewSessionViewModel, NewMongoSessionViewModel>();
+            services.AddSingleton<INewSessionViewModel, NewFileSessionViewModel>();
 
             // Viewmodels
             services.AddTransient<NewSessionWindowViewModel>();

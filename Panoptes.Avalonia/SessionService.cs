@@ -4,6 +4,7 @@ using Panoptes.Model.Messages;
 using Panoptes.Model.Mock.Sessions;
 using Panoptes.Model.MongoDB.Sessions;
 using Panoptes.Model.Sessions;
+using Panoptes.Model.Sessions.File;
 using Panoptes.Model.Sessions.Stream;
 using QuantConnect.Packets;
 using System;
@@ -16,7 +17,7 @@ namespace Panoptes.Avalonia
     {
         private readonly IMessenger _messenger;
         private readonly IResultConverter _resultConverter;
-        //private readonly IResultSerializer _resultSerializer;
+        private readonly IResultSerializer _resultSerializer;
         private readonly IResultMutator _resultMutator;
         //private readonly IApiClient _apiClient;
 
@@ -31,7 +32,7 @@ namespace Panoptes.Avalonia
         {
             _messenger = messenger;
             _resultConverter = resultConverter;
-            //_resultSerializer = resultSerializer;
+            _resultSerializer = resultSerializer;
             _resultMutator = resultMutator;
         }
 
@@ -191,6 +192,11 @@ namespace Panoptes.Avalonia
 #endif
                 OpenSession(session);
             }
+            else if (parameters is FileSessionParameters fileParameters)
+            {
+                var session = new FileSession(this, _resultSerializer, fileParameters);
+                OpenSession(session);
+            }
             else
             {
                 throw new ArgumentException($"Unknown ISessionParameters of type '{parameters.GetType()}'.", nameof(parameters));
@@ -198,19 +204,6 @@ namespace Panoptes.Avalonia
         }
 
         /*
-        public void OpenFile(FileSessionParameters parameters)
-        {
-            if (_session != null)
-            {
-                // Another session is open.
-                // Close the session first before opening this new one
-                ShutdownSession();
-            }
-
-            var session = new FileSession(this, _resultSerializer, parameters);
-            OpenSession(session);
-        }
-
         public void OpenApi(ApiSessionParameters parameters)
         {
             if (_session != null)

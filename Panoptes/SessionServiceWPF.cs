@@ -4,6 +4,7 @@ using Panoptes.Model.Messages;
 using Panoptes.Model.Mock.Sessions;
 using Panoptes.Model.MongoDB.Sessions;
 using Panoptes.Model.Sessions;
+using Panoptes.Model.Sessions.File;
 using Panoptes.Model.Sessions.Stream;
 using QuantConnect.Packets;
 using System;
@@ -15,7 +16,7 @@ namespace Panoptes
     {
         private readonly IMessenger _messenger;
         private readonly IResultConverter _resultConverter;
-        //private readonly IResultSerializer _resultSerializer;
+        private readonly IResultSerializer _resultSerializer;
         private readonly IResultMutator _resultMutator;
         //private readonly IApiClient _apiClient;
 
@@ -30,7 +31,7 @@ namespace Panoptes
         {
             _messenger = messenger;
             _resultConverter = resultConverter;
-            //_resultSerializer = resultSerializer;
+            _resultSerializer = resultSerializer;
             _resultMutator = resultMutator;
         }
 
@@ -146,18 +147,18 @@ namespace Panoptes
         {
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
+            if (_session != null)
+            {
+                // Another session is open.
+                // Close the session first before opening this new one
+                ShutdownSession();
+            }
+
             if (parameters is MongoSessionParameters mongoParameters)
             {
                 if (string.IsNullOrWhiteSpace(mongoParameters.Host))
                 {
                     throw new ArgumentException("Host is required", nameof(parameters));
-                }
-
-                if (_session != null)
-                {
-                    // Another session is open.
-                    // Close the session first before opening this new one
-                    ShutdownSession();
                 }
 
                 // Open a new session and open it
@@ -171,19 +172,17 @@ namespace Panoptes
                     throw new ArgumentException("Host is required", nameof(parameters));
                 }
 
-                if (_session != null)
-                {
-                    // Another session is open.
-                    // Close the session first before opening this new one
-                    ShutdownSession();
-                }
-
                 // Open a new session and open it
 #if DEBUG
                 var session = new MockStreamSession(this, _resultConverter, streamParameters);
 #else
                 var session = new StreamSession(this, _resultConverter, streamParameters);
 #endif
+                OpenSession(session);
+            }
+            else if (parameters is FileSessionParameters fileParameters)
+            {
+                var session = new FileSession(this, _resultSerializer, fileParameters);
                 OpenSession(session);
             }
             else
@@ -193,19 +192,6 @@ namespace Panoptes
         }
 
         /*
-        public void OpenFile(FileSessionParameters parameters)
-        {
-            if (_session != null)
-            {
-                // Another session is open.
-                // Close the session first before opening this new one
-                ShutdownSession();
-            }
-
-            var session = new FileSession(this, _resultSerializer, parameters);
-            OpenSession(session);
-        }
-
         public void OpenApi(ApiSessionParameters parameters)
         {
             if (_session != null)

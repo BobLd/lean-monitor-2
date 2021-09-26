@@ -14,11 +14,7 @@
 		ShowInTaskbar="False">
 
 	<Window.DataTemplates>
-		<!--
-        <DataTemplate DataType="{x:Type newSession:NewFileSessionViewModel}">
-            <newSession1:NewFileSessionControl/>
-        </DataTemplate>
-        
+		<!--        
         <DataTemplate DataType="{x:Type newSession:NewApiSessionViewModel}">
             <newSession1:NewApiSessionControl/>
         </DataTemplate>
@@ -31,6 +27,10 @@
 		<DataTemplate DataType="{x:Type newSession:NewStreamSessionViewModel}">
 			<newSession1:NewStreamSessionControl/>
 		</DataTemplate>
+		
+		<DataTemplate DataType="{x:Type newSession:NewFileSessionViewModel}">
+			<newSession1:NewFileSessionControl/>
+		</DataTemplate>		
 	</Window.DataTemplates>
 
 	<Grid>
