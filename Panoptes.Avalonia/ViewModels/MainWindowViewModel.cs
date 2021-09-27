@@ -11,7 +11,7 @@ using Panoptes.ViewModels.Panels;
 
 namespace Panoptes.Avalonia.ViewModels
 {
-    internal sealed class MainWindowViewModel : ObservableRecipient
+    public sealed class MainWindowViewModel : ObservableRecipient
     {
         private readonly ISessionService _sessionService;
         //private readonly ILayoutManager _layoutManager;

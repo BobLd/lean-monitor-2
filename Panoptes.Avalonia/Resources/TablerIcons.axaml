@@ -1,16 +1,16 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
-        <Border Padding="20" BorderBrush="Red" BorderThickness="0">
+        <Border Padding="0" BorderBrush="Red" BorderThickness="0">
             <!-- Add Controls for Previewer Here -->
-			<DrawingPresenter Width="80" Height="80" Drawing="{StaticResource TablerIcons.Coin2}" />
+			<DrawingPresenter Width="80" Height="80" Drawing="{StaticResource TablerIcons.Gauge}" />
         </Border>
     </Design.PreviewWith>
 
 	<Style>
 		<!--###### NOTE ABOUT SvgToXaml #######
 		https://github.com/BerndK/SvgToXaml
-		When Converting using SvgToXaml, repalce 'F1 M24,24z M0,0z'
+		When Converting using SvgToXaml, replace 'F1 M24,24z M0,0z'
 		by 
 			<GeometryDrawing Geometry="F1 M24,24z M0,0z">
 				<GeometryDrawing.Pen>
@@ -20,6 +20,48 @@
 		-->
 		<Style.Resources>			
 			<!--https://github.com/tabler/tabler-icons-->
+
+			<DrawingGroup x:Key="TablerIcons.Calendar">
+				<GeometryDrawing Geometry="F1 M24,24z M0,0z">
+					<GeometryDrawing.Pen>
+						<Pen Brush="Transparent" Thickness="0"/>
+					</GeometryDrawing.Pen>
+				</GeometryDrawing>
+
+				<GeometryDrawing>
+					<GeometryDrawing.Pen>
+						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+					</GeometryDrawing.Pen>
+					<GeometryDrawing.Geometry>
+						<RectangleGeometry Rect="4,5,16,16" />
+					</GeometryDrawing.Geometry>
+				</GeometryDrawing>
+				<GeometryDrawing>
+					<GeometryDrawing.Pen>
+						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+					</GeometryDrawing.Pen>
+					<GeometryDrawing.Geometry>
+						<LineGeometry StartPoint="16,3" EndPoint="16,7" />
+					</GeometryDrawing.Geometry>
+				</GeometryDrawing>
+				<GeometryDrawing>
+					<GeometryDrawing.Pen>
+						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+					</GeometryDrawing.Pen>
+					<GeometryDrawing.Geometry>
+						<LineGeometry StartPoint="8,3" EndPoint="8,7" />
+					</GeometryDrawing.Geometry>
+				</GeometryDrawing>
+				<GeometryDrawing>
+					<GeometryDrawing.Pen>
+						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+					</GeometryDrawing.Pen>
+					<GeometryDrawing.Geometry>
+						<LineGeometry StartPoint="4,11" EndPoint="20,11" />
+					</GeometryDrawing.Geometry>
+				</GeometryDrawing>
+			</DrawingGroup>
+
 			<DrawingGroup x:Key="TablerIcons.Coin2">
 				<GeometryDrawing Geometry="F1 M24,24z M0,0z">
 					<GeometryDrawing.Pen>

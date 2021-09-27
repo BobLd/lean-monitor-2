@@ -4,7 +4,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:Panoptes.Avalonia.Views.Panels"
-             xmlns:panels="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
+			 xmlns:ctrls="clr-namespace:Panoptes.Avalonia.Views.Controls"
+             xmlns:panels="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"			 
              mc:Ignorable="d"
 			 d:DesignHeight="450" d:DesignWidth="800">
 	<UserControl.Styles>
@@ -15,74 +16,47 @@
 		<Style Selector="DataGridCell.directionColored">
 			<Setter Property="Foreground" Value="{Binding Path=Direction, Mode=OneWay, Converter={StaticResource TradesColorConverter}}"/>
 		</Style>
+
+		<Style Selector="CalendarDatePicker">
+			<Setter Property="Watermark" Value="dd/mm/yyyy"/>
+			<Setter Property="MinWidth" Value="110"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Padding" Value="5,1,5,0"/>
+		</Style>
 	</UserControl.Styles>
 	
-	<Grid>
-		<DataGrid IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
-                  DoubleTapped="OnDataGridDoubleTapped" Items="{Binding Orders, Mode=OneWay}"
-				  CanUserResizeColumns="True" HeadersVisibility="Column"
-				  AlternatingRowBackground="Transparent" RowBackground="Transparent">
-			<DataGrid.Columns>
-				<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
-				<DataGridTextColumn Header="Status" Binding="{Binding Status, Mode=OneWay}" CellStyleClasses="statusColored"/>
-				<DataGridTextColumn Header="Symbol" Binding="{Binding Symbol, Converter={StaticResource SymbolConverter}, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Type" Binding="{Binding Type, Mode=OneWay}"/>
-				<DataGridTextColumn Header="TIF" Binding="{Binding TimeInForce, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Expiry" Binding="{Binding Expiry, Mode=OneWay}"/>
+	<TabControl Padding="0">
+		<TabItem Header="Today">
+			<local:TradesDataGridControl Items="{Binding Orders, Mode=OneWay}" Margin="0,2,0,0"/>
+		</TabItem>
+		<TabItem Header="History" IsSelected="True">
+			<Grid Margin="0,2,0,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="25"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+				<StackPanel Grid.Row="0" Orientation="Horizontal">
+					<Label Content="From "/>
+					<CalendarDatePicker SelectedDate="{Binding FromDate, Mode=TwoWay}" DisplayDateEnd="{Binding ToDate, Mode=OneWay}"/>
+					<Label Content=" to "/>
+					<CalendarDatePicker SelectedDate="{Binding ToDate, Mode=TwoWay}" DisplayDateStart="{Binding FromDate, Mode=OneWay}"/>
+					
+					<Label Content="|>"/>
+					<Label Content="{Binding FromDate}"/>
+					<Label Content=" to "/>
+					<Label Content="{Binding ToDate}"/>
+					<Label Content="|"/>
 
-				<DataGridTextColumn Header="Type" Binding="{Binding SecurityType, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Side" Binding="{Binding Direction, Mode=OneWay}" CellStyleClasses="directionColored"/>
-				<DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-
-				<DataGridTextColumn Header="Filled" Binding="{Binding FilledQuantity, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-				<DataGridTemplateColumn Header="Filled %" MinWidth="50" Width="80" SortMemberPath="FilledPercent">
-					<DataGridTemplateColumn.CellTemplate>
-						<DataTemplate>
-							<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-								<ProgressBar Value="{Binding FilledProgress, Mode=OneWay}" Minimum="0" Maximum="100"
-                                             Background="Transparent" BorderBrush="Transparent" Orientation="Horizontal"
-                                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-											 MinWidth="50" Margin="1"/>
-								<Label Content="{Binding FilledPercent, Mode=OneWay, StringFormat='{}{0:0.#%}'}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-							</Grid>
-						</DataTemplate>
-					</DataGridTemplateColumn.CellTemplate>
-				</DataGridTemplateColumn>
-				<DataGridTextColumn Header="Open" Binding="{Binding OpenQuantity, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Last Fill" Binding="{Binding LastFillTime, Mode=OneWay}"/>
-
-				<DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Ccy" Binding="{Binding PriceCurrency, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Fees" Binding="{Binding Fees, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Fees Ccy" Binding="{Binding FeesCurrency, Mode=OneWay}"/>
-
-				<DataGridTextColumn Header="Value" Binding="{Binding Value, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Limit Price" Binding="{Binding LimitPrice, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Stop Price" Binding="{Binding StopPrice, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-				<DataGridCheckBoxColumn Header="Stop Triggered" Binding="{Binding StopTriggered, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Trigger Price" Binding="{Binding TriggerPrice, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-				<DataGridCheckBoxColumn Header="Trigger Touched" Binding="{Binding TriggerTouched, Mode=OneWay}"/>
-				
-				<DataGridTextColumn Header="Created" Binding="{Binding CreatedTime, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Modified" Binding="{Binding LastUpdateTime, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Tag" Binding="{Binding Tag, Mode=OneWay}"/>
-
-				<!--Security Name-->
-				<!--Algo-->
-				<!--Settlement Ccy-->
-				<!--Net Price ($/Local)-->
-				<!--Net Position $-->
-				<!--Trade Date-->
-				<!--FX-->
-				<!--Settlement Date-->
-				<!--Broker-->
-				<!--Account-->
-				<!--Swap ?-->
-				<!--Strategy-->
-				<!--Trader-->
-				<!--Portfolio Manager-->
-			</DataGrid.Columns>
-		</DataGrid>
-	</Grid>
+					<Button Width="25" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"
+							BorderThickness="1" Padding="0" Background="Transparent">
+						<Button.Content>
+							<DrawingPresenter Drawing="{StaticResource TablerIcons.Gauge}"/>
+						</Button.Content>
+					</Button>
+				</StackPanel>
+				<local:TradesDataGridControl Grid.Row="1" Items="{Binding Orders, Mode=OneWay}"/>
+			</Grid>
+		</TabItem>
+		<TabItem Header="..."/>
+	</TabControl>
 </UserControl>

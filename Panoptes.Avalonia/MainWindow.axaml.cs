@@ -14,7 +14,7 @@ using System.Diagnostics;
 
 namespace Panoptes.Avalonia
 {
-    internal partial class MainWindow : Window
+    public partial class MainWindow : Window
     {
         private readonly IMessenger _messenger;
 

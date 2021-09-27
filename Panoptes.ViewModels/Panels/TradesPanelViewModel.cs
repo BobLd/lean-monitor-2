@@ -38,6 +38,36 @@ namespace Panoptes.ViewModels.Panels
             Name = "Trades";
         }
 
+        private DateTime? _fromDate;
+        public DateTime? FromDate
+        {
+            get
+            {
+                return _fromDate;
+            }
+
+            set
+            {
+                _fromDate = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private DateTime? _toDate;
+        public DateTime? ToDate
+        {
+            get
+            {
+                return _toDate;
+            }
+
+            set
+            {
+                _toDate = value;
+                OnPropertyChanged();
+            }
+        }
+
         public TradesPanelViewModel(IMessenger messenger) : this()
         {
             _messenger = messenger;

@@ -11,7 +11,14 @@
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Default.xaml"/>		
 		<StyleInclude Source="avares://Panoptes.Avalonia/Resources/TablerIcons.axaml"/>
 		<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>
-		
+
+		<Style Selector="TabItem">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="Padding" Value="7,2,7,3"/>
+			<Setter Property="VerticalAlignment" Value="Bottom"/>
+		</Style>
+
+		<!--OxyPlot-->
 		<Style Selector="charts|AxisTrackerControl">
 			<Setter Property="Background" Value="#F2C6E6FF" />
 			<Setter Property="LineStroke" Value="#B3C6E6FF"/>
