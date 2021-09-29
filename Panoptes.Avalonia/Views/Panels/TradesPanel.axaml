@@ -5,7 +5,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:Panoptes.Avalonia.Views.Panels"
 			 xmlns:ctrls="clr-namespace:Panoptes.Avalonia.Views.Controls"
-             xmlns:panels="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"			 
+             xmlns:panels="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
+
              mc:Ignorable="d"
 			 d:DesignHeight="450" d:DesignWidth="800">
 	<UserControl.Styles>
@@ -24,23 +25,26 @@
 			<Setter Property="Padding" Value="5,1,5,0"/>
 		</Style>
 	</UserControl.Styles>
-	
+
 	<TabControl Padding="0">
 		<TabItem Header="Today">
-			<local:TradesDataGridControl Items="{Binding Orders, Mode=OneWay}" Margin="0,2,0,0"/>
+			<local:TradesDataGridControl Items="{Binding OrdersToday, Mode=OneWay}" Margin="0,2,0,0"/>
 		</TabItem>
 		<TabItem Header="History" IsSelected="True">
 			<Grid Margin="0,2,0,0">
 				<Grid.RowDefinitions>
-					<RowDefinition Height="25"/>
 					<RowDefinition Height="*"/>
+					<RowDefinition Height="25"/>
 				</Grid.RowDefinitions>
-				<StackPanel Grid.Row="0" Orientation="Horizontal">
+				<local:TradesDataGridControl Grid.Row="0" Items="{Binding OrdersHistory, Mode=OneWay}"/>
+				<StackPanel Grid.Row="1" Orientation="Horizontal">
 					<Label Content="From "/>
-					<CalendarDatePicker SelectedDate="{Binding FromDate, Mode=TwoWay}" DisplayDateEnd="{Binding ToDate, Mode=OneWay}"/>
+					<CalendarDatePicker x:Name="_calendarDatePickerFrom" SelectedDate="{Binding FromDate, Mode=TwoWay}"
+										DisplayDateEnd="{Binding ToDate, Mode=OneWay}"/>
 					<Label Content=" to "/>
-					<CalendarDatePicker SelectedDate="{Binding ToDate, Mode=TwoWay}" DisplayDateStart="{Binding FromDate, Mode=OneWay}"/>
-					
+					<CalendarDatePicker x:Name="_calendarDatePickerTo" SelectedDate="{Binding ToDate, Mode=TwoWay}"
+										DisplayDateStart="{Binding FromDate, Mode=OneWay}"/>
+
 					<Label Content="|>"/>
 					<Label Content="{Binding FromDate}"/>
 					<Label Content=" to "/>
@@ -54,7 +58,6 @@
 						</Button.Content>
 					</Button>
 				</StackPanel>
-				<local:TradesDataGridControl Grid.Row="1" Items="{Binding Orders, Mode=OneWay}"/>
 			</Grid>
 		</TabItem>
 		<TabItem Header="..."/>

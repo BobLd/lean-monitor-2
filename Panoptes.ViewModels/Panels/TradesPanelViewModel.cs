@@ -22,20 +22,28 @@ namespace Panoptes.ViewModels.Panels
 
         private readonly BlockingCollection<QueueElement> _resultsQueue = new BlockingCollection<QueueElement>();
 
-        private ObservableCollection<OrderViewModel> _orders = new ObservableCollection<OrderViewModel>();
-        public ObservableCollection<OrderViewModel> Orders
+        private readonly List<OrderViewModel> _rawOrders = new List<OrderViewModel>();
+
+        private ObservableCollection<OrderViewModel> _ordersToday = new ObservableCollection<OrderViewModel>();
+        public ObservableCollection<OrderViewModel> OrdersToday
         {
-            get { return _orders; }
+            get { return _ordersToday; }
             set
             {
-                _orders = value;
+                _ordersToday = value;
                 OnPropertyChanged();
             }
         }
 
-        public TradesPanelViewModel()
+        private ObservableCollection<OrderViewModel> _ordersHistory = new ObservableCollection<OrderViewModel>();
+        public ObservableCollection<OrderViewModel> OrdersHistory
         {
-            Name = "Trades";
+            get { return _ordersHistory; }
+            set
+            {
+                _ordersHistory = value;
+                OnPropertyChanged();
+            }
         }
 
         private DateTime? _fromDate;
@@ -48,8 +56,10 @@ namespace Panoptes.ViewModels.Panels
 
             set
             {
+                if (_fromDate == value) return;
                 _fromDate = value;
                 OnPropertyChanged();
+                UpdateHistoryOrders();
             }
         }
 
@@ -63,9 +73,61 @@ namespace Panoptes.ViewModels.Panels
 
             set
             {
+                if (_toDate == value) return;
                 _toDate = value;
                 OnPropertyChanged();
+                UpdateHistoryOrders();
             }
+        }
+
+        private readonly Func<DateTime, DateTime?, DateTime?, bool> _filterDateRange = (r, from, to) =>
+        {
+            if (from.HasValue && to.HasValue)
+            {
+                return from.Value <= r.Date && r.Date <= to.Value;
+            }
+            else if (from.HasValue)
+            {
+                return from.Value <= r.Date;
+            }
+            else if (to.HasValue)
+            {
+                return to.Value >= r.Date;
+            }
+            else
+            {
+                return true;
+            }
+        };
+
+        private void UpdateHistoryOrders()
+        {
+            OrdersHistory.Clear();
+            foreach (var ovm in _rawOrders.AsParallel().Where(o => _filterDateRange(o.CreatedTime, FromDate, ToDate)))
+            {
+                OrdersHistory.Add(ovm);
+            }
+        }
+
+        private void AddOrderToToday(OrderViewModel ovm)
+        {
+            if (ovm.CreatedTime.Date == DateTime.UtcNow.Date)
+            {
+                OrdersToday.Add(ovm);
+            }
+        }
+
+        private void AddOrderToHistory(OrderViewModel ovm)
+        {
+            if (_filterDateRange(ovm.CreatedTime, FromDate, ToDate))
+            {
+                OrdersHistory.Add(ovm);
+            }
+        }
+
+        public TradesPanelViewModel()
+        {
+            Name = "Trades";
         }
 
         public TradesPanelViewModel(IMessenger messenger) : this()
@@ -85,6 +147,8 @@ namespace Panoptes.ViewModels.Panels
 
             _messenger.Register<TradesPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
+            _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, _) => r.ProcessNewDay());
+
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
@@ -95,7 +159,9 @@ namespace Panoptes.ViewModels.Panels
                 switch (e.ProgressPercentage)
                 {
                     case 0:
-                        Orders.Add(ovm);
+                        _rawOrders.Add(ovm);
+                        AddOrderToToday(ovm);
+                        AddOrderToHistory(ovm);
                         break;
 
                     case 1:
@@ -111,12 +177,17 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.RunWorkerAsync();
         }
 
+        private void ProcessNewDay()
+        {
+            System.Diagnostics.Trace.WriteLine($"TradesPanelViewModel: New day @ {DateTime.Now:O}");
+        }
+
         private void Clear()
         {
             _orderEventsDic.Clear(); // will not update UI
             _ordersDic.Clear();
             //this._resultsQueue
-            Orders.Clear();
+            OrdersToday.Clear();
         }
 
         private void ResultQueueReader(object sender, DoWorkEventArgs e)
@@ -128,7 +199,7 @@ namespace Panoptes.ViewModels.Panels
                 {
                     if (result.Orders.Count == 0) continue;
                     // Update orders
-                    foreach (var order in Orders)
+                    foreach (var order in OrdersToday)
                     {
                         if (result.Orders.ContainsKey(order.Id))
                         {

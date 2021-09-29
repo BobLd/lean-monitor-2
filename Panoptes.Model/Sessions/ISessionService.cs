@@ -1,4 +1,6 @@
-﻿namespace Panoptes.Model.Sessions
+﻿using System;
+
+namespace Panoptes.Model.Sessions
 {
     public interface ISessionService
     {

@@ -9,11 +9,13 @@ using QuantConnect.Packets;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace Panoptes.Avalonia
 {
     internal sealed class SessionService : ISessionService, ISessionHandler
     {
+        private readonly Timer _timer;
         private readonly IMessenger _messenger;
         private readonly IResultConverter _resultConverter;
         private readonly IResultSerializer _resultSerializer;
@@ -33,6 +35,16 @@ namespace Panoptes.Avalonia
             _resultConverter = resultConverter;
             _resultSerializer = resultSerializer;
             _resultMutator = resultMutator;
+            _timer = new Timer(o => _messenger.Send(new TimerMessage(o)), null,
+                TimeSpan.FromSeconds(GetTimeToNextMinute() + TimeSpan.FromMilliseconds(1).TotalSeconds),
+                TimeSpan.FromMinutes(1));
+        }
+
+        private static double GetTimeToNextMinute()
+        {
+            var timeOfDay = DateTime.Now.TimeOfDay;
+            var nextFullMinute = TimeSpan.FromMinutes(Math.Ceiling(timeOfDay.TotalMinutes));
+            return (nextFullMinute - timeOfDay).TotalSeconds;
         }
 
         public void HandleResult(ResultContext resultContext)

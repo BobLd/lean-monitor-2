@@ -314,9 +314,9 @@ namespace Panoptes.Model.Mock.Sessions
 
         private IEnumerable<Order> GetOrders()
         {
-            if (_currentTime.Second % 3 == 0)
+            if (_currentTime.Second % 2 == 0)
             {
-                int orderCount = _random.Next(0, 3);
+                int orderCount = _random.Next(20, 70);
 
                 for (int i = 0; i < orderCount; i++)
                 {

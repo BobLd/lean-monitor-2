@@ -62,6 +62,7 @@ namespace Panoptes.Avalonia.ViewModels
         {
             StatusViewModel = statusViewModel;
             _sessionService = resultService;
+
             //_layoutManager = layoutManager;
             _messenger = messenger;
 
