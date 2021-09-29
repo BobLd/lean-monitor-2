@@ -35,9 +35,18 @@ namespace Panoptes.Avalonia
             _resultConverter = resultConverter;
             _resultSerializer = resultSerializer;
             _resultMutator = resultMutator;
-            _timer = new Timer(o => _messenger.Send(new TimerMessage(o)), null,
+            _timer = new Timer(OnMinute, null,
                 TimeSpan.FromSeconds(GetTimeToNextMinute() + TimeSpan.FromMilliseconds(1).TotalSeconds),
                 TimeSpan.FromMinutes(1));
+        }
+
+        private void OnMinute(object? state)
+        {
+            Trace.WriteLine($"SessionService: New minute @ {DateTime.Now:O}");
+            if (DateTime.UtcNow.TimeOfDay.TotalSeconds < 60)
+            {
+                _messenger.Send(new TimerMessage(state));
+            }
         }
 
         private static double GetTimeToNextMinute()

@@ -140,7 +140,7 @@ namespace Panoptes.Model.Mock.Sessions
                         break;
                 }
 
-                _currentTime = _currentTime.AddSeconds(_stepSecond);
+                _currentTime = _currentTime.AddSeconds(_stepSecond + _random.Next(0, 3));
                 Thread.Sleep(_sleep);
             }
         }
