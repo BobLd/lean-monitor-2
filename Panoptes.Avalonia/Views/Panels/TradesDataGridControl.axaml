@@ -4,13 +4,24 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450">
+
+	<UserControl.Styles>
+		<Style Selector="DataGridCell.statusColored">
+			<Setter Property="Foreground" Value="{Binding Path=Status, Mode=OneWay, Converter={StaticResource TradesColorConverter}}"/>
+		</Style>
+
+		<Style Selector="DataGridCell.directionColored">
+			<Setter Property="Foreground" Value="{Binding Path=Direction, Mode=OneWay, Converter={StaticResource TradesColorConverter}}"/>
+		</Style>
+	</UserControl.Styles>
+
 	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
 			  DoubleTapped="OnDataGridDoubleTapped"
 			  CanUserResizeColumns="True" HeadersVisibility="Column"
 			  AlternatingRowBackground="Transparent" RowBackground="Transparent">
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
-			<DataGridTextColumn Header="Status" Binding="{Binding Status, Mode=OneWay}" CellStyleClasses="statusColored"/>
+			<DataGridTextColumn Header="Status" Binding="{Binding StatusStr, Mode=OneWay}" CellStyleClasses="statusColored"/>
 			<DataGridTextColumn Header="Symbol" Binding="{Binding Symbol, Converter={StaticResource SymbolConverter}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Type" Binding="{Binding Type, Mode=OneWay}"/>
 			<DataGridTextColumn Header="TIF" Binding="{Binding TimeInForce, Mode=OneWay}"/>

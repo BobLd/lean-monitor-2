@@ -52,7 +52,7 @@
 			<local:ViewModelLocator x:Key="Locator"/>
 			<charts:DateConverter x:Key="DateConverter"/>
 			<converters:SymbolConverter x:Key="SymbolConverter"/>
-			<converters:TradesColorConverter x:Key="TradesColorConverter"/>
+			<converters:TradesColorConverter x:Key="TradesColorConverter"/>	
 			<converters:StatusBarColorConverter x:Key="StatusBarColorConverter"/>
 			<converters:LogPanelLogoTypeConverter x:Key="LogPanelLogoTypeConverter"/>
 			<converters:PositiveNegativeNumberConverter x:Key="PositiveNegativeNumberConverter"/>

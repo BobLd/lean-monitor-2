@@ -49,6 +49,7 @@ namespace Panoptes.ViewModels.Panels
             _orderSubmissionData = order.OrderSubmissionData;
 
             _status = order.Status;
+            _statusStr = _status.ToShortString();
 
             if (order is LimitOrder limitOrder)
             {
@@ -388,8 +389,16 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (_status == value) return;
                 _status = value;
+                _statusStr = _status.ToShortString();
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(StatusStr));
             }
+        }
+
+        public string _statusStr;
+        public string StatusStr
+        {
+            get { return _statusStr; }
         }
 
         /// <summary>
