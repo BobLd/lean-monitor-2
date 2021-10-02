@@ -21,6 +21,7 @@
 			  AlternatingRowBackground="Transparent" RowBackground="Transparent">
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
+			<DataGridTextColumn Header="Created" Binding="{Binding CreatedTime, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Status" Binding="{Binding StatusStr, Mode=OneWay}" CellStyleClasses="statusColored"/>
 			<DataGridTextColumn Header="Symbol" Binding="{Binding Symbol, Converter={StaticResource SymbolConverter}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Type" Binding="{Binding Type, Mode=OneWay}"/>
@@ -50,18 +51,17 @@
 			<DataGridTextColumn Header="Last Fill" Binding="{Binding LastFillTime, Mode=OneWay}"/>
 
 			<DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Value" Binding="{Binding Value, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Ccy" Binding="{Binding PriceCurrency, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Fees" Binding="{Binding Fees, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Fees Ccy" Binding="{Binding FeesCurrency, Mode=OneWay}"/>
-
-			<DataGridTextColumn Header="Value" Binding="{Binding Value, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
+			<!--
 			<DataGridTextColumn Header="Limit Price" Binding="{Binding LimitPrice, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Stop Price" Binding="{Binding StopPrice, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
 			<DataGridCheckBoxColumn Header="Stop Triggered" Binding="{Binding StopTriggered, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Trigger Price" Binding="{Binding TriggerPrice, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
 			<DataGridCheckBoxColumn Header="Trigger Touched" Binding="{Binding TriggerTouched, Mode=OneWay}"/>
-
-			<DataGridTextColumn Header="Created" Binding="{Binding CreatedTime, Mode=OneWay}"/>
+			-->
 			<DataGridTextColumn Header="Modified" Binding="{Binding LastUpdateTime, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Tag" Binding="{Binding Tag, Mode=OneWay}"/>
 

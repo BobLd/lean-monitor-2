@@ -139,7 +139,7 @@ namespace Panoptes.ViewModels.Charts
 
         private void ParseResult(Result result)
         {
-            foreach (var chart in result.Charts)
+            foreach (var chart in result.Charts.OrderBy(x => x.Key))
             {
                 PlotModel plot;
                 if (_plotModelsDict.ContainsKey(chart.Key))
@@ -197,7 +197,7 @@ namespace Panoptes.ViewModels.Charts
 
                 lock (plot.SyncRoot)
                 {
-                    foreach (var serie in chart.Value.Series)
+                    foreach (var serie in chart.Value.Series.OrderBy(x => x.Key))
                     {
                         if (serie.Value.Values.Count == 0) continue;
                         Series s = plot.Series.FirstOrDefault(k => (string)k.Tag == serie.Value.Name);
@@ -211,12 +211,14 @@ namespace Panoptes.ViewModels.Charts
                                 // Handle candle and line series the same way, choice is done in UI
                                 case SeriesType.Candle:
                                 case SeriesType.Line:
+                                case SeriesType.Bar:
                                     s = new LineSeries()
                                     {
                                         Color = serie.Value.Color.ToOxyColor().Negative(),
                                         Tag = serie.Value.Name,
                                         Title = serie.Value.Name,
                                         MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
+                                        CanTrackerInterpolatePoints = false
                                     };
                                     plot.Series.Add(s);
                                     break;
@@ -234,14 +236,16 @@ namespace Panoptes.ViewModels.Charts
                                     plot.Series.Add(s);
                                     break;
 
-                                case SeriesType.Bar:
-                                    s = new RectangleSeries()
-                                    {
-                                        Tag = serie.Value.Name,
-                                        Title = serie.Value.Name
-                                    };
-                                    plot.Series.Add(s);
-                                    break;
+                                /*
+                            case SeriesType.Bar:
+                                s = new RectangleSeries()
+                                {
+                                    Tag = serie.Value.Name,
+                                    Title = serie.Value.Name
+                                };
+                                plot.Series.Add(s);
+                                break;
+                                */
 
                                 default:
 #pragma warning disable RCS1079 // Throwing of new NotImplementedException.
@@ -254,9 +258,21 @@ namespace Panoptes.ViewModels.Charts
                         {
                             case SeriesType.Candle:
                             case SeriesType.Line:
+                            case SeriesType.Bar:
                                 // Handle candle and line series the same way, choice is done in UI
                                 var lineSeriesC = (LineSeries)s;
-                                var newLinePointsC = serie.Value.Values.Select(p => DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y));
+                                var newLinePointsC = serie.Value.Values.Select(p =>
+                                {
+                                    var point = p;
+                                    var x = point.X;
+                                    var dt = x.ToDateTimeUtc();
+                                    if (dt == default)
+                                    {
+
+                                    }
+
+                                    return DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y);
+                                });
                                 var currentLine = lineSeriesC.Points;
                                 var filteredLine = newLinePointsC.Except(currentLine).ToList();
                                 if (filteredLine.Count == 0) break;
@@ -271,18 +287,19 @@ namespace Panoptes.ViewModels.Charts
                                 if (filteredScatter.Count == 0) break;
                                 scatterSeries.Points.AddRange(filteredScatter);
                                 break;
-
-                            case SeriesType.Bar:
-                                var barSeries = (RectangleSeries)s;
-                                var newBarSeries = serie.Value.Values.Select(p =>
-                                    new RectangleItem(DateTimeAxis.ToDouble(p.X.ToDateTimeUtc()),
-                                                      DateTimeAxis.ToDouble(p.X.ToDateTimeUtc().AddDays(1)),
-                                                      (double)p.Y, (double)p.Y, (double)p.Y));
-                                var currentBar = barSeries.Items;
-                                var filteredBar = newBarSeries.Except(currentBar).ToList();
-                                if (filteredBar.Count == 0) break;
-                                barSeries.Items.AddRange(filteredBar);
-                                break;
+                            /*
+                        case SeriesType.Bar:
+                            var barSeries = (RectangleSeries)s;
+                            var newBarSeries = serie.Value.Values.Select(p =>
+                                new RectangleItem(DateTimeAxis.ToDouble(p.X.ToDateTimeUtc()),
+                                                  DateTimeAxis.ToDouble(p.X.ToDateTimeUtc().AddDays(1)),
+                                                  (double)p.Y, (double)p.Y, (double)p.Y));
+                            var currentBar = barSeries.Items;
+                            var filteredBar = newBarSeries.Except(currentBar).ToList();
+                            if (filteredBar.Count == 0) break;
+                            barSeries.Items.AddRange(filteredBar);
+                            break;
+                            */
 
                             case SeriesType.Pie:
                             case SeriesType.StackedArea:

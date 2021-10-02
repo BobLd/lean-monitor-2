@@ -21,8 +21,8 @@ namespace Panoptes.Model.Messages
             EntryType = entryType;
         }
 
-        public DateTime DateTime { get; private set; }
-        public string Message { get; private set; }
-        public LogItemType EntryType { get; private set; }
+        public DateTime DateTime { get; }
+        public string Message { get; }
+        public LogItemType EntryType { get; }
     }
 }

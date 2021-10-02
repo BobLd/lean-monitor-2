@@ -15,6 +15,6 @@ namespace Panoptes.Model.Messages
             Key = key;
         }
 
-        public string Key { get; private set; }
+        public string Key { get; }
     }
 }

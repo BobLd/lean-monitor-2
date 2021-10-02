@@ -9,6 +9,11 @@ namespace Panoptes.Avalonia.Views.Charts
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (value == null)
+            {
+                return "NULL";
+            }
+
             if (value is double date)
             {
                 return DateTimeAxis.ToDateTime(date).ToString();

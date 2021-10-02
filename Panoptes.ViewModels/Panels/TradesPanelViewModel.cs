@@ -7,12 +7,37 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
 {
     public sealed class TradesPanelViewModel : ToolPaneViewModel
     {
+        private enum ActionsThreadUI
+        {
+            /// <summary>
+            /// Finish the order update.
+            /// </summary>
+            OrderFinishUpdate = 0,
+
+            /// <summary>
+            /// Finish the order update and add it to all lists.
+            /// </summary>
+            OrderFinishUpdateAddAll = 1,
+
+            /// <summary>
+            /// Remove order from history.
+            /// </summary>
+            OrderRemoveHistory = 2,
+
+            /// <summary>
+            /// Add order to history.
+            /// </summary>
+            OrderAddHistory = 3,
+        }
+
         private readonly IMessenger _messenger;
 
         private readonly ConcurrentDictionary<int, List<OrderEvent>> _orderEventsDic = new ConcurrentDictionary<int, List<OrderEvent>>();
@@ -21,8 +46,6 @@ namespace Panoptes.ViewModels.Panels
         private readonly BackgroundWorker _resultBgWorker;
 
         private readonly BlockingCollection<QueueElement> _resultsQueue = new BlockingCollection<QueueElement>();
-
-        private readonly List<OrderViewModel> _rawOrders = new List<OrderViewModel>();
 
         private ObservableCollection<OrderViewModel> _ordersToday = new ObservableCollection<OrderViewModel>();
         public ObservableCollection<OrderViewModel> OrdersToday
@@ -59,7 +82,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_fromDate == value) return;
                 _fromDate = value;
                 OnPropertyChanged();
-                UpdateHistoryOrders();
+                _messenger.Send(new FilterMessage("trades", _fromDate, _toDate));
             }
         }
 
@@ -76,7 +99,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_toDate == value) return;
                 _toDate = value;
                 OnPropertyChanged();
-                UpdateHistoryOrders();
+                _messenger.Send(new FilterMessage("trades", _fromDate, _toDate));
             }
         }
 
@@ -100,12 +123,40 @@ namespace Panoptes.ViewModels.Panels
             }
         };
 
-        private void UpdateHistoryOrders()
+        private Task<(IReadOnlyList<OrderViewModel> Add, IReadOnlyList<OrderViewModel> Remove)> GetFilteredOrders()
         {
-            OrdersHistory.Clear();
-            foreach (var ovm in _rawOrders.AsParallel().Where(o => _filterDateRange(o.CreatedTime, FromDate, ToDate)))
+            return Task.Run(() =>
             {
-                OrdersHistory.Add(ovm);
+                var fullList = _ordersDic.Values.AsParallel().Where(o => _filterDateRange(o.CreatedTime, FromDate, ToDate)).ToList();
+
+                // careful with concurrency
+                var currentHistoOrders = _ordersHistory.ToArray();
+                return ((IReadOnlyList<OrderViewModel>)fullList.Except(currentHistoOrders).ToList(),
+                        (IReadOnlyList<OrderViewModel>)currentHistoOrders.Except(fullList).ToList());
+            });
+        }
+
+        private async Task ApplyFiltersHistoryOrders()
+        {
+            try
+            {
+                Trace.WriteLine("TradesPanelViewModel: Start applying filters...");
+                var (Add, Remove) = await GetFilteredOrders().ConfigureAwait(false);
+
+                foreach (var remove in Remove)
+                {
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderRemoveHistory, remove);
+                }
+
+                foreach (var add in Add)
+                {
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderAddHistory, add);
+                }
+                Trace.WriteLine("TradesPanelViewModel: Done applying filters!");
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
             }
         }
 
@@ -149,23 +200,31 @@ namespace Panoptes.ViewModels.Panels
 
             _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, _) => r.ProcessNewDay());
 
+            _messenger.Register<TradesPanelViewModel, FilterMessage>(this, async (r, _) => await r.ApplyFiltersHistoryOrders().ConfigureAwait(false));
+
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {
-                var ovm = (OrderViewModel)e.UserState;
-                ovm.FinishUpdateInThreadUI();
-
-                switch (e.ProgressPercentage)
+                switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
-                    case 0:
-                        _rawOrders.Add(ovm);
+                    case ActionsThreadUI.OrderFinishUpdate:
+                        ((OrderViewModel)e.UserState).FinishUpdateInThreadUI();
+                        break;
+
+                    case ActionsThreadUI.OrderFinishUpdateAddAll:
+                        var ovm = (OrderViewModel)e.UserState;
+                        ovm.FinishUpdateInThreadUI();
                         AddOrderToToday(ovm);
                         AddOrderToHistory(ovm);
                         break;
 
-                    case 1:
-                        // Do nothing as already added
+                    case ActionsThreadUI.OrderRemoveHistory:
+                        _ordersHistory.Remove((OrderViewModel)e.UserState);
+                        break;
+
+                    case ActionsThreadUI.OrderAddHistory:
+                        _ordersHistory.Add((OrderViewModel)e.UserState);
                         break;
 
                     default:
@@ -179,15 +238,15 @@ namespace Panoptes.ViewModels.Panels
 
         private void ProcessNewDay()
         {
-            System.Diagnostics.Trace.WriteLine($"TradesPanelViewModel: New day @ {DateTime.Now:O}");
+            Trace.WriteLine($"TradesPanelViewModel: New day @ {DateTime.Now:O}");
         }
 
         private void Clear()
         {
-            _orderEventsDic.Clear(); // will not update UI
+            _orderEventsDic.Clear();
             _ordersDic.Clear();
-            //this._resultsQueue
             OrdersToday.Clear();
+            OrdersHistory.Clear();
         }
 
         private void ResultQueueReader(object sender, DoWorkEventArgs e)
@@ -222,27 +281,17 @@ namespace Panoptes.ViewModels.Panels
                         }
 
                         _ordersDic.TryAdd(ovm.Id, ovm);
-                        FinishUpdateAddThreadUI(ovm);
+                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderFinishUpdateAddAll, ovm);
                     }
                 }
                 else if (qe.Element is OrderEventMessage m) // Process OrderEvent
                 {
                     if (ParseOrderEvent(m, out var ovm))
                     {
-                        FinishUpdateThreadUI(ovm);
+                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderFinishUpdate, ovm);
                     }
                 }
             }
-        }
-
-        private void FinishUpdateThreadUI(OrderViewModel ovm)
-        {
-            _resultBgWorker.ReportProgress(1, ovm);
-        }
-
-        private void FinishUpdateAddThreadUI(OrderViewModel ovm)
-        {
-            _resultBgWorker.ReportProgress(0, ovm);
         }
 
         private bool ParseOrderEvent(OrderEventMessage result, out OrderViewModel orderViewModel)
