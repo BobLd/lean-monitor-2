@@ -16,6 +16,11 @@
 		<StackPanel Margin="4" Orientation="Horizontal">
 			<Label Content="Series"></Label>
 			<ComboBox MinWidth="100" Items="{Binding PlotModels}" SelectedItem="{Binding SelectedSeries, Mode=TwoWay}" IsTextSearchEnabled="True"/>
+			<Button Content="All" Command="{Binding BarsAll}"/>
+			<Button Content="1m" Command="{Binding Bars1m}"/>
+			<Button Content="5m" Command="{Binding Bars5m}"/>
+			<Button Content="1h" Command="{Binding Bars1h}"/>
+			<Button Content="1d" Command="{Binding Bars1d}"/>
 		</StackPanel>
 
 		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"

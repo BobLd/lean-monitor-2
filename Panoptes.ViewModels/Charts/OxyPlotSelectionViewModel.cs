@@ -1,10 +1,12 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Toolkit.Mvvm.Input;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
-using Panoptes.Model;
 using Panoptes.Model.Charting;
 using Panoptes.Model.Messages;
+using QuantConnect;
+using QuantConnect.Data.Consolidators;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,6 +14,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Result = Panoptes.Model.Result;
 using ScatterMarkerSymbol = QuantConnect.ScatterMarkerSymbol;
 using SeriesType = QuantConnect.SeriesType;
 
@@ -41,9 +46,95 @@ namespace Panoptes.ViewModels.Charts
 
         private readonly BlockingCollection<Result> _resultsQueue = new BlockingCollection<Result>();
 
+        private readonly Dictionary<string, PlotModel> _plotModelsDict = new Dictionary<string, PlotModel>();
+
+        private readonly Dictionary<string, List<DataPoint>> _rawDataPoint = new Dictionary<string, List<DataPoint>>();
+
+        TradeBarConsolidator _tradeBarConsolidator;
+
+        public AsyncRelayCommand BarsAll { get; }
+        public AsyncRelayCommand Bars1m { get; }
+        public AsyncRelayCommand Bars5m { get; }
+        public AsyncRelayCommand Bars1h { get; }
+        public AsyncRelayCommand Bars1d { get; }
+
         public OxyPlotSelectionViewModel()
         {
             Name = "Charts";
+            _tradeBarConsolidator = TradeBarConsolidator.FromResolution(Resolution.Hour);
+            _tradeBarConsolidator.DataConsolidated += _tradeBarConsolidator_DataConsolidated;
+
+            BarsAll = new AsyncRelayCommand(DoBarsAll, () => true);
+            Bars1m = new AsyncRelayCommand(DoBars, () => false);
+            Bars5m = new AsyncRelayCommand(DoBars5min, CanDoBars5min);
+            Bars1h = new AsyncRelayCommand(DoBars, () => false);
+            Bars1d = new AsyncRelayCommand(DoBars, () => false);
+        }
+
+        public Task DoBarsAll(CancellationToken cancelationToken)
+        {
+            return Task.Run(() =>
+            {
+                lock (SelectedSeries.SyncRoot)
+                {
+                    foreach (var serie in SelectedSeries.Series)
+                    {
+                        if (serie is LineCandleStickSeries candleStickSeries)
+                        {
+                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Line;
+                        }
+                    }
+                }
+                InvalidatePlotThreadUI();
+            }, cancelationToken);
+        }
+
+        public Task DoBars5min(CancellationToken cancelationToken)
+        {
+            return Task.Run(() =>
+            {
+                lock (SelectedSeries.SyncRoot)
+                {
+                    foreach (var serie in SelectedSeries.Series)
+                    {
+                        if (serie is LineCandleStickSeries candleStickSeries)
+                        {
+                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
+                        }
+                    }
+                }
+                InvalidatePlotThreadUI();
+            }, cancelationToken);
+        }
+
+        public bool CanDoBars5min()
+        {
+            // TODO
+            if (SelectedSeries == null)
+            {
+                return true;
+            }
+
+            foreach (var serie in SelectedSeries.Series)
+            {
+                if (serie is LineCandleStickSeries)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+
+        public Task DoBars()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void _tradeBarConsolidator_DataConsolidated(object sender, QuantConnect.Data.Market.TradeBar e)
+        {
+            
         }
 
         public OxyPlotSelectionViewModel(IMessenger messenger) : this()
@@ -120,8 +211,6 @@ namespace Panoptes.ViewModels.Charts
                 OnPropertyChanged();
             }
         }
-
-        private readonly Dictionary<string, PlotModel> _plotModelsDict = new Dictionary<string, PlotModel>();
 
         private static string GetUnit(ChartDefinition chartDefinition)
         {
@@ -200,7 +289,7 @@ namespace Panoptes.ViewModels.Charts
                     foreach (var serie in chart.Value.Series.OrderBy(x => x.Key))
                     {
                         if (serie.Value.Values.Count == 0) continue;
-                        Series s = plot.Series.FirstOrDefault(k => (string)k.Tag == serie.Value.Name);
+                        var s = plot.Series.FirstOrDefault(k => (string)k.Tag == serie.Value.Name);
 
                         // Create Series
                         if (s == null)
@@ -211,6 +300,16 @@ namespace Panoptes.ViewModels.Charts
                                 // Handle candle and line series the same way, choice is done in UI
                                 case SeriesType.Candle:
                                 case SeriesType.Line:
+                                    s = new LineCandleStickSeries()
+                                    {
+                                        Color = serie.Value.Color.ToOxyColor().Negative(),
+                                        Tag = serie.Value.Name,
+                                        Title = serie.Value.Name,
+                                        SerieType = LineCandleStickSeries.SerieTypes.Line
+                                    };
+                                    plot.Series.Add(s);
+                                    break;
+
                                 case SeriesType.Bar:
                                     s = new LineSeries()
                                     {
@@ -258,25 +357,18 @@ namespace Panoptes.ViewModels.Charts
                         {
                             case SeriesType.Candle:
                             case SeriesType.Line:
+                                ((LineCandleStickSeries)s).AddRange(serie.Value.Values.Select(p =>
+                                            DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y)));
+                                break;
+
                             case SeriesType.Bar:
                                 // Handle candle and line series the same way, choice is done in UI
-                                var lineSeriesC = (LineSeries)s;
-                                var newLinePointsC = serie.Value.Values.Select(p =>
-                                {
-                                    var point = p;
-                                    var x = point.X;
-                                    var dt = x.ToDateTimeUtc();
-                                    if (dt == default)
-                                    {
-
-                                    }
-
-                                    return DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y);
-                                });
-                                var currentLine = lineSeriesC.Points;
-                                var filteredLine = newLinePointsC.Except(currentLine).ToList();
-                                if (filteredLine.Count == 0) break;
-                                lineSeriesC.Points.AddRange(filteredLine);
+                                var lineSeriesBar = (LineSeries)s;
+                                var newLinePointsBar = serie.Value.Values.Select(p => DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y));
+                                var currentLineBar = lineSeriesBar.Points;
+                                var filteredLineBar = newLinePointsBar.Except(currentLineBar).ToList();
+                                if (filteredLineBar.Count == 0) break;
+                                lineSeriesBar.Points.AddRange(filteredLineBar);
                                 break;
 
                             case SeriesType.Scatter:
@@ -338,7 +430,6 @@ namespace Panoptes.ViewModels.Charts
         {
             _plotModelsDict.Clear();
             _plotModels.Clear();
-            //this._resultsQueue.Dispose();
         }
 
         private static MarkerType GetMarkerType(ScatterMarkerSymbol scatterMarkerSymbol)
