@@ -389,7 +389,7 @@ namespace Panoptes.ViewModels.Charts
                                 case SeriesType.Line:
                                     s = new LineCandleStickSeries()
                                     {
-                                        Color = serie.Value.Color.ToOxyColor().Negative(),
+                                        LineColor = serie.Value.Color.ToOxyColor().Negative(),
                                         Tag = serie.Value.Name,
                                         Title = serie.Value.Name,
                                         SerieType = LineCandleStickSeries.SerieTypes.Line

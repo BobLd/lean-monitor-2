@@ -3,7 +3,7 @@
     <Design.PreviewWith>
         <Border Padding="0" BorderBrush="Red" BorderThickness="0">
             <!-- Add Controls for Previewer Here -->
-			<DrawingPresenter Width="80" Height="80" Drawing="{StaticResource TablerIcons.Gauge}" />
+			<DrawingPresenter Width="120" Height="120" Drawing="{StaticResource TablerIcons.ChartCandle2}" />
         </Border>
     </Design.PreviewWith>
 
@@ -692,29 +692,26 @@
 			</DrawingGroup>
 
 			<DrawingGroup x:Key="TablerIcons.ChartCandle2" >
-				<GeometryDrawing>
+				<GeometryDrawing Geometry="F1 M24,24z M0,0z">
 					<GeometryDrawing.Pen>
-						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+						<Pen Brush="Transparent" Thickness="0"/>
 					</GeometryDrawing.Pen>
-					<GeometryDrawing.Geometry>
-						<LineGeometry StartPoint="6,4" EndPoint="6,5" />
-					</GeometryDrawing.Geometry>
 				</GeometryDrawing>
-				<GeometryDrawing>
+
+				<!--Axis-->
+				<GeometryDrawing Geometry="M3,3L3,21 21,21">
 					<GeometryDrawing.Pen>
 						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
 					</GeometryDrawing.Pen>
-					<GeometryDrawing.Geometry>
-						<LineGeometry StartPoint="6,12" EndPoint="6,18" />
-					</GeometryDrawing.Geometry>
 				</GeometryDrawing>
+
+				<!--First candle-->
 				<GeometryDrawing>
 					<GeometryDrawing.Pen>
 						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
 					</GeometryDrawing.Pen>
 					<GeometryDrawing.Geometry>
-						<RectangleGeometry Rect="4,6,4,5" />
-						<!--RadiusX="1" RadiusY="1"-->
+						<LineGeometry StartPoint="8,4" EndPoint="8,5" />
 					</GeometryDrawing.Geometry>
 				</GeometryDrawing>
 				
@@ -723,27 +720,48 @@
 						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
 					</GeometryDrawing.Pen>
 					<GeometryDrawing.Geometry>
-						<LineGeometry StartPoint="12,8" EndPoint="12,13" />
-					</GeometryDrawing.Geometry>
-				</GeometryDrawing>
-				<GeometryDrawing>
-					<GeometryDrawing.Pen>
-						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
-					</GeometryDrawing.Pen>
-					<GeometryDrawing.Geometry>
-						<LineGeometry StartPoint="12,20" EndPoint="12,20" />
-					</GeometryDrawing.Geometry>
-				</GeometryDrawing>
-				<GeometryDrawing>
-					<GeometryDrawing.Pen>
-						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
-					</GeometryDrawing.Pen>
-					<GeometryDrawing.Geometry>
-						<RectangleGeometry Rect="10,14,4,5" />
-						<!--RadiusX="1" RadiusY="1"-->
+						<LineGeometry StartPoint="8,12" EndPoint="8,18" />
 					</GeometryDrawing.Geometry>
 				</GeometryDrawing>
 				
+				<GeometryDrawing>
+					<GeometryDrawing.Pen>
+						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+					</GeometryDrawing.Pen>
+					<GeometryDrawing.Geometry>
+						<RectangleGeometry Rect="6,6,4,5" />
+					</GeometryDrawing.Geometry>
+				</GeometryDrawing>
+
+				<!--Second candle-->
+				<GeometryDrawing>
+					<GeometryDrawing.Pen>
+						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+					</GeometryDrawing.Pen>
+					<GeometryDrawing.Geometry>
+						<LineGeometry StartPoint="13,10" EndPoint="13,13" />
+					</GeometryDrawing.Geometry>
+				</GeometryDrawing>
+				
+				<GeometryDrawing>
+					<GeometryDrawing.Pen>
+						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+					</GeometryDrawing.Pen>
+					<GeometryDrawing.Geometry>
+						<LineGeometry StartPoint="13,18" EndPoint="13,18" />
+					</GeometryDrawing.Geometry>
+				</GeometryDrawing>
+				
+				<GeometryDrawing>
+					<GeometryDrawing.Pen>
+						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
+					</GeometryDrawing.Pen>
+					<GeometryDrawing.Geometry>
+						<RectangleGeometry Rect="11,14,4,3" />
+					</GeometryDrawing.Geometry>
+				</GeometryDrawing>
+
+				<!--Thrid candle-->
 				<GeometryDrawing>
 					<GeometryDrawing.Pen>
 						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
@@ -752,21 +770,22 @@
 						<LineGeometry StartPoint="18,4" EndPoint="18,4" />
 					</GeometryDrawing.Geometry>
 				</GeometryDrawing>
+				
 				<GeometryDrawing>
 					<GeometryDrawing.Pen>
 						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
 					</GeometryDrawing.Pen>
 					<GeometryDrawing.Geometry>
-						<LineGeometry StartPoint="18,12" EndPoint="18,16" />
+						<LineGeometry StartPoint="18,10" EndPoint="18,15" />
 					</GeometryDrawing.Geometry>
 				</GeometryDrawing>
+				
 				<GeometryDrawing>
 					<GeometryDrawing.Pen>
 						<Pen Brush="{StaticResource ThemeForegroundBrush}" Thickness="2" LineCap="Round" LineJoin="Round" />
 					</GeometryDrawing.Pen>
 					<GeometryDrawing.Geometry>
-						<RectangleGeometry Rect="16,5,4,6" />
-						<!--RadiusX="1" RadiusY="1"-->
+						<RectangleGeometry Rect="16,5,4,4" />
 					</GeometryDrawing.Geometry>
 				</GeometryDrawing>
 			</DrawingGroup>
