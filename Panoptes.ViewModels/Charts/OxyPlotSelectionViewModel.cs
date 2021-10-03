@@ -64,11 +64,11 @@ namespace Panoptes.ViewModels.Charts
             _tradeBarConsolidator = TradeBarConsolidator.FromResolution(Resolution.Hour);
             _tradeBarConsolidator.DataConsolidated += _tradeBarConsolidator_DataConsolidated;
 
-            BarsAll = new AsyncRelayCommand(DoBarsAll, () => true);
-            Bars1m = new AsyncRelayCommand(DoBars, () => false);
-            Bars5m = new AsyncRelayCommand(DoBars5min, CanDoBars5min);
-            Bars1h = new AsyncRelayCommand(DoBars, () => false);
-            Bars1d = new AsyncRelayCommand(DoBars, () => false);
+            BarsAll = new AsyncRelayCommand(DoBarsAll, CanDoBarsAll);
+            Bars1m = new AsyncRelayCommand(DoBars1m, CanDoBars1m);
+            Bars5m = new AsyncRelayCommand(DoBars5m, CanDoBars5min);
+            Bars1h = new AsyncRelayCommand(DoBars1h, CanDoBars1h);
+            Bars1d = new AsyncRelayCommand(DoBars1d, CanDoBars1d);
         }
 
         public Task DoBarsAll(CancellationToken cancelationToken)
@@ -89,7 +89,12 @@ namespace Panoptes.ViewModels.Charts
             }, cancelationToken);
         }
 
-        public Task DoBars5min(CancellationToken cancelationToken)
+        public bool CanDoBarsAll()
+        {
+            return true;
+        }
+
+        public Task DoBars1m(CancellationToken cancelationToken)
         {
             return Task.Run(() =>
             {
@@ -100,6 +105,31 @@ namespace Panoptes.ViewModels.Charts
                         if (serie is LineCandleStickSeries candleStickSeries)
                         {
                             candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
+                            candleStickSeries.SetTimeSpan(TimeSpan.FromMinutes(1));
+                        }
+                    }
+                }
+                InvalidatePlotThreadUI();
+            }, cancelationToken);
+        }
+
+        public bool CanDoBars1m()
+        {
+            return true;
+        }
+
+        public Task DoBars5m(CancellationToken cancelationToken)
+        {
+            return Task.Run(() =>
+            {
+                lock (SelectedSeries.SyncRoot)
+                {
+                    foreach (var serie in SelectedSeries.Series)
+                    {
+                        if (serie is LineCandleStickSeries candleStickSeries)
+                        {
+                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
+                            candleStickSeries.SetTimeSpan(TimeSpan.FromMinutes(5));
                         }
                     }
                 }
@@ -109,23 +139,56 @@ namespace Panoptes.ViewModels.Charts
 
         public bool CanDoBars5min()
         {
-            // TODO
-            if (SelectedSeries == null)
-            {
-                return true;
-            }
-
-            foreach (var serie in SelectedSeries.Series)
-            {
-                if (serie is LineCandleStickSeries)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return true;
         }
 
+        public Task DoBars1h(CancellationToken cancelationToken)
+        {
+            return Task.Run(() =>
+            {
+                lock (SelectedSeries.SyncRoot)
+                {
+                    foreach (var serie in SelectedSeries.Series)
+                    {
+                        if (serie is LineCandleStickSeries candleStickSeries)
+                        {
+                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
+                            candleStickSeries.SetTimeSpan(TimeSpan.FromHours(1));
+                        }
+                    }
+                }
+                InvalidatePlotThreadUI();
+            }, cancelationToken);
+        }
 
+        public bool CanDoBars1h()
+        {
+            return true;
+        }
+
+        public Task DoBars1d(CancellationToken cancelationToken)
+        {
+            return Task.Run(() =>
+            {
+                lock (SelectedSeries.SyncRoot)
+                {
+                    foreach (var serie in SelectedSeries.Series)
+                    {
+                        if (serie is LineCandleStickSeries candleStickSeries)
+                        {
+                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
+                            candleStickSeries.SetTimeSpan(TimeSpan.FromDays(1));
+                        }
+                    }
+                }
+                InvalidatePlotThreadUI();
+            }, cancelationToken);
+        }
+
+        public bool CanDoBars1d()
+        {
+            return true;
+        }
 
         public Task DoBars()
         {

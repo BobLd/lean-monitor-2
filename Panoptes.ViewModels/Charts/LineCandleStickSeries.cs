@@ -43,6 +43,25 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
+        public TimeSpan TimeSpan { get; private set; }
+
+        public void SetTimeSpan(TimeSpan ts)
+        {
+            if (TimeSpan.Equals(ts))
+            {
+                return;
+            }
+
+            if (ts.Ticks < 0)
+            {
+                throw new ArgumentException("TimeSpan must be positive.", nameof(ts));
+            }
+
+            TimeSpan = ts;
+
+            UpdateCandles(Points, true);
+        }
+
         public OxyColor LineColor { get; set; }
 
         /// <summary>
@@ -140,6 +159,24 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
+        protected override void UpdateMaxMin()
+        {
+            switch (SerieType)
+            {
+                case SerieTypes.Candles:
+                    base.UpdateMaxMin();
+                    break;
+
+                case SerieTypes.Line:
+                    this.MinX = this.MinY = this.MaxX = this.MaxY = double.NaN;
+                    this.InternalUpdateMaxMin(_rawDataPoints);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Copy of points.
+        /// </summary>
         public IReadOnlyList<DataPoint> Points => _rawDataPoints.AsReadOnly();
 
         private readonly List<DataPoint> _rawDataPoints = new List<DataPoint>();
@@ -165,7 +202,6 @@ namespace Panoptes.ViewModels.Charts
             return DateTimeAxis.ToDouble(RoundDown(DateTimeAxis.ToDateTime(dateTime), interval));
         }
 
-        TimeSpan TimeSpan = TimeSpan.FromHours(1);
         public void AddRange(IEnumerable<DataPoint> dataPoints)
         {
             if (!dataPoints.Any()) return;
@@ -176,9 +212,23 @@ namespace Panoptes.ViewModels.Charts
             // Add new data points to the raw data points
             _rawDataPoints.AddRange(newPoints);
 
-            // Check if last candle needs update
-            if (this.Items.Count > 0)
+            // Udpate the candles
+            UpdateCandles(newPoints, false);
+        }
+
+        /// <summary>
+        /// Update Candles
+        /// </summary>
+        /// <param name="newPoints">Must be distinct</param>
+        private void UpdateCandles(IReadOnlyList<DataPoint> newPoints, bool reset)
+        {
+            if (reset)
             {
+                this.Items.Clear();
+            }
+            else if (this.Items.Count > 0)
+            {
+                // Check if last candle needs update
                 var last = Items.Last();
                 var update = newPoints.Where(p => RoundDownDouble(p.X, TimeSpan).Equals(last.X)).ToList();
                 if (update.Count > 0)
@@ -187,10 +237,9 @@ namespace Panoptes.ViewModels.Charts
                     last.Close = update.Last().Y;
                     last.Low = Math.Min(last.Low, update.Min(x => x.Y));
                     last.High = Math.Max(last.Low, update.Max(x => x.Y));
+                    if (newPoints.Count == 0) return;
                 }
             }
-
-            if (newPoints.Count == 0) return;
 
             // Add new candles
             var grp = newPoints.GroupBy(p => RoundDown(DateTimeAxis.ToDateTime(p.X), TimeSpan))
@@ -202,14 +251,6 @@ namespace Panoptes.ViewModels.Charts
             this.Items.AddRange(grp);
         }
 
-        public void Add(DataPoint dataPoint)
-        {
-            _rawDataPoints.Add(dataPoint);
-
-            // consolidate here
-            this.Items.Add(new HighLowItem(dataPoint.X, dataPoint.Y, dataPoint.Y));
-        }
-
         #region Line series rendering
         /// <summary>
         /// Renders the series on the specified rendering context.
@@ -217,9 +258,7 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         public void RenderLineSerie(IRenderContext rc)
         {
-            //var actualPoints = this.Items.ConvertAll(hl => new DataPoint(hl.X, hl.Low));
             var actualPoints = _rawDataPoints;
-
             if (actualPoints == null || actualPoints.Count == 0)
             {
                 return;
@@ -748,9 +787,7 @@ namespace Panoptes.ViewModels.Charts
                 }
             };
             int i = 0;
-            foreach (var item in this.Items
-                .Where(x => x.X <= this.XAxis.ActualMaximum)
-                .Where(x => x.X >= this.XAxis.ActualMinimum))
+            foreach (var item in this.Items.Where(x => x.X <= this.XAxis.ActualMaximum && x.X >= this.XAxis.ActualMinimum))
             {
                 check(new DataPoint(item.X, item.High), item, i);
                 check(new DataPoint(item.X, item.Low), item, i);
