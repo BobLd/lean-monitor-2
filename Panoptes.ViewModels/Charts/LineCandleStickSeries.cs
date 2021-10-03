@@ -43,11 +43,11 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
-        public TimeSpan TimeSpan { get; private set; }
+        public TimeSpan Period { get; private set; }
 
-        public void SetTimeSpan(TimeSpan ts)
+        public void SetPeriod(TimeSpan ts)
         {
-            if (TimeSpan.Equals(ts))
+            if (Period.Equals(ts))
             {
                 return;
             }
@@ -57,14 +57,14 @@ namespace Panoptes.ViewModels.Charts
                 throw new ArgumentException("TimeSpan must be positive.", nameof(ts));
             }
 
-            TimeSpan = ts;
+            Period = ts;
 
             UpdateCandles(Points, true);
         }
 
         public bool CanDoTimeSpan(TimeSpan ts)
         {
-            return Points.GroupBy(p => RoundDown(DateTimeAxis.ToDateTime(p.X), ts)).Any(g => g.Count() > 1);
+            return Points.ToList().GroupBy(p => RoundDown(DateTimeAxis.ToDateTime(p.X), ts)).Any(g => g.Count() > 1);
         }
 
         public OxyColor LineColor { get; set; }
@@ -166,10 +166,23 @@ namespace Panoptes.ViewModels.Charts
 
         protected override void UpdateMaxMin()
         {
+            //DateTime TimeOrigin = new DateTime(1899, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+            //double ToDouble(DateTime value)
+            //{
+            //    var span = value - TimeOrigin;
+            //    return span.TotalDays + 1;
+            //}
+
             switch (SerieType)
             {
                 case SerieTypes.Candles:
-                    base.UpdateMaxMin();
+                    //base.UpdateMaxMin();
+                    this.MinX = this.MinY = this.MaxX = this.MaxY = double.NaN;
+                    this.InternalUpdateMaxMin(Items,
+                        i => i.X - (Period.TotalDays / 2.0),
+                        i => i.X + (Period.TotalDays / 2.0),
+                        i => Min(i.Low, i.Open, i.Close, i.High),
+                        i => Max(i.High, i.Open, i.Close, i.Low));
                     break;
 
                 case SerieTypes.Line:
@@ -177,6 +190,16 @@ namespace Panoptes.ViewModels.Charts
                     this.InternalUpdateMaxMin(_rawDataPoints);
                     break;
             }
+        }
+
+        private static double Max(double x1, double x2, double x3, double x4)
+        {
+            return Math.Max(x1, Math.Max(x2, Math.Max(x3, x4)));
+        }
+
+        private static double Min(double x1, double x2, double x3, double x4)
+        {
+            return Math.Min(x1, Math.Min(x2, Math.Min(x3, x4)));
         }
 
         /// <summary>
@@ -235,7 +258,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 // Check if last candle needs update
                 var last = Items.Last();
-                var update = newPoints.Where(p => RoundDownDouble(p.X, TimeSpan).Equals(last.X)).ToList();
+                var update = newPoints.Where(p => RoundDownDouble(p.X, Period).Equals(last.X)).ToList();
                 if (update.Count > 0)
                 {
                     newPoints = newPoints.Except(update).ToList();
@@ -248,7 +271,7 @@ namespace Panoptes.ViewModels.Charts
 
             // Add new candles
             // need to check if there's more than 1 datapoint in each group...
-            var grp = newPoints.GroupBy(p => RoundDown(DateTimeAxis.ToDateTime(p.X), TimeSpan))
+            var grp = newPoints.GroupBy(p => RoundDown(DateTimeAxis.ToDateTime(p.X), Period))
                 .Select(g => new HighLowItem(DateTimeAxis.ToDouble(g.Key),
                                        g.Max(p => p.Y),
                                        g.Min(p => p.Y),
@@ -602,7 +625,7 @@ namespace Panoptes.ViewModels.Charts
                     else
                     {
                         var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                        rc.DrawClippedRectangleAsPolygon(clippingRect, rect, fillColor, lineColor, this.StrokeThickness);
+                        rc.DrawClippedRectangleAsPolygon(clippingRect, rect, fillColor, OxyColors.Transparent, this.StrokeThickness);
                     }
                 }
             }

@@ -100,7 +100,7 @@ namespace Panoptes.ViewModels.Charts
                         if (serie is LineCandleStickSeries candleStickSeries)
                         {
                             candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
-                            candleStickSeries.SetTimeSpan(TimeSpan.FromMinutes(1));
+                            candleStickSeries.SetPeriod(TimeSpan.FromMinutes(1));
                         }
                     }
                 }
@@ -135,7 +135,7 @@ namespace Panoptes.ViewModels.Charts
                         if (serie is LineCandleStickSeries candleStickSeries)
                         {
                             candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
-                            candleStickSeries.SetTimeSpan(TimeSpan.FromMinutes(5));
+                            candleStickSeries.SetPeriod(TimeSpan.FromMinutes(5));
                         }
                     }
                 }
@@ -170,7 +170,7 @@ namespace Panoptes.ViewModels.Charts
                         if (serie is LineCandleStickSeries candleStickSeries)
                         {
                             candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
-                            candleStickSeries.SetTimeSpan(TimeSpan.FromHours(1));
+                            candleStickSeries.SetPeriod(TimeSpan.FromHours(1));
                         }
                     }
                 }
@@ -204,7 +204,7 @@ namespace Panoptes.ViewModels.Charts
                         if (serie is LineCandleStickSeries candleStickSeries)
                         {
                             candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
-                            candleStickSeries.SetTimeSpan(TimeSpan.FromDays(1));
+                            candleStickSeries.SetPeriod(TimeSpan.FromDays(1));
                         }
                     }
                 }
