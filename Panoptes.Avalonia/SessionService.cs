@@ -15,7 +15,10 @@ namespace Panoptes.Avalonia
 {
     internal sealed class SessionService : ISessionService, ISessionHandler
     {
+#pragma warning disable IDE0052 // Remove unread private members
         private readonly Timer _timer;
+#pragma warning restore IDE0052 // Remove unread private members
+
         private readonly IMessenger _messenger;
         private readonly IResultConverter _resultConverter;
         private readonly IResultSerializer _resultSerializer;

@@ -5,13 +5,12 @@ using OxyPlot.Axes;
 using OxyPlot.Series;
 using Panoptes.Model.Charting;
 using Panoptes.Model.Messages;
-using QuantConnect;
-using QuantConnect.Data.Consolidators;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -25,19 +24,19 @@ namespace Panoptes.ViewModels.Charts
     public sealed class OxyPlotSelectionViewModel : ToolPaneViewModel
     {
         #region Colors (Should not be here, let's try to put it in xaml) 
-        //private readonly static OxyColor SciChartBackgroungOxy = OxyColor.FromArgb(255, 28, 28, 30);
+        internal readonly static OxyColor SciChartBackgroungOxy = OxyColor.FromArgb(255, 28, 28, 30);
 
-        private readonly static OxyColor SciChartMajorGridLineOxy = OxyColor.FromArgb(255, 50, 53, 57);
+        internal readonly static OxyColor SciChartMajorGridLineOxy = OxyColor.FromArgb(255, 50, 53, 57);
 
-        private readonly static OxyColor SciChartMinorGridLineOxy = OxyColor.FromArgb(255, 35, 36, 38);
+        internal readonly static OxyColor SciChartMinorGridLineOxy = OxyColor.FromArgb(255, 35, 36, 38);
 
-        private readonly static OxyColor SciChartTextOxy = OxyColor.FromArgb(255, 166, 167, 172);
+        internal readonly static OxyColor SciChartTextOxy = OxyColor.FromArgb(255, 166, 167, 172);
 
-        //private readonly static OxyColor SciChartCandleStickIncreasingOxy = OxyColor.FromArgb(255, 82, 204, 84);
+        internal readonly static OxyColor SciChartCandleStickIncreasingOxy = OxyColor.FromArgb(255, 82, 204, 84);
 
-        //private readonly static OxyColor SciChartCandleStickDecreasingOxy = OxyColor.FromArgb(255, 226, 101, 101);
+        internal readonly static OxyColor SciChartCandleStickDecreasingOxy = OxyColor.FromArgb(255, 226, 101, 101);
 
-        //private readonly static OxyColor SciChartLegendTextOxy = OxyColor.FromArgb(255, 198, 230, 235);
+        internal readonly static OxyColor SciChartLegendTextOxy = OxyColor.FromArgb(255, 198, 230, 235);
         #endregion
 
         private readonly IMessenger _messenger;
@@ -48,10 +47,6 @@ namespace Panoptes.ViewModels.Charts
 
         private readonly Dictionary<string, PlotModel> _plotModelsDict = new Dictionary<string, PlotModel>();
 
-        private readonly Dictionary<string, List<DataPoint>> _rawDataPoint = new Dictionary<string, List<DataPoint>>();
-
-        TradeBarConsolidator _tradeBarConsolidator;
-
         public AsyncRelayCommand BarsAll { get; }
         public AsyncRelayCommand Bars1m { get; }
         public AsyncRelayCommand Bars5m { get; }
@@ -61,9 +56,6 @@ namespace Panoptes.ViewModels.Charts
         public OxyPlotSelectionViewModel()
         {
             Name = "Charts";
-            _tradeBarConsolidator = TradeBarConsolidator.FromResolution(Resolution.Hour);
-            _tradeBarConsolidator.DataConsolidated += _tradeBarConsolidator_DataConsolidated;
-
             BarsAll = new AsyncRelayCommand(DoBarsAll, CanDoBarsAll);
             Bars1m = new AsyncRelayCommand(DoBars1m, CanDoBars1m);
             Bars5m = new AsyncRelayCommand(DoBars5m, CanDoBars5min);
@@ -75,6 +67,7 @@ namespace Panoptes.ViewModels.Charts
         {
             return Task.Run(() =>
             {
+                Trace.WriteLine("OxyPlotSelectionViewModel: Start DoBarsAll...");
                 lock (SelectedSeries.SyncRoot)
                 {
                     foreach (var serie in SelectedSeries.Series)
@@ -86,6 +79,7 @@ namespace Panoptes.ViewModels.Charts
                     }
                 }
                 InvalidatePlotThreadUI();
+                Trace.WriteLine("OxyPlotSelectionViewModel: Done DoBarsAll.");
             }, cancelationToken);
         }
 
@@ -98,6 +92,7 @@ namespace Panoptes.ViewModels.Charts
         {
             return Task.Run(() =>
             {
+                Trace.WriteLine("OxyPlotSelectionViewModel: Start DoBars1m...");
                 lock (SelectedSeries.SyncRoot)
                 {
                     foreach (var serie in SelectedSeries.Series)
@@ -110,18 +105,29 @@ namespace Panoptes.ViewModels.Charts
                     }
                 }
                 InvalidatePlotThreadUI();
+                Trace.WriteLine("OxyPlotSelectionViewModel: Done DoBars1m.");
             }, cancelationToken);
         }
 
         public bool CanDoBars1m()
         {
-            return true;
+            if (SelectedSeries == null) return true;
+            foreach (var serie in SelectedSeries.Series)
+            {
+                if (serie is LineCandleStickSeries candleStickSeries && 
+                    candleStickSeries.CanDoTimeSpan(TimeSpan.FromMinutes(1)))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public Task DoBars5m(CancellationToken cancelationToken)
         {
             return Task.Run(() =>
             {
+                Trace.WriteLine("OxyPlotSelectionViewModel: Start DoBars5m...");
                 lock (SelectedSeries.SyncRoot)
                 {
                     foreach (var serie in SelectedSeries.Series)
@@ -134,18 +140,29 @@ namespace Panoptes.ViewModels.Charts
                     }
                 }
                 InvalidatePlotThreadUI();
+                Trace.WriteLine("OxyPlotSelectionViewModel: Done DoBars5m.");
             }, cancelationToken);
         }
 
         public bool CanDoBars5min()
         {
-            return true;
+            if (SelectedSeries == null) return true;
+            foreach (var serie in SelectedSeries.Series)
+            {
+                if (serie is LineCandleStickSeries candleStickSeries &&
+                    candleStickSeries.CanDoTimeSpan(TimeSpan.FromMinutes(5)))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public Task DoBars1h(CancellationToken cancelationToken)
         {
             return Task.Run(() =>
             {
+                Trace.WriteLine("OxyPlotSelectionViewModel: Start DoBars1h...");
                 lock (SelectedSeries.SyncRoot)
                 {
                     foreach (var serie in SelectedSeries.Series)
@@ -158,12 +175,22 @@ namespace Panoptes.ViewModels.Charts
                     }
                 }
                 InvalidatePlotThreadUI();
+                Trace.WriteLine("OxyPlotSelectionViewModel: Done DoBars1h.");
             }, cancelationToken);
         }
 
         public bool CanDoBars1h()
         {
-            return true;
+            if (SelectedSeries == null) return true;
+            foreach (var serie in SelectedSeries.Series)
+            {
+                if (serie is LineCandleStickSeries candleStickSeries &&
+                    candleStickSeries.CanDoTimeSpan(TimeSpan.FromHours(1)))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public Task DoBars1d(CancellationToken cancelationToken)
@@ -187,17 +214,16 @@ namespace Panoptes.ViewModels.Charts
 
         public bool CanDoBars1d()
         {
-            return true;
-        }
-
-        public Task DoBars()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void _tradeBarConsolidator_DataConsolidated(object sender, QuantConnect.Data.Market.TradeBar e)
-        {
-            
+            if (SelectedSeries == null) return true;
+            foreach (var serie in SelectedSeries.Series)
+            {
+                if (serie is LineCandleStickSeries candleStickSeries &&
+                    candleStickSeries.CanDoTimeSpan(TimeSpan.FromDays(1)))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public OxyPlotSelectionViewModel(IMessenger messenger) : this()
@@ -246,9 +272,7 @@ namespace Panoptes.ViewModels.Charts
             while (!_resultBgWorker.CancellationPending)
             {
                 var result = _resultsQueue.Take(); // Need cancelation token
-
                 if (result.Charts.Count == 0) continue;
-
                 ParseResult(result);
             }
         }
@@ -484,9 +508,37 @@ namespace Panoptes.ViewModels.Charts
             _resultBgWorker.ReportProgress(0, plot);
         }
 
+        private bool _canInvalidatePlot = true;
+        private readonly object _canInvalidatePlotLock = new object();
+        public bool CanInvalidatePlot
+        {
+            get
+            {
+                lock (_canInvalidatePlotLock)
+                {
+                    return _canInvalidatePlot;
+                }
+            }
+
+            set
+            {
+                lock (_canInvalidatePlotLock)
+                {
+                    _canInvalidatePlot = value;
+                }
+            }
+        }
+
+        private DateTime _lastInvalidatePlot = DateTime.MinValue;
+
         private void InvalidatePlotThreadUI()
         {
-            _resultBgWorker.ReportProgress(1);
+            var now = DateTime.UtcNow;
+            if ((now - _lastInvalidatePlot).TotalMilliseconds > 250 && CanInvalidatePlot)
+            {
+                _lastInvalidatePlot = now;
+                _resultBgWorker.ReportProgress(1);
+            }
         }
 
         private void Clear()

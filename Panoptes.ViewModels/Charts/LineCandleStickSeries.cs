@@ -19,7 +19,7 @@ namespace Panoptes.ViewModels.Charts
     /// </summary>
     /// <remarks>See also <a href="http://en.wikipedia.org/wiki/Candlestick_chart">Wikipedia</a> and
     /// <a href="http://www.mathworks.com/help/toolbox/finance/candle.html">Matlab documentation</a>.</remarks>
-    public class LineCandleStickSeries : HighLowSeries
+    public sealed class LineCandleStickSeries : HighLowSeries
     {
         private SerieTypes _serieTypes;
         private readonly object _lockSerieTypes;
@@ -62,6 +62,11 @@ namespace Panoptes.ViewModels.Charts
             UpdateCandles(Points, true);
         }
 
+        public bool CanDoTimeSpan(TimeSpan ts)
+        {
+            return Points.GroupBy(p => RoundDown(DateTimeAxis.ToDateTime(p.X), ts)).Any(g => g.Count() > 1);
+        }
+
         public OxyColor LineColor { get; set; }
 
         /// <summary>
@@ -98,7 +103,7 @@ namespace Panoptes.ViewModels.Charts
             SerieType = SerieTypes.Candles;
             MinimumSegmentLength = 2.0;
 
-            //Color = OxyColorsDark.SciChartMajorGridLineOxy;
+            Color = OxyPlotSelectionViewModel.SciChartMajorGridLineOxy;
             DataFieldX = "Time";
             DataFieldHigh = "High";
             DataFieldLow = "Low";
@@ -106,8 +111,8 @@ namespace Panoptes.ViewModels.Charts
             DataFieldClose = "Close";
             Title = "Candles";
 
-            this.IncreasingColor = OxyColors.Green; // OxyColorsDark.SciChartCandleStickIncreasingOxy;
-            this.DecreasingColor = OxyColors.Red; // OxyColorsDark.SciChartCandleStickDecreasingOxy;
+            this.IncreasingColor = OxyPlotSelectionViewModel.SciChartCandleStickIncreasingOxy;
+            this.DecreasingColor = OxyPlotSelectionViewModel.SciChartCandleStickDecreasingOxy;
             this.LineColor = OxyColors.White;
             this.CandleWidth = 0;
         }
@@ -242,6 +247,7 @@ namespace Panoptes.ViewModels.Charts
             }
 
             // Add new candles
+            // need to check if there's more than 1 datapoint in each group...
             var grp = newPoints.GroupBy(p => RoundDown(DateTimeAxis.ToDateTime(p.X), TimeSpan))
                 .Select(g => new HighLowItem(DateTimeAxis.ToDouble(g.Key),
                                        g.Max(p => p.Y),
@@ -406,7 +412,7 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The render context.</param>
         /// <param name="clippingRect">The clipping rectangle.</param>
         /// <param name="pointsToRender">The points to render.</param>
-        protected virtual void RenderLineAndMarkers(IRenderContext rc, OxyRect clippingRect, IList<ScreenPoint> pointsToRender)
+        private void RenderLineAndMarkers(IRenderContext rc, OxyRect clippingRect, IList<ScreenPoint> pointsToRender)
         {
             var screenPoints = pointsToRender;
             this.RenderLine(rc, clippingRect, screenPoints);
@@ -418,7 +424,7 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The render context.</param>
         /// <param name="clippingRect">The clipping rectangle.</param>
         /// <param name="pointsToRender">The points to render.</param>
-        protected virtual void RenderLine(IRenderContext rc, OxyRect clippingRect, IList<ScreenPoint> pointsToRender)
+        private void RenderLine(IRenderContext rc, OxyRect clippingRect, IList<ScreenPoint> pointsToRender)
         {
             var dashArray = LineStyle.Solid.GetDashArray(); // this.ActualDashArray;
             var outputBuffer = new List<ScreenPoint>(pointsToRender.Count);
@@ -635,7 +641,7 @@ namespace Panoptes.ViewModels.Charts
                 this.StrokeThickness);
         }
 
-        Tuple<ScreenPoint, TrackerHitResult> previousPoint;
+        private Tuple<ScreenPoint, TrackerHitResult> previousPoint;
 
         /// <summary>
         /// Gets the point on the series that is nearest the specified point.
@@ -682,7 +688,7 @@ namespace Panoptes.ViewModels.Charts
 
             var nidx = ((pidx + 1) < this.Items.Count) ? pidx + 1 : pidx;
 
-            Func<HighLowItem, double> distance = bar =>
+            double distance(HighLowItem bar)
             {
                 var dx = bar.X - xy.X;
                 var dyo = bar.Open - xy.Y;
@@ -696,7 +702,7 @@ namespace Panoptes.ViewModels.Charts
                 var d2C = (dx * dx) + (dyc * dyc);
 
                 return Math.Min(d2O, Math.Min(d2H, Math.Min(d2L, d2C)));
-            };
+            }
 
             // determine closest point
             var midx = distance(this.Items[pidx]) <= distance(this.Items[nidx]) ? pidx : nidx;
@@ -769,7 +775,7 @@ namespace Panoptes.ViewModels.Charts
             double minimumDistance = double.MaxValue;
 
             TrackerHitResult result = null;
-            Action<DataPoint, HighLowItem, int> check = (p, item, index) =>
+            void check(DataPoint p, HighLowItem item, int index)
             {
                 var sp = this.Transform(p);
                 double dx = sp.X - point.X;
@@ -785,7 +791,7 @@ namespace Panoptes.ViewModels.Charts
 
                     minimumDistance = d2;
                 }
-            };
+            }
             int i = 0;
             foreach (var item in this.Items.Where(x => x.X <= this.XAxis.ActualMaximum && x.X >= this.XAxis.ActualMinimum))
             {

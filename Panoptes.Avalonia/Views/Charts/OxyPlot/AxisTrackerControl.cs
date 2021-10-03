@@ -328,7 +328,9 @@ namespace Panoptes.Avalonia.Views.Charts
             Control parent = this;
             while (!(parent is Canvas) && parent != null)
             {
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 parent = parent.GetVisualParent() as Control;
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             }
 
             if (parent == null)
@@ -349,8 +351,7 @@ namespace Panoptes.Avalonia.Views.Charts
             var dx = ha == HorizontalAlignment.Center ? -0.5 : ha == HorizontalAlignment.Left ? 0 : -1;
             var dy = va == VerticalAlignment.Center ? -0.5 : va == VerticalAlignment.Top ? 0 : -1;
 
-            Thickness margin;
-            path.Data = ShowPointer ? CreatePointerBorderGeometry(ha, va, contentWidth, contentHeight, out margin)
+            path.Data = ShowPointer ? CreatePointerBorderGeometry(ha, va, contentWidth, contentHeight, out var margin)
                                     : CreateBorderGeometry(ha, va, contentWidth, contentHeight, out margin);
 
             content.Margin = margin;

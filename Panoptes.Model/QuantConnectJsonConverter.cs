@@ -33,7 +33,7 @@ namespace Panoptes.Model
     public class NullResultValueTypeJsonConverter<T> : JsonConverter
         where T : QuantConnect.Result
     {
-        private JsonSerializerSettings _settings;
+        private readonly JsonSerializerSettings _settings;
 
         /// <summary>
         /// Initialize a new instance of <see cref="NullResultValueTypeJsonConverter{T}"/>
@@ -139,12 +139,8 @@ namespace Panoptes.Model
             var token = JToken.ReadFrom(reader);
             // Takes the Type field and selects the correct OrderType instance
             var orderTypeValue = token["Type"].Value<string>();
-            int orderTypeNumber;
-            var orderType = Parse.TryParse(orderTypeValue, NumberStyles.Any, out orderTypeNumber) ?
-                orderTypeNumber :
-                (int)(OrderType)Enum.Parse(typeof(OrderType), orderTypeValue, true);
-
-            token["Type"] = orderType;
+            token["Type"] = Parse.TryParse(orderTypeValue, NumberStyles.Any, out int orderTypeNumber) ?
+                orderTypeNumber : (int)(OrderType)Enum.Parse(typeof(OrderType), orderTypeValue, true);
             return OrderJsonConverter.CreateOrderFromJObject((JObject)token);
         }
 
