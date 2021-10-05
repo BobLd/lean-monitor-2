@@ -443,7 +443,8 @@ namespace Panoptes.ViewModels.Charts
                                         LineColor = serie.Value.Color.ToOxyColor().Negative(),
                                         Tag = serie.Value.Name,
                                         Title = serie.Value.Name,
-                                        SerieType = PlotSerieTypes.Line
+                                        SerieType = PlotSerieTypes.Line,
+                                        Period = TimeSpan.FromMinutes(5)
                                     };
                                     plot.Series.Add(s);
                                     break;
