@@ -258,7 +258,7 @@ namespace Panoptes.ViewModels.Panels
                 {
                     if (result.Orders.Count == 0) continue;
                     // Update orders
-                    foreach (var order in OrdersToday)
+                    foreach (var order in OrdersToday) // TODO - collection was modified
                     {
                         if (result.Orders.ContainsKey(order.Id))
                         {

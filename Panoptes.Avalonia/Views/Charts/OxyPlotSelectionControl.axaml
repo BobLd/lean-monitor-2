@@ -6,7 +6,7 @@
 			 xmlns:charts="clr-namespace:Panoptes.Avalonia.Views.Charts"
 			 xmlns:oxy="http://oxyplot.org/avalonia"
              mc:Ignorable="d"
-			 d:DesignHeight="450" d:DesignWidth="800">
+			 d:DesignHeight="450" d:DesignWidth="600">
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
@@ -16,27 +16,38 @@
 		<StackPanel Margin="4" Orientation="Horizontal">
 			<Label Content="Series"></Label>
 			<ComboBox MinWidth="100" Items="{Binding PlotModels}" SelectedItem="{Binding SelectedSeries, Mode=TwoWay}" IsTextSearchEnabled="True"/>
-			<ToggleButton Padding="0">
+			<Label Width="10"/>
+			<ToggleButton Padding="0" IsThreeState="False" ClickMode="Release" IsChecked="{Binding IsCandlePlotChecked, Mode=OneWay}"
+						  Command="{Binding PlotCandles}" ToolTip.Tip="Candles chart">
 				<ToggleButton.Content>
-					<DrawingPresenter Drawing="{StaticResource TablerIcons.ChartCandle2}" ToolTip.Tip="Candles chart"/>
-				</ToggleButton.Content>
-			</ToggleButton>
-			<ToggleButton Padding="0">
-				<ToggleButton.Content>
-					<DrawingPresenter Drawing="{StaticResource TablerIcons.ChartDots}" ToolTip.Tip="Line chart"/>
+					<DrawingPresenter Drawing="{StaticResource TablerIcons.ChartCandle2}"/>
 				</ToggleButton.Content>
 			</ToggleButton>
 
-			<!--Careful here making the difference between aggregation period and displayed period (i.e. one year of data displayed)-->
-			<Button Content="All" Command="{Binding BarsAll}" ToolTip.Tip="All data points"/>
-			<Button Content="1m" Command="{Binding Bars1m}" ToolTip.Tip="1-minute"/>
-			<Button Content="5m" Command="{Binding Bars5m}" ToolTip.Tip="5-minute"/>
-			<Button Content="1h" Command="{Binding Bars1h}" ToolTip.Tip="1-hour"/>
-			<Button Content="1d" Command="{Binding Bars1d}" ToolTip.Tip="1-day"/>
+			<ToggleButton Padding="0" IsChecked="{Binding IsLinePlotChecked, Mode=OneWay}"
+						  Command="{Binding PlotLines}" ToolTip.Tip="Line chart">
+				<ToggleButton.Content>
+					<DrawingPresenter Drawing="{StaticResource TablerIcons.ChartDots}"/>
+				</ToggleButton.Content>
+			</ToggleButton>
+			<Label Width="10"/>
+			
+			<!--Careful here making the difference between aggregation period and displayed
+				period (i.e. one year of data displayed)-->
+			<ToggleButton Content="All" IsChecked="{Binding IsPlotAllChecked, Mode=OneWay}"
+						  Command="{Binding PlotAll}" ToolTip.Tip="All data points"/>
+			<ToggleButton Content="1m" IsChecked="{Binding IsPlot1mChecked, Mode=OneWay}"
+						  Command="{Binding Plot1m}" ToolTip.Tip="1-minute"/>
+			<ToggleButton Content="5m" IsChecked="{Binding IsPlot5mChecked, Mode=OneWay}"
+						  Command="{Binding Plot5m}" ToolTip.Tip="5-minute"/>
+			<ToggleButton Content="1h" IsChecked="{Binding IsPlot1hChecked, Mode=OneWay}"
+						  Command="{Binding Plot1h}" ToolTip.Tip="1-hour"/>
+			<ToggleButton Content="1d" IsChecked="{Binding IsPlot1dChecked, Mode=OneWay}"
+						  Command="{Binding Plot1d}" ToolTip.Tip="1-day"/>
 
-			<Button Content="1w" ToolTip.Tip="1-week"/>
-			<Button Content="1M" ToolTip.Tip="1-month"/>
-			<Button Content="1y" ToolTip.Tip="1-year"/>
+			<ToggleButton Content="1w" ToolTip.Tip="1-week"/>
+			<ToggleButton Content="1M" ToolTip.Tip="1-month"/>
+			<ToggleButton Content="1y" ToolTip.Tip="1-year"/>
 		</StackPanel>
 
 		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"

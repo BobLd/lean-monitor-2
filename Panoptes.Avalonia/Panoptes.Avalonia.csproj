@@ -9,7 +9,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="0.10.7" />
     <PackageReference Include="Avalonia.Diagnostics" Version="0.10.7" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
-    <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-20210506.4" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-20210915.2" />
    </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" />
@@ -24,5 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Views\Controls\" />
+    <Folder Include="Windows\" />
   </ItemGroup>
 </Project>

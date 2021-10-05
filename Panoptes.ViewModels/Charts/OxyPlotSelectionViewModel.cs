@@ -47,173 +47,216 @@ namespace Panoptes.ViewModels.Charts
 
         private readonly Dictionary<string, PlotModel> _plotModelsDict = new Dictionary<string, PlotModel>();
 
-        public AsyncRelayCommand BarsAll { get; }
-        public AsyncRelayCommand Bars1m { get; }
-        public AsyncRelayCommand Bars5m { get; }
-        public AsyncRelayCommand Bars1h { get; }
-        public AsyncRelayCommand Bars1d { get; }
+        public AsyncRelayCommand PlotAll { get; }
+        public AsyncRelayCommand Plot1m { get; }
+        public AsyncRelayCommand Plot5m { get; }
+        public AsyncRelayCommand Plot1h { get; }
+        public AsyncRelayCommand Plot1d { get; }
+
+        public AsyncRelayCommand PlotLines { get; }
+
+        public AsyncRelayCommand PlotCandles { get; }
+
+        private PlotSerieTypes _plotSerieTypes { get; set; }
+
+        public PlotSerieTypes PlotSerieTypes
+        {
+            get
+            {
+                return _plotSerieTypes;
+            }
+
+            set
+            {
+                if (_plotSerieTypes != value)
+                {
+                    _plotSerieTypes = value;
+                    OnPropertyChanged();
+                }
+
+                OnPropertyChanged(nameof(IsCandlePlotChecked));
+                OnPropertyChanged(nameof(IsLinePlotChecked));
+            }
+        }
+
+        private TimeSpan _period { get; set; }
+
+        public TimeSpan Period
+        {
+            get
+            {
+                return _period;
+            }
+
+            set
+            {
+                if (_period != value) // need to check if can do
+                {
+                    _period = value;
+                    OnPropertyChanged();
+                }
+
+                OnPropertyChanged(nameof(IsPlotAllChecked));
+                OnPropertyChanged(nameof(IsPlot1mChecked));
+                OnPropertyChanged(nameof(IsPlot5mChecked));
+                OnPropertyChanged(nameof(IsPlot1hChecked));
+                OnPropertyChanged(nameof(IsPlot1dChecked));
+            }
+        }
+
+        public bool IsLinePlotChecked => _plotSerieTypes == PlotSerieTypes.Line;
+        public bool IsCandlePlotChecked => _plotSerieTypes == PlotSerieTypes.Candles;
+
+        public bool IsPlotAllChecked => _period.Equals(TimeSpan.Zero);
+        public bool IsPlot1mChecked => _period.Equals(TimeSpan.FromMinutes(1));
+        public bool IsPlot5mChecked => _period.Equals(TimeSpan.FromMinutes(5));
+        public bool IsPlot1hChecked => _period.Equals(TimeSpan.FromHours(1));
+        public bool IsPlot1dChecked => _period.Equals(TimeSpan.FromDays(1));
 
         public OxyPlotSelectionViewModel()
         {
             Name = "Charts";
-            BarsAll = new AsyncRelayCommand(DoBarsAll, CanDoBarsAll);
-            Bars1m = new AsyncRelayCommand(DoBars1m, CanDoBars1m);
-            Bars5m = new AsyncRelayCommand(DoBars5m, CanDoBars5min);
-            Bars1h = new AsyncRelayCommand(DoBars1h, CanDoBars1h);
-            Bars1d = new AsyncRelayCommand(DoBars1d, CanDoBars1d);
+            PlotAll = new AsyncRelayCommand(ProcessPlotAll, CanDoBarsAll);
+            Plot1m = new AsyncRelayCommand(ProcessPlot1min, CanDoBars1m);
+            Plot5m = new AsyncRelayCommand(ProcessPlot5min, CanDoBars5min);
+            Plot1h = new AsyncRelayCommand(ProcessPlot1hour, CanDoBars1h);
+            Plot1d = new AsyncRelayCommand(ProcessPlot1day, CanDoBars1d);
+            PlotLines = new AsyncRelayCommand(ProcessPlotLines, () => true);
+            PlotCandles = new AsyncRelayCommand(ProcessPlotCandles, () => true);
         }
 
-        public Task DoBarsAll(CancellationToken cancelationToken)
+        private Task ProcessPlotLines(CancellationToken cancelationToken)
+        {
+            return SetAndProcessPlot(PlotSerieTypes.Line, Period, cancelationToken);
+        }
+
+        private Task ProcessPlotCandles(CancellationToken cancelationToken)
+        {
+            return SetAndProcessPlot(PlotSerieTypes.Candles, Period, cancelationToken);
+        }
+
+        private Task ProcessPlotAll(CancellationToken cancelationToken)
+        {
+            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.Zero, cancelationToken);
+        }
+
+        private Task ProcessPlot1min(CancellationToken cancelationToken)
+        {
+            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.FromMinutes(1), cancelationToken);
+        }
+
+        private Task ProcessPlot5min(CancellationToken cancelationToken)
+        {
+            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.FromMinutes(5), cancelationToken);
+        }
+
+        private Task ProcessPlot1hour(CancellationToken cancelationToken)
+        {
+            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.FromHours(1), cancelationToken);
+        }
+
+        private Task ProcessPlot1day(CancellationToken cancelationToken)
+        {
+            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.FromDays(1), cancelationToken);
+        }
+
+        private Task SetAndProcessPlot(PlotSerieTypes serieTypes, TimeSpan period, CancellationToken cancelationToken)
         {
             return Task.Run(() =>
             {
-                Trace.WriteLine("OxyPlotSelectionViewModel: Start DoBarsAll...");
+                Trace.WriteLine($"OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period})...");
+                if (PlotSerieTypes == PlotSerieTypes.Candles && serieTypes == PlotSerieTypes.Candles && period == TimeSpan.Zero)
+                {
+                    // Not a correct way to do that
+                    Trace.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Exit - Trying to set to 'All' while in Candle mode");
+                    Period = _period;
+                    return;
+                }
+
+                PlotSerieTypes = serieTypes;
+                if (serieTypes == PlotSerieTypes.Candles && period == TimeSpan.Zero)
+                {
+                    // Not a correct way to do that
+                    Trace.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Setting period to 1min bacause Candles");
+                    Period = TimeSpan.FromMinutes(1);
+                }
+                else
+                {
+                    Period = period;
+                }
+
                 lock (SelectedSeries.SyncRoot)
                 {
                     foreach (var serie in SelectedSeries.Series)
                     {
                         if (serie is LineCandleStickSeries candleStickSeries)
                         {
-                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Line;
+                            candleStickSeries.SerieType = PlotSerieTypes;
+                            candleStickSeries.SetPeriod(Period);
                         }
                     }
                 }
+
                 InvalidatePlotThreadUI();
-                Trace.WriteLine("OxyPlotSelectionViewModel: Done DoBarsAll.");
+                Trace.WriteLine($"OxyPlotSelectionViewModelSetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}).");
             }, cancelationToken);
         }
 
         public bool CanDoBarsAll()
         {
             return true;
-        }
-
-        public Task DoBars1m(CancellationToken cancelationToken)
-        {
-            return Task.Run(() =>
-            {
-                Trace.WriteLine("OxyPlotSelectionViewModel: Start DoBars1m...");
-                lock (SelectedSeries.SyncRoot)
-                {
-                    foreach (var serie in SelectedSeries.Series)
-                    {
-                        if (serie is LineCandleStickSeries candleStickSeries)
-                        {
-                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
-                            candleStickSeries.SetPeriod(TimeSpan.FromMinutes(1));
-                        }
-                    }
-                }
-                InvalidatePlotThreadUI();
-                Trace.WriteLine("OxyPlotSelectionViewModel: Done DoBars1m.");
-            }, cancelationToken);
+            //return PlotSerieTypes == PlotSerieTypes.Line;
         }
 
         public bool CanDoBars1m()
         {
-            if (SelectedSeries == null) return true;
-            foreach (var serie in SelectedSeries.Series)
-            {
-                if (serie is LineCandleStickSeries candleStickSeries && 
-                    candleStickSeries.CanDoTimeSpan(TimeSpan.FromMinutes(1)))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public Task DoBars5m(CancellationToken cancelationToken)
-        {
-            return Task.Run(() =>
-            {
-                Trace.WriteLine("OxyPlotSelectionViewModel: Start DoBars5m...");
-                lock (SelectedSeries.SyncRoot)
-                {
-                    foreach (var serie in SelectedSeries.Series)
-                    {
-                        if (serie is LineCandleStickSeries candleStickSeries)
-                        {
-                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
-                            candleStickSeries.SetPeriod(TimeSpan.FromMinutes(5));
-                        }
-                    }
-                }
-                InvalidatePlotThreadUI();
-                Trace.WriteLine("OxyPlotSelectionViewModel: Done DoBars5m.");
-            }, cancelationToken);
+            return true;
+            //if (SelectedSeries == null) return true;
+            //foreach (var serie in SelectedSeries.Series)
+            //{
+            //    if (serie is LineCandleStickSeries candleStickSeries &&
+            //        candleStickSeries.CanDoTimeSpan(TimeSpan.FromMinutes(1)))
+            //    {
+            //        return true;
+            //    }
+            //}
+            //return false;
         }
 
         public bool CanDoBars5min()
         {
-            if (SelectedSeries == null) return true;
-            foreach (var serie in SelectedSeries.Series)
-            {
-                if (serie is LineCandleStickSeries candleStickSeries &&
-                    candleStickSeries.CanDoTimeSpan(TimeSpan.FromMinutes(5)))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public Task DoBars1h(CancellationToken cancelationToken)
-        {
-            return Task.Run(() =>
-            {
-                Trace.WriteLine("OxyPlotSelectionViewModel: Start DoBars1h...");
-                lock (SelectedSeries.SyncRoot)
-                {
-                    foreach (var serie in SelectedSeries.Series)
-                    {
-                        if (serie is LineCandleStickSeries candleStickSeries)
-                        {
-                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
-                            candleStickSeries.SetPeriod(TimeSpan.FromHours(1));
-                        }
-                    }
-                }
-                InvalidatePlotThreadUI();
-                Trace.WriteLine("OxyPlotSelectionViewModel: Done DoBars1h.");
-            }, cancelationToken);
+            return true;
+            //if (SelectedSeries == null) return true;
+            //foreach (var serie in SelectedSeries.Series)
+            //{
+            //    if (serie is LineCandleStickSeries candleStickSeries &&
+            //        candleStickSeries.CanDoTimeSpan(TimeSpan.FromMinutes(5)))
+            //    {
+            //        return true;
+            //    }
+            //}
+            //return false;
         }
 
         public bool CanDoBars1h()
         {
-            if (SelectedSeries == null) return true;
-            foreach (var serie in SelectedSeries.Series)
-            {
-                if (serie is LineCandleStickSeries candleStickSeries &&
-                    candleStickSeries.CanDoTimeSpan(TimeSpan.FromHours(1)))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public Task DoBars1d(CancellationToken cancelationToken)
-        {
-            return Task.Run(() =>
-            {
-                lock (SelectedSeries.SyncRoot)
-                {
-                    foreach (var serie in SelectedSeries.Series)
-                    {
-                        if (serie is LineCandleStickSeries candleStickSeries)
-                        {
-                            candleStickSeries.SerieType = LineCandleStickSeries.SerieTypes.Candles;
-                            candleStickSeries.SetPeriod(TimeSpan.FromDays(1));
-                        }
-                    }
-                }
-                InvalidatePlotThreadUI();
-            }, cancelationToken);
+            return true;
+            //if (SelectedSeries == null) return true;
+            //foreach (var serie in SelectedSeries.Series)
+            //{
+            //    if (serie is LineCandleStickSeries candleStickSeries &&
+            //        candleStickSeries.CanDoTimeSpan(TimeSpan.FromHours(1)))
+            //    {
+            //        return true;
+            //    }
+            //}
+            //return false;
         }
 
         public bool CanDoBars1d()
         {
+            return true;
+            /*
             if (SelectedSeries == null) return true;
             foreach (var serie in SelectedSeries.Series)
             {
@@ -224,12 +267,12 @@ namespace Panoptes.ViewModels.Charts
                 }
             }
             return false;
+            */
         }
 
         public OxyPlotSelectionViewModel(IMessenger messenger) : this()
         {
             _messenger = messenger;
-
             _messenger.Register<OxyPlotSelectionViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 if (m.ResultContext.Result.Charts.Count == 0) return;
@@ -244,14 +287,14 @@ namespace Panoptes.ViewModels.Charts
                 switch (e.ProgressPercentage)
                 {
                     case 0:
-                        lock (PlotModels)
+                        //lock (PlotModels)
+                        //{
+                        PlotModels.Add((PlotModel)e.UserState);
+                        if (PlotModels.Count == 1)
                         {
-                            PlotModels.Add((PlotModel)e.UserState);
-                            if (PlotModels.Count == 1)
-                            {
-                                SelectedSeries = PlotModels.FirstOrDefault();
-                            }
+                            SelectedSeries = PlotModels.FirstOrDefault();
                         }
+                        //}
                         break;
 
                     case 1:
@@ -259,7 +302,7 @@ namespace Panoptes.ViewModels.Charts
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(e), "Unknown 'ProgressPercentage' passed.");
+                        throw new ArgumentOutOfRangeException(nameof(e), $"Unknown 'ProgressPercentage' value passed '{e.ProgressPercentage}'.");
                 }
             };
 
@@ -295,6 +338,8 @@ namespace Panoptes.ViewModels.Charts
             set
             {
                 _selectedSeries = value;
+                // Need to update toggle buttons for candles/lines, period selected
+                // or deactivate them
                 OnPropertyChanged();
             }
         }
@@ -317,12 +362,7 @@ namespace Panoptes.ViewModels.Charts
         {
             foreach (var chart in result.Charts.OrderBy(x => x.Key))
             {
-                PlotModel plot;
-                if (_plotModelsDict.ContainsKey(chart.Key))
-                {
-                    plot = _plotModelsDict[chart.Key];
-                }
-                else
+                if (!_plotModelsDict.TryGetValue(chart.Key, out var plot))
                 {
                     // Create Plot
                     plot = new PlotModel()
@@ -386,13 +426,24 @@ namespace Panoptes.ViewModels.Charts
                             {
                                 // Handle candle and line series the same way, choice is done in UI
                                 case SeriesType.Candle:
+                                    s = new LineCandleStickSeries()
+                                    {
+                                        LineColor = serie.Value.Color.ToOxyColor().Negative(),
+                                        Tag = serie.Value.Name,
+                                        Title = serie.Value.Name,
+                                        SerieType = PlotSerieTypes.Candles,
+                                        Period = TimeSpan.FromMinutes(5)
+                                    };
+                                    plot.Series.Add(s);
+                                    break;
+
                                 case SeriesType.Line:
                                     s = new LineCandleStickSeries()
                                     {
                                         LineColor = serie.Value.Color.ToOxyColor().Negative(),
                                         Tag = serie.Value.Name,
                                         Title = serie.Value.Name,
-                                        SerieType = LineCandleStickSeries.SerieTypes.Line
+                                        SerieType = PlotSerieTypes.Line
                                     };
                                     plot.Series.Add(s);
                                     break;
@@ -533,12 +584,14 @@ namespace Panoptes.ViewModels.Charts
 
         private void InvalidatePlotThreadUI()
         {
-            var now = DateTime.UtcNow;
-            if ((now - _lastInvalidatePlot).TotalMilliseconds > 250 && CanInvalidatePlot)
-            {
-                _lastInvalidatePlot = now;
-                _resultBgWorker.ReportProgress(1);
-            }
+            _resultBgWorker.ReportProgress(1);
+
+            //var now = DateTime.UtcNow;
+            //if ((now - _lastInvalidatePlot).TotalMilliseconds > 250 && CanInvalidatePlot)
+            //{
+            //    _lastInvalidatePlot = now;
+            //    _resultBgWorker.ReportProgress(1);
+            //}
         }
 
         private void Clear()

@@ -167,14 +167,6 @@ namespace Panoptes.Avalonia.Views.Charts
                             var extraTracker = def.TrackerTemplate.Build(new ContentControl()).Control;
                             extraTracker.DataContext = result;
 
-                            /*
-                            var extraTracker = new ContentControl
-                            {
-                                Template = def.TrackerTemplate,
-                                DataContext = result,
-                            };
-                            */
-
                             if (!ReferenceEquals(extraTracker, currentExtraTracker))
                             {
                                 canvas.Children.Remove(currentExtraTracker);
@@ -191,7 +183,7 @@ namespace Panoptes.Avalonia.Views.Charts
         /// <summary>
         /// Occurs when an input device begins a manipulation on the plot.
         /// </summary>
-        /// <param name="e">The <see cref="OxyPlot.OxyMouseEventArgs" /> instance containing the event data.</param>
+        /// <param name="e">The <see cref="OxyMouseEventArgs" /> instance containing the event data.</param>
         public override void Started(OxyMouseEventArgs e)
         {
             base.Started(e);
