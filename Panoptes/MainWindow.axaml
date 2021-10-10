@@ -1,0 +1,115 @@
+<Window x:Class="Panoptes.MainWindow"
+		xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:oxy="http://oxyplot.org/avalonia"
+		xmlns:sessions="clr-namespace:Panoptes.Model.Sessions;assembly=Panoptes.Model"
+		xmlns:charts1="clr-namespace:Panoptes.Views.Charts"
+		xmlns:panels="clr-namespace:Panoptes.Views.Panels"
+		xmlns:panels1="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
+		xmlns:viewModel="clr-namespace:Panoptes.ViewModels"
+		xmlns:qc="clr-namespace:QuantConnect;assembly=QuantConnect.Common"
+		DataContext="{Binding MainWindow, Source={StaticResource Locator}}"
+		Opened="OnOpened"
+		Closed="OnClosed"
+		Closing="OnClosing"
+		WindowStartupLocation="CenterOwner"
+		Title="Panoptes - LEAN Algorithm Monitor"
+		mc:Ignorable="d"
+		d:DesignWidth="800" d:DesignHeight="450">
+	
+	<Window.Styles>
+		<Style Selector="DockPanel.statusBarColored">
+			<Setter Property="Background" Value="{Binding Path=AlgorithmStatus, Mode=OneWay, Converter={StaticResource StatusBarColorConverter}}"/>
+		</Style>
+	</Window.Styles>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="24"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<Menu Grid.Row="0">
+			<MenuItem Header="_File">
+				<MenuItem Header="_Open..." Command="{Binding OpenSessionCommand}" HotKey="Ctrl+O"/>
+				<Separator/>
+				<MenuItem Header="_Close" Command="{Binding CloseCommand}"/>
+				<Separator/>
+				<MenuItem Header="_Export..." Command="{Binding ExportCommand}"/>
+				<Separator/>
+				<MenuItem Header="E_xit" Command="{Binding ExitCommand}" HotKey="Alt+F4"/>
+			</MenuItem>
+			<!--
+			<MenuItem Header="_View">
+				<MenuItem Header="_Statistics" IsChecked="{Binding StatisticsPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+				<MenuItem Header="_Runtime Statistics" IsChecked="{Binding RuntimeStatisticsPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+				<Separator/>
+				<MenuItem Header="_Profit &amp; Loss" IsChecked="{Binding ProfitLossPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+				<MenuItem Header="_Trades" IsChecked="{Binding TradesPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+				<Separator/>
+				<MenuItem Header="_Log" IsChecked="{Binding LogPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+			</MenuItem>
+			-->
+			<MenuItem Header="_Session" IsEnabled="{Binding IsSessionActive}">
+				<MenuItem Header="_Connect" Command="{Binding ConnectCommand}"/>
+				<MenuItem Header="_Disconnect" Command="{Binding DisconnectCommand}"/>
+			</MenuItem>
+			<!--
+            <MenuItem Header="_Window">
+                <MenuItem Header="_Save Window Layout" Command="{Binding SaveLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+                <MenuItem Header="Revert Window Layout" Command="{Binding RestoreLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+                <MenuItem Header="_Reset Window Layout" Command="{Binding ResetLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+            </MenuItem>
+            -->
+			<MenuItem Header="_Help">
+				<MenuItem Header="_Charting documentation..." Click="BrowseChartingDocumentationMenuItem_OnClick"/>
+				<Separator/>
+				<MenuItem Header="_Monitor GitHub project..." Click="BrowseMonitorGithubMenuItem_OnClick"/>
+				<MenuItem Header="_LEAN Engine GitHub project..." Click="BrowseLeanGithubMenuItem_OnClick"/>
+				<Separator/>
+				<MenuItem Header="_About..." Click="ShowAboutButton_OnClick"/>
+			</MenuItem>
+		</Menu>
+
+		<Grid Grid.Row="1">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="149*"/>
+				<RowDefinition Height="113*"/>
+				<RowDefinition Height="123*"/>
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="184*"/>
+				<ColumnDefinition Width="279*"/>
+				<ColumnDefinition Width="337*"/>
+			</Grid.ColumnDefinitions>
+
+			<panels:RuntimeStatisticsPanelControl DataContext="{Binding RuntimeStatisticsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+			<panels:TradesPanelControl DataContext="{Binding TradesPane}" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+			<!--
+			<panels:StatisticsPanelControl DataContext="{Binding StatisticsPane}" Grid.Row="1" HorizontalAlignment="Stretch" Height="Auto" VerticalAlignment="Stretch" Width="Auto"/>
+			-->
+			<panels:ProfitLossPanelControl DataContext="{Binding ProfitLossPane}" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+			<panels:LogPanelControl DataContext="{Binding LogPane}" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+			<charts1:OxyPlotSelectionControl DataContext="{Binding OxyPlotSelectionPane}" Grid.ColumnSpan="2" Grid.Column="1" />
+
+		</Grid>
+		<!--StatusBar-->
+		<Border BorderThickness="{StaticResource ThemeBorderThickness}" BorderBrush="{StaticResource ThemeBorderLowBrush}" Grid.Row="2" Margin="0,3,0,0">
+			<DockPanel DataContext="{Binding StatusViewModel}" Grid.Row="2" Height="22" HorizontalAlignment="Stretch" Classes="statusBarColored">
+				<StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10" VerticalAlignment="Stretch">
+					<TextBlock Text="{Binding ProjectName}" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding SessionName}" VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding AlgorithmStatus}" VerticalAlignment="Center" Width="100"/>
+				</StackPanel>
+				<ProgressBar DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Stretch" Opacity="0.5" BorderThickness="0" MinWidth="50" Width="120"
+							 Margin="0" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}"/>
+			</DockPanel>
+		</Border>
+	</Grid>
+</Window>

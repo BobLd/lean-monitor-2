@@ -1,0 +1,279 @@
+<Window x:Class="Panoptes.Views.Windows.TradeInfoWindow"
+		xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:local="clr-namespace:Panoptes"
+		xmlns:model="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
+        mc:Ignorable="d"
+		d:DesignWidth="800" d:DesignHeight="450"        
+        Title="{Binding Id}"
+		Height="450" Width="900" MinHeight="350" MinWidth="850"
+		SizeToContent="WidthAndHeight">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="Auto"/>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<!-- Left -->
+		<Border Grid.Row="0" Grid.Column="0" Margin="1" Padding="1" CornerRadius="3" BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+			<!--Header="Symbol Data"-->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<Label Content="ID" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Symbol.ID, Mode=OneWay}" Grid.Row="0" Grid.Column="1" IsReadOnly="True" VerticalAlignment="Center"/>
+
+				<Label Content="Value" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Symbol.Value, Mode=OneWay}" Grid.Row="0" Grid.Column="3" IsReadOnly="True" VerticalAlignment="Center" />
+
+
+				<Label Content="SecurityType" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Symbol.SecurityType, Mode=OneWay}" Grid.Row="1" Grid.Column="1" IsReadOnly="True" VerticalAlignment="Center"/>
+
+				<Label Content="Canonical" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
+				<TextBox Text="TODO" IsReadOnly="True" Grid.Row="1" Grid.Column="3" VerticalAlignment="Center"/>
+
+
+				<Label Content="Underlying" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Symbol.Underlying, Mode=OneWay}" Grid.Row="2" Grid.Column="1" IsReadOnly="True" VerticalAlignment="Center"/>
+
+				<Label Content="Currency" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding PriceCurrency, Mode=OneWay}" Grid.Row="2" Grid.Column="3" IsReadOnly="True" VerticalAlignment="Center"/>
+			</Grid>
+		</Border>
+
+		<Border Grid.Column="0" Grid.Row="1" Margin="1" Padding="1" CornerRadius="3" BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+			<!--Header="Details"-->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<Label Content="Id" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Id, Mode=OneWay}" IsReadOnly="True" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+				<Label Content="Created" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding CreatedTime, Mode=OneWay}" IsReadOnly="True" Grid.Row="0" Grid.Column="3" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+
+				<Label Content="Type" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Type, Mode=OneWay}" IsReadOnly="True" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+				<Label Content="Direction" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Direction, Mode=OneWay}" IsReadOnly="True" Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+
+				<Label Content="Time in Force" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding TimeInForce, Mode=OneWay}" IsReadOnly="True" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+				<Label Content="Marketable" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" ToolTip.Tip="True if market order or limit order with:&#x0a;- Buy and Limit price &gt;= Ask price or &#x0a;- Sell and Limit price &lt;= Bid price"/>
+				<TextBox Text="{Binding IsMarketable, Mode=OneWay}" IsReadOnly="True" Grid.Row="2" Grid.Column="3" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+
+				<Label Content="Quantity" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Quantity, Mode=OneWay}" IsReadOnly="True" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+				<Label Content="Exchange" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Properties.Exchange, Mode=OneWay}" IsReadOnly="True" Grid.Row="4" Grid.Column="3" VerticalAlignment="Center" CaretBrush="Transparent"/>
+			</Grid>
+		</Border>
+
+		<Border Grid.Column="0" Grid.Row="2" Margin="1" Padding="1" CornerRadius="3" BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+			<!--Header="Fills"-->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+				</Grid.ColumnDefinitions>
+
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<Label Content="Status" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Status, Mode=OneWay}" IsReadOnly="True" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+				<Label Content="Last Fill" Grid.Column="2" Grid.Row="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding LastFillTime, Mode=OneWay}" IsReadOnly="True" Grid.Column="3" Grid.Row="0" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+
+				<Label Content="Filled" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding FilledQuantity, Mode=OneWay}" IsReadOnly="True" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+				<Label Content="Open" Grid.Column="2" Grid.Row="1" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding OpenQuantity, Mode=OneWay}" IsReadOnly="True" Grid.Column="3" Grid.Row="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+
+				<Label Content="Price" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Price, Mode=OneWay}" IsReadOnly="True" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+				<Label Content="Value" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Value, Mode=OneWay}" IsReadOnly="True" Grid.Row="2" Grid.Column="3" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+
+				<Label Content="Fees" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding Fees, Mode=OneWay}" IsReadOnly="True" Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+				<Label Content="Fees Ccy" Grid.Column="2" Grid.Row="3" VerticalAlignment="Center"/>
+				<TextBox Text="{Binding FeesCurrency, Mode=OneWay}" IsReadOnly="True" Grid.Column="3" Grid.Row="3" VerticalAlignment="Center" CaretBrush="Transparent"/>
+			</Grid>
+		</Border>
+
+		<!-- Right -->
+		<Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="3">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+
+			<Border Grid.Column="0" Margin="1" Padding="1" CornerRadius="3" BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+				<!--Header="Submission Data"-->
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+
+					<Label Content="Bid" Grid.Column="0" Grid.Row="0" VerticalAlignment="Center"/>
+					<TextBox Text="{Binding BidPrice, Mode=OneWay}" IsReadOnly="True" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+					<Label Content="Ask" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center"/>
+					<TextBox Text="{Binding AskPrice, Mode=OneWay}" IsReadOnly="True" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+					<Label Content="Last" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center"/>
+					<TextBox Text="{Binding LastPrice, Mode=OneWay}" IsReadOnly="True" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" CaretBrush="Transparent"/>
+
+					<Label Content="Change %" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center"/>
+					<TextBox Text="{Binding PriceChangePcg, Mode=OneWay, StringFormat='{}{0:0.#%}'}" IsReadOnly="True"
+							 Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" CaretBrush="Transparent"/>
+				</Grid>
+			</Border>
+
+			<Border Grid.Column="1" Margin="1" Padding="1" CornerRadius="3" BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+				<!--Header="{Binding Type, Mode=OneWay}"-->
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="21.647"/>
+						<ColumnDefinition Width="16.787"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+
+					<Label Content="TODO" Grid.Column="0" VerticalAlignment="Center"/>
+					<TextBox Text="" IsReadOnly="True" VerticalAlignment="Center" Grid.ColumnSpan="3" Margin="71,0,0,0"/>
+
+					<Label Content="TODO" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center"/>
+					<TextBox Text="" IsReadOnly="True" Grid.Row="1" VerticalAlignment="Center" Grid.ColumnSpan="3" Margin="71,0,0,0"/>
+
+					<Label Content="TODO" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center"/>
+					<TextBox Text="" IsReadOnly="True" Grid.Row="2" VerticalAlignment="Center" Grid.ColumnSpan="3" Margin="71,0,0,0"/>
+
+					<Label Content="TODO" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center"/>
+					<TextBox Text="" IsReadOnly="True" Grid.Row="3" VerticalAlignment="Center" Grid.ColumnSpan="3" Margin="71,0,0,0"/>
+
+				</Grid>
+			</Border>
+
+			<Border Grid.Column="2" Margin="1" Padding="1" CornerRadius="3" BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+				<!--Header="Broker ID"-->
+				<DataGrid Items="{Binding BrokerId}" IsReadOnly="True" AutoGenerateColumns="False" HeadersVisibility="None"
+						  AlternatingRowBackground="Transparent" RowBackground="Transparent">
+					<DataGrid.Columns>
+						<!--<DataGridTextColumn Header="ID" Binding="{Binding, Mode=OneWay}"/>-->
+						<DataGridTemplateColumn Header="ID">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding, Mode=OneWay}" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis"/>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+					</DataGrid.Columns>
+				</DataGrid>
+			</Border>
+
+			<Border Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="1" Padding="1" CornerRadius="3" BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+				<!--Header="Tag"-->
+				<TextBox Text="{Binding Tag, Mode=OneWay}" IsReadOnly="True" CaretBrush="Transparent"/>
+			</Border>
+		</Grid>
+
+		<Border Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2">
+			<!--Header="Events"-->
+			<DataGrid Items="{Binding Events}" IsReadOnly="True" AutoGenerateColumns="False" CanUserResizeColumns="True"
+					  AlternatingRowBackground="Transparent" RowBackground="Transparent">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}"/>
+					<DataGridTextColumn Header="Time (UTC)" Binding="{Binding UtcTime, Mode=OneWay}"/>
+					<DataGridTextColumn Header="Status" Binding="{Binding Status, Mode=OneWay}"/>
+					<DataGridTextColumn Header="Fee" Binding="{Binding OrderFee.Value.Amount, Mode=OneWay}"/>
+					<DataGridTextColumn Header="Fee Ccy" Binding="{Binding OrderFee.Value.Currency, Mode=OneWay}"/>
+					<DataGridTextColumn Header="FillPrice" Binding="{Binding FillPrice, Mode=OneWay}"/>
+					<DataGridTextColumn Header="FillPriceCurrency" Binding="{Binding FillPriceCurrency, Mode=OneWay}"/>
+					<DataGridTextColumn Header="FillQuantity" Binding="{Binding FillQuantity, Mode=OneWay}"/>
+					<DataGridCheckBoxColumn Header="IsAssignment" Binding="{Binding IsAssignment, Mode=OneWay}"/>
+					<DataGridTemplateColumn Header="Message" SortMemberPath="Message" MaxWidth="300">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding Message, Mode=OneWay}" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis"/>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+					<DataGridTextColumn Header="LimitPrice" Binding="{Binding LimitPrice, Mode=OneWay}" />
+					<DataGridTextColumn Header="StopPrice" Binding="{Binding StopPrice, Mode=OneWay}" />
+					<DataGridTextColumn Header="TriggerPrice" Binding="{Binding TriggerPrice, Mode=OneWay}" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</Border>
+	</Grid>
+</Window>
