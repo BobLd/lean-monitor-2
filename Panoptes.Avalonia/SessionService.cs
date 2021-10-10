@@ -38,25 +38,59 @@ namespace Panoptes.Avalonia
             _resultConverter = resultConverter;
             _resultSerializer = resultSerializer;
             _resultMutator = resultMutator;
-            _timer = new Timer(OnMinute, null,
-                TimeSpan.FromSeconds(GetTimeToNextMinute() + TimeSpan.FromMilliseconds(1).TotalSeconds),
-                TimeSpan.FromMinutes(1));
+
+            // Need to check if it's a live session, or put it in Open(ISessionParameters parameters)
+            // At a later stage, timer should be done on server side
+            bool isLive = true;
+            if (isLive)
+            {
+                _timer = new Timer(OnMinute, null,
+                    TimeSpan.FromSeconds(Times.GetSecondsToNextMinute() + Times.OneMillisecond.TotalSeconds),
+                    Times.OneMinute);
+            }
         }
 
         private void OnMinute(object? state)
         {
-            Trace.WriteLine($"SessionService: New minute @ {DateTime.Now:O}");
-            if (DateTime.UtcNow.TimeOfDay.TotalSeconds < 60)
-            {
-                _messenger.Send(new TimerMessage(state));
-            }
-        }
+#if DEBUG
+            Trace.WriteLine($"GC.GetTotalMemory={GC.GetTotalMemory(false) / 1048576:0.0}MB");
+#endif
 
-        private static double GetTimeToNextMinute()
-        {
-            var timeOfDay = DateTime.Now.TimeOfDay;
-            var nextFullMinute = TimeSpan.FromMinutes(Math.Ceiling(timeOfDay.TotalMinutes));
-            return (nextFullMinute - timeOfDay).TotalSeconds;
+            var utcNow = DateTime.UtcNow;
+
+            // Check if new day
+            if (utcNow.TimeOfDay.TotalSeconds < 60)
+            {
+                // New year
+                if (utcNow.DayOfYear == 1)
+                {
+                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewYear));
+                }
+
+                // New month
+                if (utcNow.Day == 1)
+                {
+                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewMonth));
+                }
+
+                // New week
+                if (utcNow.DayOfWeek == DayOfWeek.Monday)
+                {
+                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewWeek));
+                }
+
+                // New day
+                _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewDay));
+            }
+
+            // New hour
+            if (utcNow.TimeOfDay.TotalHours % utcNow.TimeOfDay.Hours < Times.OneMinute.TotalHours)
+            {
+                _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewHour));
+            }
+
+            // New minute
+            _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewMinute));
         }
 
         public void HandleResult(ResultContext resultContext)
@@ -178,18 +212,18 @@ namespace Panoptes.Avalonia
         {
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
+            if (_session != null)
+            {
+                // Another session is open.
+                // Close the session first before opening this new one
+                ShutdownSession();
+            }
+
             if (parameters is MongoSessionParameters mongoParameters)
             {
                 if (string.IsNullOrWhiteSpace(mongoParameters.Host))
                 {
                     throw new ArgumentException("Host is required", nameof(parameters));
-                }
-
-                if (_session != null)
-                {
-                    // Another session is open.
-                    // Close the session first before opening this new one
-                    ShutdownSession();
                 }
 
                 // Open a new session and open it
@@ -201,13 +235,6 @@ namespace Panoptes.Avalonia
                 if (string.IsNullOrWhiteSpace(streamParameters.Host))
                 {
                     throw new ArgumentException("Host is required", nameof(parameters));
-                }
-
-                if (_session != null)
-                {
-                    // Another session is open.
-                    // Close the session first before opening this new one
-                    ShutdownSession();
                 }
 
                 // Open a new session and open it

@@ -13,6 +13,8 @@ namespace Panoptes.Model.Sessions.Stream
            : base(sessionHandler, resultConverter, parameters)
         { }
 
+        private readonly TimeSpan timeOut = TimeSpan.FromMilliseconds(500);
+
         protected override void EventsListener(object sender, DoWorkEventArgs e)
         {
             try
@@ -22,7 +24,7 @@ namespace Panoptes.Model.Sessions.Stream
                     while (!_eternalQueueListener.CancellationPending)
                     {
                         var message = new NetMQMessage();
-                        if (!pullSocket.TryReceiveMultipartMessage(TimeSpan.FromMilliseconds(500), ref message))
+                        if (!pullSocket.TryReceiveMultipartMessage(timeOut, ref message))
                         {
                             continue;
                         }

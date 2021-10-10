@@ -15,7 +15,7 @@ namespace Panoptes.ViewModels.Panels
 {
     public sealed class TradesPanelViewModel : ToolPaneViewModel
     {
-        private enum ActionsThreadUI
+        private enum ActionsThreadUI : byte
         {
             /// <summary>
             /// Finish the order update.
@@ -198,7 +198,7 @@ namespace Panoptes.ViewModels.Panels
 
             _messenger.Register<TradesPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
-            _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, _) => r.ProcessNewDay());
+            _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m.Value));
 
             _messenger.Register<TradesPanelViewModel, FilterMessage>(this, async (r, _) => await r.ApplyFiltersHistoryOrders().ConfigureAwait(false));
 
@@ -206,25 +206,31 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {
+                if (e.UserState is not OrderViewModel ovm)
+                {
+                    throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                }
+
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
                     case ActionsThreadUI.OrderFinishUpdate:
-                        ((OrderViewModel)e.UserState).FinishUpdateInThreadUI();
+                        ovm.FinishUpdateInThreadUI();
                         break;
 
                     case ActionsThreadUI.OrderFinishUpdateAddAll:
-                        var ovm = (OrderViewModel)e.UserState;
                         ovm.FinishUpdateInThreadUI();
+
+                        // Could optimise the below, check don't need to be done in UI thread
                         AddOrderToToday(ovm);
                         AddOrderToHistory(ovm);
                         break;
 
                     case ActionsThreadUI.OrderRemoveHistory:
-                        _ordersHistory.Remove((OrderViewModel)e.UserState);
+                        _ordersHistory.Remove(ovm);
                         break;
 
                     case ActionsThreadUI.OrderAddHistory:
-                        _ordersHistory.Add((OrderViewModel)e.UserState);
+                        _ordersHistory.Add(ovm);
                         break;
 
                     default:
@@ -236,9 +242,20 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.RunWorkerAsync();
         }
 
-        private void ProcessNewDay()
+        private void ProcessNewDay(TimerMessage.TimerEventType timerEventType)
         {
-            Trace.WriteLine($"TradesPanelViewModel: New day @ {DateTime.Now:O}");
+            switch (timerEventType)
+            {
+                case TimerMessage.TimerEventType.NewDay:
+                    // TODO
+                    // - Clear 'Today' order (now yesterday's one)
+                    Trace.WriteLine($"TradesPanelViewModel: NewDay @ {DateTime.Now:O}");
+                    break;
+
+                default:
+                    Trace.WriteLine($"TradesPanelViewModel: {timerEventType} @ {DateTime.Now:O}");
+                    break;
+            }
         }
 
         private void Clear()
@@ -257,8 +274,9 @@ namespace Panoptes.ViewModels.Panels
                 if (qe.Element is Result result) // Process Order
                 {
                     if (result.Orders.Count == 0) continue;
+
                     // Update orders
-                    foreach (var order in OrdersToday) // TODO - collection was modified
+                    foreach (var order in _ordersDic.Values) //OrdersToday) // TODO - collection was modified
                     {
                         if (result.Orders.ContainsKey(order.Id))
                         {

@@ -415,11 +415,40 @@ namespace Panoptes.Avalonia.Views.Charts
         {
             var m = Distance;
             var rect = new Rect(ha == HorizontalAlignment.Left ? m : 0, va == VerticalAlignment.Top ? m : 0, width, height);
+
+            double left = 0;
+            double top = 0;
+            double right = 0;
+            double bottom = 0;
+
+            if (ha == HorizontalAlignment.Left)
+            {
+                left = m;
+            }
+            else
+            {
+                right = m;
+            }
+
+            if (va == VerticalAlignment.Top)
+            {
+                top = m;
+            }
+            else
+            {
+                bottom = m;
+            }
+
+            margin = new Thickness(left, top, right, bottom);
+
+            /*
             margin = new Thickness(
                 ha == HorizontalAlignment.Left ? m : 0,
                 va == VerticalAlignment.Top ? m : 0,
                 ha == HorizontalAlignment.Right ? m : 0,
                 va == VerticalAlignment.Bottom ? m : 0);
+            */
+
             return new RectangleGeometry(rect);
         }
 

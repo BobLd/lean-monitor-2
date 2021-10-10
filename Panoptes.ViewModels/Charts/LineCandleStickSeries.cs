@@ -1,6 +1,6 @@
 ﻿using OxyPlot;
-using OxyPlot.Axes;
 using OxyPlot.Series;
+using Panoptes.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,7 +80,7 @@ namespace Panoptes.ViewModels.Charts
 
             if (span < ts.TotalDays) return false;
 
-            return points.GroupBy(p => RoundDownDouble(p.X, ts)).Any(g => g.Count() > 1);
+            return points.GroupBy(p => Times.OxyplotRoundDown(p.X, ts)).Any(g => g.Count() > 1);
         }
 
         public OxyColor LineColor { get; set; }
@@ -127,10 +127,10 @@ namespace Panoptes.ViewModels.Charts
             DataFieldClose = "Close";
             Title = "Candles";
 
-            this.IncreasingColor = OxyPlotSelectionViewModel.SciChartCandleStickIncreasingOxy;
-            this.DecreasingColor = OxyPlotSelectionViewModel.SciChartCandleStickDecreasingOxy;
-            this.LineColor = OxyColors.White;
-            this.CandleWidth = 0;
+            IncreasingColor = OxyPlotSelectionViewModel.SciChartCandleStickIncreasingOxy;
+            DecreasingColor = OxyPlotSelectionViewModel.SciChartCandleStickDecreasingOxy;
+            LineColor = OxyColors.White;
+            CandleWidth = 0;
         }
 
         /// <summary>
@@ -160,10 +160,10 @@ namespace Panoptes.ViewModels.Charts
         {
             if (startIndex < 0)
             {
-                startIndex = this.WindowStartIndex;
+                startIndex = WindowStartIndex;
             }
 
-            return this.FindWindowStartIndex(this.Items, item => item.X, x, startIndex);
+            return FindWindowStartIndex(Items, item => item.X, x, startIndex);
         }
 
         public override void Render(IRenderContext rc)
@@ -185,8 +185,8 @@ namespace Panoptes.ViewModels.Charts
             switch (SerieType)
             {
                 case PlotSerieTypes.Candles:
-                    this.MinX = this.MinY = this.MaxX = this.MaxY = double.NaN;
-                    this.InternalUpdateMaxMin(Items,
+                    MinX = MinY = MaxX = MaxY = double.NaN;
+                    InternalUpdateMaxMin(Items,
                         i => i.X - (Period.TotalDays / 2.0),
                         i => i.X + (Period.TotalDays * 5), // / 2.0),
                         i => Min(i.Low, i.Open, i.Close, i.High),
@@ -194,8 +194,8 @@ namespace Panoptes.ViewModels.Charts
                     break;
 
                 case PlotSerieTypes.Line:
-                    this.MinX = this.MinY = this.MaxX = this.MaxY = double.NaN;
-                    this.InternalUpdateMaxMin(_points);
+                    MinX = MinY = MaxX = MaxY = double.NaN;
+                    InternalUpdateMaxMin(_points);
                     break;
             }
         }
@@ -216,28 +216,6 @@ namespace Panoptes.ViewModels.Charts
         /// Copy of raw points.
         /// </summary>
         public IReadOnlyList<DataPoint> RawPoints => _rawPoints.AsReadOnly();
-
-        private static DateTime RoundDown(DateTime dateTime, TimeSpan interval)
-        {
-            if (interval == TimeSpan.Zero)
-            {
-                // divide by zero exception
-                return dateTime;
-            }
-
-            var amount = dateTime.Ticks % interval.Ticks;
-            if (amount > 0)
-            {
-                return dateTime.AddTicks(-amount);
-            }
-
-            return dateTime;
-        }
-
-        private static double RoundDownDouble(double dateTime, TimeSpan interval)
-        {
-            return DateTimeAxis.ToDouble(RoundDown(DateTimeAxis.ToDateTime(dateTime), interval));
-        }
 
         public void AddRange(IEnumerable<DataPoint> dataPoints)
         {
@@ -270,7 +248,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 // Check if last candle needs update
                 var last = Items.Last();
-                var update = newPoints.Where(p => RoundDownDouble(p.X, Period).Equals(last.X)).ToList();
+                var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)).ToList();
                 if (update.Count > 0)
                 {
                     newPoints = newPoints.Except(update).ToList();
@@ -283,12 +261,11 @@ namespace Panoptes.ViewModels.Charts
 
             // Add new candles
             // need to check if there's more than 1 datapoint in each group...
-            var grp = newPoints.GroupBy(p => RoundDownDouble(p.X, Period)).Select(g => new HighLowItem(g.Key,
-                                                                                                   g.Max(p => p.Y),
-                                                                                                   g.Min(p => p.Y),
-                                                                                                   g.First().Y,
-                                                                                                   g.Last().Y)).ToList();
-            this.Items.AddRange(grp);
+            var grp = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
+                               .Select(g => new HighLowItem(g.Key,
+                                                            g.Max(p => p.Y), g.Min(p => p.Y),
+                                                            g.First().Y, g.Last().Y)).ToList();
+            Items.AddRange(grp);
         }
 
         #region Line series rendering
@@ -296,7 +273,7 @@ namespace Panoptes.ViewModels.Charts
         /// Renders the series on the specified rendering context.
         /// </summary>
         /// <param name="rc">The rendering context.</param>
-        public void RenderLineSerie(IRenderContext rc)
+        private void RenderLineSerie(IRenderContext rc)
         {
             var actualPoints = _points;
             if (actualPoints == null || actualPoints.Count == 0)
@@ -304,12 +281,12 @@ namespace Panoptes.ViewModels.Charts
                 return;
             }
 
-            this.VerifyAxes();
+            VerifyAxes();
 
-            var clippingRect = this.GetClippingRect();
+            var clippingRect = GetClippingRect();
             rc.SetClip(clippingRect);
 
-            this.RenderPoints(rc, clippingRect, actualPoints);
+            RenderPoints(rc, clippingRect, actualPoints);
 
             //if (this.LabelFormatString != null)
             //{
@@ -349,7 +326,7 @@ namespace Panoptes.ViewModels.Charts
                     return false;
                 }
 
-                if (hasValidPoint = this.IsValidPoint(currentPoint))
+                if (hasValidPoint = IsValidPoint(currentPoint))
                 {
                     break;
                 }
@@ -361,7 +338,7 @@ namespace Panoptes.ViewModels.Charts
             }
 
             // First valid point
-            var screenPoint = this.Transform(currentPoint);
+            var screenPoint = Transform(currentPoint);
 
             // Handle broken line segment if exists
             if (previousContiguousLineSegmentEndPoint.HasValue)
@@ -383,12 +360,12 @@ namespace Panoptes.ViewModels.Charts
                 {
                     break;
                 }
-                if (!this.IsValidPoint(currentPoint))
+                if (!IsValidPoint(currentPoint))
                 {
                     break;
                 }
 
-                screenPoint = this.Transform(currentPoint);
+                screenPoint = Transform(currentPoint);
                 contiguous.Add(screenPoint);
             }
 
@@ -415,23 +392,23 @@ namespace Panoptes.ViewModels.Charts
             int startIdx = 0;
             double xmax = double.MaxValue;
 
-            if (this.IsXMonotonic)
+            if (IsXMonotonic)
             {
                 // determine render range
-                var xmin = this.XAxis.ActualMinimum;
-                xmax = this.XAxis.ActualMaximum;
-                this.WindowStartIndex = this.UpdateWindowStartIndex(points, point => point.X, xmin, this.WindowStartIndex);
+                var xmin = XAxis.ActualMinimum;
+                xmax = XAxis.ActualMaximum;
+                WindowStartIndex = UpdateWindowStartIndex(points, point => point.X, xmin, WindowStartIndex);
 
-                startIdx = this.WindowStartIndex;
+                startIdx = WindowStartIndex;
             }
 
             for (int i = startIdx; i < points.Count; i++)
             {
-                if (!this.ExtractNextContiguousLineSegment(points, ref i, ref lastValidPoint, xmax, broken, contiguousScreenPointsBuffer))
+                if (!ExtractNextContiguousLineSegment(points, ref i, ref lastValidPoint, xmax, broken, contiguousScreenPointsBuffer))
                 {
                     break;
                 }
-                this.RenderLineAndMarkers(rc, clippingRect, contiguousScreenPointsBuffer);
+                RenderLineAndMarkers(rc, clippingRect, contiguousScreenPointsBuffer);
                 contiguousScreenPointsBuffer.Clear();
             }
         }
@@ -445,7 +422,7 @@ namespace Panoptes.ViewModels.Charts
         private void RenderLineAndMarkers(IRenderContext rc, OxyRect clippingRect, IList<ScreenPoint> pointsToRender)
         {
             var screenPoints = pointsToRender;
-            this.RenderLine(rc, clippingRect, screenPoints);
+            RenderLine(rc, clippingRect, screenPoints);
         }
 
         /// <summary>
@@ -459,8 +436,8 @@ namespace Panoptes.ViewModels.Charts
             var dashArray = LineStyle.Solid.GetDashArray(); // this.ActualDashArray;
             var outputBuffer = new List<ScreenPoint>(pointsToRender.Count);
 
-            rc.DrawClippedLine(clippingRect, pointsToRender, this.MinimumSegmentLength * this.MinimumSegmentLength,
-                this.GetSelectableColor(this.LineColor), this.StrokeThickness, dashArray, this.LineJoin, false, outputBuffer);
+            rc.DrawClippedLine(clippingRect, pointsToRender, MinimumSegmentLength * MinimumSegmentLength,
+                GetSelectableColor(LineColor), StrokeThickness, dashArray, LineJoin, false, outputBuffer);
         }
 
         private readonly List<DataPoint> _points = new List<DataPoint>();
@@ -478,14 +455,14 @@ namespace Panoptes.ViewModels.Charts
         {
             if (reset)
             {
-                this._points.Clear();
+                _points.Clear();
             }
-            else if (this._points.Count > 0)
+            else if (_points.Count > 0)
             {
                 // Check if last point needs update
                 var last = _points[_points.Count - 1];
-                var update = newPoints.Where(p => RoundDownDouble(p.X, Period).Equals(last.X)).ToList();
-                if (update.Count > 0)
+                var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); //.ToList();
+                if (update.Any())
                 {
                     newPoints = newPoints.Except(update).ToList();
                     _points[_points.Count - 1] = new DataPoint(last.X, update.Last().Y);
@@ -495,8 +472,7 @@ namespace Panoptes.ViewModels.Charts
 
             // Add new point
             // need to check if there's more than 1 datapoint in each group...
-            var grp = newPoints.GroupBy(p => RoundDownDouble(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y)).ToList();
-            this._points.AddRange(grp);
+            _points.AddRange(newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y)));
         }
         #endregion
 
@@ -504,35 +480,36 @@ namespace Panoptes.ViewModels.Charts
         /// Renders the series on the specified rendering context.
         /// </summary>
         /// <param name="rc">The rendering context.</param>
-        public void RenderCandlesSerie(IRenderContext rc)
+        private void RenderCandlesSerie(IRenderContext rc)
         {
-            var nitems = this.Items.Count;
-            var items = this.Items;
+            var items = Items;
+            var nitems = items.Count;
 
-            if (nitems == 0 || this.StrokeThickness <= 0 || this.LineStyle == LineStyle.None)
+            if (nitems == 0 || StrokeThickness <= 0 || LineStyle == LineStyle.None)
             {
                 return;
             }
 
-            this.VerifyAxes();
+            VerifyAxes();
 
-            var dashArray = this.LineStyle.GetDashArray();
+            var dashArray = LineStyle.GetDashArray();
 
-            var datacandlewidth = (this.CandleWidth > 0) ? this.CandleWidth : this.minDx * 0.80;
-            var candlewidth = this.XAxis.Transform(items[0].X + datacandlewidth) - this.XAxis.Transform(items[0].X);
+            var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
+            var first = items[0];
+            var candlewidth = XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X);
 
             // colors
-            var fillUp = this.GetSelectableFillColor(this.IncreasingColor);
-            var fillDown = this.GetSelectableFillColor(this.DecreasingColor);
-            var lineUp = this.GetSelectableColor(this.IncreasingColor.ChangeIntensity(0.70));
-            var lineDown = this.GetSelectableColor(this.DecreasingColor.ChangeIntensity(0.70));
+            var fillUp = GetSelectableFillColor(IncreasingColor);
+            var fillDown = GetSelectableFillColor(DecreasingColor);
+            var lineUp = GetSelectableColor(IncreasingColor.ChangeIntensity(0.70));
+            var lineDown = GetSelectableColor(DecreasingColor.ChangeIntensity(0.70));
 
             // determine render range
-            var xmin = this.XAxis.ActualMinimum;
-            var xmax = this.XAxis.ActualMaximum;
-            this.WindowStartIndex = this.UpdateWindowStartIndex(items, item => item.X, xmin, this.WindowStartIndex);
+            var xmin = XAxis.ActualMinimum;
+            var xmax = XAxis.ActualMaximum;
+            WindowStartIndex = UpdateWindowStartIndex(items, item => item.X, xmin, WindowStartIndex);
 
-            for (int i = this.WindowStartIndex; i < nitems; i++)
+            for (int i = WindowStartIndex; i < nitems; i++)
             {
                 var bar = items[i];
 
@@ -543,7 +520,7 @@ namespace Panoptes.ViewModels.Charts
                 }
 
                 // check to see whether is valid
-                if (!this.IsValidItem(bar, this.XAxis, this.YAxis))
+                if (!IsValidItem(bar, XAxis, YAxis))
                 {
                     continue;
                 }
@@ -551,13 +528,8 @@ namespace Panoptes.ViewModels.Charts
                 var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
                 var lineColor = bar.Close > bar.Open ? lineUp : lineDown;
 
-                var high = this.Transform(bar.X, bar.High);
-                var low = this.Transform(bar.X, bar.Low);
-
-                var open = this.Transform(bar.X, bar.Open);
-                var close = this.Transform(bar.X, bar.Close);
-                var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
-                var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
+                var high = Transform(bar.X, bar.High);
+                var low = Transform(bar.X, bar.Low);
 
                 if (candlewidth < 0.4)
                 {
@@ -595,14 +567,17 @@ namespace Panoptes.ViewModels.Charts
                         LineJoin,
                         true);
 
+                    var open = Transform(bar.X, bar.Open);
+                    var close = Transform(bar.X, bar.Close);
+
                     // Open
                     var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
                     rc.DrawLine(
                         new[] { openLeft, new ScreenPoint(open.X, open.Y) },
                         lineColor,
-                        this.StrokeThickness,
+                        StrokeThickness,
                         dashArray,
-                        this.LineJoin,
+                        LineJoin,
                         true);
 
                     // Close
@@ -610,29 +585,35 @@ namespace Panoptes.ViewModels.Charts
                     rc.DrawLine(
                         new[] { closeRight, new ScreenPoint(open.X, close.Y) },
                         lineColor,
-                        this.StrokeThickness,
+                        StrokeThickness,
                         dashArray,
-                        this.LineJoin,
+                        LineJoin,
                         true);
                 }
                 else
                 {
+                    var open = Transform(bar.X, bar.Open);
+                    var close = Transform(bar.X, bar.Close);
+
+                    var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
+                    var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
+
                     // Upper extent
                     rc.DrawLine(
                         new[] { high, min },
                         lineColor,
-                        this.StrokeThickness,
+                        StrokeThickness,
                         dashArray,
-                        this.LineJoin,
+                        LineJoin,
                         true);
 
                     // Lower extent
                     rc.DrawLine(
                         new[] { max, low },
                         lineColor,
-                        this.StrokeThickness,
+                        StrokeThickness,
                         dashArray,
-                        this.LineJoin,
+                        LineJoin,
                         true);
 
                     // Body
@@ -640,192 +621,18 @@ namespace Panoptes.ViewModels.Charts
 
                     if (max.Y - min.Y < 1.0)
                     {
-                        var leftPoint = new ScreenPoint(openLeft.X - this.StrokeThickness, min.Y);
-                        var rightPoint = new ScreenPoint(openLeft.X + this.StrokeThickness + candlewidth, min.Y);
-                        rc.DrawLine(new[] { leftPoint, rightPoint },  lineColor, this.StrokeThickness, null, LineJoin.Miter, true);
+                        var leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, min.Y);
+                        var rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, min.Y);
+                        rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, null, LineJoin.Miter, true);
 
-                        leftPoint = new ScreenPoint(openLeft.X - this.StrokeThickness, max.Y);
-                        rightPoint = new ScreenPoint(openLeft.X + this.StrokeThickness + candlewidth, max.Y);
-                        rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, this.StrokeThickness, null, LineJoin.Miter, true);
+                        leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, max.Y);
+                        rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, max.Y);
+                        rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, null, LineJoin.Miter, true);
                     }
                     else
                     {
                         var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
                         rc.DrawRectangle(rect, fillColor, OxyColors.Transparent, 0);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Renders the series on the specified rendering context.
-        /// </summary>
-        /// <param name="rc">The rendering context.</param>
-        public void RenderCandlesSerieOld(IRenderContext rc)
-        {
-            var nitems = this.Items.Count;
-            var items = this.Items;
-
-            if (nitems == 0 || this.StrokeThickness <= 0 || this.LineStyle == LineStyle.None)
-            {
-                return;
-            }
-
-            this.VerifyAxes();
-
-            var clippingRect = this.GetClippingRect();
-            var dashArray = this.LineStyle.GetDashArray();
-
-            var datacandlewidth = (this.CandleWidth > 0) ? this.CandleWidth : this.minDx * 0.80;
-            var candlewidth =
-                this.XAxis.Transform(items[0].X + datacandlewidth) -
-                this.XAxis.Transform(items[0].X);
-
-            // colors
-            var fillUp = this.GetSelectableFillColor(this.IncreasingColor);
-            var fillDown = this.GetSelectableFillColor(this.DecreasingColor);
-            var lineUp = this.GetSelectableColor(this.IncreasingColor.ChangeIntensity(0.70));
-            var lineDown = this.GetSelectableColor(this.DecreasingColor.ChangeIntensity(0.70));
-
-            // determine render range
-            var xmin = this.XAxis.ActualMinimum;
-            var xmax = this.XAxis.ActualMaximum;
-            this.WindowStartIndex = this.UpdateWindowStartIndex(items, item => item.X, xmin, this.WindowStartIndex);
-
-            for (int i = this.WindowStartIndex; i < nitems; i++)
-            {
-                var bar = items[i];
-
-                // if item beyond visible range, done
-                if (bar.X > xmax)
-                {
-                    return;
-                }
-
-                // check to see whether is valid
-                if (!this.IsValidItem(bar, this.XAxis, this.YAxis))
-                {
-                    continue;
-                }
-
-                var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
-                var lineColor = bar.Close > bar.Open ? lineUp : lineDown;
-
-                var high = this.Transform(bar.X, bar.High);
-                var low = this.Transform(bar.X, bar.Low);
-
-                var open = this.Transform(bar.X, bar.Open);
-                var close = this.Transform(bar.X, bar.Close);
-                var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
-                var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
-
-                if (candlewidth < 0.4)
-                {
-                    //Body
-                    if (i % 2 == 0)
-                    {
-                        rc.DrawClippedLine(
-                        clippingRect,
-                        new[] { high, low },
-                        0,
-                        lineColor,
-                        this.StrokeThickness,
-                        dashArray,
-                        this.LineJoin,
-                        true);
-                    }
-                }
-                else if (candlewidth < 1.75)
-                {
-                    // Body
-                    rc.DrawClippedLine(
-                        clippingRect,
-                        new[] { high, low },
-                        0,
-                        lineColor,
-                        this.StrokeThickness,
-                        dashArray,
-                        this.LineJoin,
-                        true);
-                }
-                else if (candlewidth < 3.5)
-                {
-                    // Body
-                    rc.DrawClippedLine(
-                        clippingRect,
-                        new[] { high, low },
-                        0,
-                        lineColor,
-                        this.StrokeThickness,
-                        dashArray,
-                        this.LineJoin,
-                        true);
-
-                    // Open
-                    var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-                    rc.DrawClippedLine(
-                        clippingRect,
-                        new[] { openLeft, new ScreenPoint(open.X, open.Y) },
-                        0,
-                        lineColor,
-                        this.StrokeThickness,
-                        dashArray,
-                        this.LineJoin,
-                        true);
-
-                    // Close
-                    var closeRight = close + new ScreenVector(candlewidth * 0.5, 0);
-                    rc.DrawClippedLine(
-                        clippingRect,
-                        new[] { closeRight, new ScreenPoint(open.X, close.Y) },
-                        0,
-                        lineColor,
-                        this.StrokeThickness,
-                        dashArray,
-                        this.LineJoin,
-                        true);
-                }
-                else
-                {
-                    // Upper extent
-                    rc.DrawClippedLine(
-                        clippingRect,
-                        new[] { high, min },
-                        0,
-                        lineColor,
-                        this.StrokeThickness,
-                        dashArray,
-                        this.LineJoin,
-                        true);
-
-                    // Lower extent
-                    rc.DrawClippedLine(
-                        clippingRect,
-                        new[] { max, low },
-                        0,
-                        lineColor,
-                        this.StrokeThickness,
-                        dashArray,
-                        this.LineJoin,
-                        true);
-
-                    // Body
-                    var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-
-                    if (max.Y - min.Y < 1.0)
-                    {
-                        var leftPoint = new ScreenPoint(openLeft.X - this.StrokeThickness, min.Y);
-                        var rightPoint = new ScreenPoint(openLeft.X + this.StrokeThickness + candlewidth, min.Y);
-                        rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, leftPoint.DistanceToSquared(rightPoint), lineColor, this.StrokeThickness, null, LineJoin.Miter, true);
-
-                        leftPoint = new ScreenPoint(openLeft.X - this.StrokeThickness, max.Y);
-                        rightPoint = new ScreenPoint(openLeft.X + this.StrokeThickness + candlewidth, max.Y);
-                        rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, leftPoint.DistanceToSquared(rightPoint), lineColor, this.StrokeThickness, null, LineJoin.Miter, true);
-                    }
-                    else
-                    {
-                        var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                        rc.DrawClippedRectangleAsPolygon(clippingRect, rect, fillColor, OxyColors.Transparent, this.StrokeThickness);
                     }
                 }
             }
@@ -841,30 +648,48 @@ namespace Panoptes.ViewModels.Charts
             double xmid = (legendBox.Left + legendBox.Right) / 2;
             double yopen = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.7);
             double yclose = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.3);
-            double[] dashArray = this.LineStyle.GetDashArray();
+            double[] dashArray = LineStyle.GetDashArray();
 
-            var datacandlewidth = (this.CandleWidth > 0) ? this.CandleWidth : this.minDx * 0.80;
+            var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
 
+            var first = Items[0];
             var candlewidth = Math.Min(
                 legendBox.Width,
-                this.XAxis.Transform(this.Items[0].X + datacandlewidth) - this.XAxis.Transform(this.Items[0].X));
+                XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X));
 
             rc.DrawLine(
                 new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
-                this.GetSelectableColor(this.ActualColor),
-                this.StrokeThickness,
+                GetSelectableColor(ActualColor),
+                StrokeThickness,
                 dashArray,
                 LineJoin.Miter,
                 true);
 
             rc.DrawRectangleAsPolygon(
                 new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
-                this.GetSelectableFillColor(this.IncreasingColor),
-                this.GetSelectableColor(this.ActualColor),
-                this.StrokeThickness);
+                GetSelectableFillColor(IncreasingColor),
+                GetSelectableColor(ActualColor),
+                StrokeThickness);
         }
 
         private Tuple<ScreenPoint, TrackerHitResult> previousPoint;
+
+        public override TrackerHitResult GetNearestPoint(ScreenPoint point, bool interpolate)
+        {
+            if (interpolate) return null;
+
+            switch (SerieType)
+            {
+                case PlotSerieTypes.Candles:
+                    return GetNearestPointCandles(point, interpolate);
+
+                case PlotSerieTypes.Line:
+                    return GetNearestPointLine(point, interpolate);
+
+                default:
+                    throw new ArgumentException($"Unknown SerieType: '{SerieType}'");
+            }
+        }
 
         /// <summary>
         /// Gets the point on the series that is nearest the specified point.
@@ -872,24 +697,24 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="point">The point.</param>
         /// <param name="interpolate">Interpolate the series if this flag is set to <c>true</c>.</param>
         /// <returns>A TrackerHitResult for the current hit.</returns>
-        public override TrackerHitResult GetNearestPoint(ScreenPoint point, bool interpolate)
+        private TrackerHitResult GetNearestPointCandles(ScreenPoint point, bool interpolate)
         {
             if (previousPoint?.Item1.Equals(point) == true)
             {
                 return previousPoint.Item2;
             }
 
-            if (this.XAxis == null || this.YAxis == null || interpolate || this.Items.Count == 0)
+            if (XAxis == null || YAxis == null || interpolate || Items.Count == 0)
             {
                 return null;
             }
 
-            var nbars = this.Items.Count;
-            var xy = this.InverseTransform(point);
+            var nbars = Items.Count;
+            var xy = InverseTransform(point);
             var targetX = xy.X;
 
             // punt if beyond start & end of series
-            if (targetX > (this.Items[nbars - 1].X + this.minDx) || targetX < (this.Items[0].X - this.minDx))
+            if (targetX > (Items[nbars - 1].X + minDx) || targetX < (Items[0].X - minDx))
             {
                 return null;
             }
@@ -899,17 +724,17 @@ namespace Panoptes.ViewModels.Charts
 
             if (nbars > 1000)
             {
-                var filteredItems = this.Items//.AsParallel()
-                    .Where(x => x.X <= this.XAxis.ActualMaximum)
+                var filteredItems = Items//.AsParallel()
+                    .Where(x => x.X <= XAxis.ActualMaximum)
                     .ToList();
-                pidx = this.FindWindowStartIndex(filteredItems, item => item.X, targetX, this.WindowStartIndex);
+                pidx = FindWindowStartIndex(filteredItems, item => item.X, targetX, WindowStartIndex);
             }
             else
             {
-                pidx = this.FindWindowStartIndex(this.Items, item => item.X, targetX, this.WindowStartIndex);
+                pidx = FindWindowStartIndex(Items, item => item.X, targetX, WindowStartIndex);
             }
 
-            var nidx = ((pidx + 1) < this.Items.Count) ? pidx + 1 : pidx;
+            var nidx = ((pidx + 1) < Items.Count) ? pidx + 1 : pidx;
 
             double distance(HighLowItem bar)
             {
@@ -928,13 +753,13 @@ namespace Panoptes.ViewModels.Charts
             }
 
             // determine closest point
-            var midx = distance(this.Items[pidx]) <= distance(this.Items[nidx]) ? pidx : nidx;
-            var mbar = this.Items[midx];
+            var midx = distance(Items[pidx]) <= distance(Items[nidx]) ? pidx : nidx;
+            var mbar = Items[midx];
 
             //DataPoint hit = new DataPoint(mbar.X, mbar.Close);
 
             TrackerFormatString = "{6:0.00}";
-            var nearest = this.GetNearestPointHighLowSeries(point, interpolate);
+            var nearest = GetNearestPointHighLowSeries(point, interpolate);
             if (nearest == null) return null;
 
             DataPoint hit = new DataPoint(mbar.X, nearest.DataPoint.Y);
@@ -957,20 +782,20 @@ namespace Panoptes.ViewModels.Charts
             {
                 Series = this,
                 DataPoint = hit,
-                Position = this.Transform(hit),
+                Position = Transform(hit),
                 Item = mbar,
                 Index = midx,
                 Text = StringHelper.Format(
-                    this.ActualCulture,
-                    this.TrackerFormatString,
+                    ActualCulture,
+                    TrackerFormatString,
                     mbar,
-                    this.Title,
-                    this.XAxis.Title ?? DefaultXAxisTitle,
-                    this.XAxis.GetValue(mbar.X),
-                    this.YAxis.GetValue(mbar.High),
-                    this.YAxis.GetValue(mbar.Low),
-                    this.YAxis.GetValue(mbar.Open),
-                    this.YAxis.GetValue(mbar.Close))
+                    Title,
+                    XAxis.Title ?? DefaultXAxisTitle,
+                    XAxis.GetValue(mbar.X),
+                    YAxis.GetValue(mbar.High),
+                    YAxis.GetValue(mbar.Low),
+                    YAxis.GetValue(mbar.Open),
+                    YAxis.GetValue(mbar.Close))
             };
             previousPoint = new Tuple<ScreenPoint, TrackerHitResult>(point, trackerHitResult);
 
@@ -983,9 +808,9 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="point">The point.</param>
         /// <param name="interpolate">Interpolate the series if this flag is set to <c>true</c>.</param>
         /// <returns>A TrackerHitResult for the current hit.</returns>
-        public TrackerHitResult GetNearestPointHighLowSeries(ScreenPoint point, bool interpolate)
+        private TrackerHitResult GetNearestPointHighLowSeries(ScreenPoint point, bool interpolate)
         {
-            if (this.XAxis == null || this.YAxis == null)
+            if (XAxis == null || YAxis == null)
             {
                 return null;
             }
@@ -1000,7 +825,7 @@ namespace Panoptes.ViewModels.Charts
             TrackerHitResult result = null;
             void check(DataPoint p, HighLowItem item, int index)
             {
-                var sp = this.Transform(p);
+                var sp = Transform(p);
                 double dx = sp.X - point.X;
                 double dy = sp.Y - point.Y;
                 double d2 = (dx * dx) + (dy * dy);
@@ -1016,7 +841,7 @@ namespace Panoptes.ViewModels.Charts
                 }
             }
             int i = 0;
-            foreach (var item in this.Items.Where(x => x.X <= this.XAxis.ActualMaximum && x.X >= this.XAxis.ActualMinimum))
+            foreach (var item in Items.Where(x => x.X <= XAxis.ActualMaximum && x.X >= XAxis.ActualMinimum))
             {
                 check(new DataPoint(item.X, item.High), item, i);
                 check(new DataPoint(item.X, item.Low), item, i);
@@ -1033,6 +858,93 @@ namespace Panoptes.ViewModels.Charts
         }
 
         /// <summary>
+        /// Gets the point on the series that is nearest the specified point.
+        /// </summary>
+        /// <param name="point">The point.</param>
+        /// <param name="interpolate">Interpolate the series if this flag is set to <c>true</c>.</param>
+        /// <returns>A TrackerHitResult for the current hit.</returns>
+        private TrackerHitResult GetNearestPointLine(ScreenPoint point, bool interpolate)
+        {
+            //if (interpolate)
+            //{
+            //    // Cannot interpolate if there is no line
+            //    if (this.ActualColor.IsInvisible() || this.StrokeThickness.Equals(0))
+            //    {
+            //        return null;
+            //    }
+
+            //    if (!this.CanTrackerInterpolatePoints)
+            //    {
+            //        return null;
+            //    }
+            //}
+
+            //if (interpolate && this.InterpolationAlgorithm != null)
+            //{
+            //    var result = this.GetNearestInterpolatedPointInternal(this.SmoothedPoints, point);
+            //    if (result != null)
+            //    {
+            //        result.Text = StringHelper.Format(
+            //            this.ActualCulture,
+            //            this.TrackerFormatString,
+            //            result.Item,
+            //            this.Title,
+            //            this.XAxis.Title ?? XYAxisSeries.DefaultXAxisTitle,
+            //            this.XAxis.GetValue(result.DataPoint.X),
+            //            this.YAxis.Title ?? XYAxisSeries.DefaultYAxisTitle,
+            //            this.YAxis.GetValue(result.DataPoint.Y));
+            //    }
+
+            //    return result;
+            //}
+
+            return GetNearestPointLineBase(point, interpolate);
+        }
+
+        /// <summary>
+        /// Gets the point on the series that is nearest the specified point.
+        /// </summary>
+        /// <param name="point">The point.</param>
+        /// <param name="interpolate">Interpolate the series if this flag is set to <c>true</c>.</param>
+        /// <returns>A TrackerHitResult for the current hit.</returns>
+        private TrackerHitResult GetNearestPointLineBase(ScreenPoint point, bool interpolate)
+        {
+            //if (interpolate && !this.CanTrackerInterpolatePoints)
+            //{
+            //    return null;
+            //}
+
+            //TrackerHitResult result = null;
+            //if (interpolate)
+            //{
+            //    result = this.GetNearestInterpolatedPointInternal(this._points, point);
+            //}
+
+            //if (result == null)
+            //{
+            //    result = this.GetNearestPointInternal(this._points, point);
+            //}
+
+            TrackerHitResult result = GetNearestPointInternal(_points, point);
+            TrackerFormatString = "{0}\n{1}: {2}\n{3}: {4}";
+
+            if (result != null)
+            {
+                result.Text = StringHelper.Format(
+                    ActualCulture,
+                    TrackerFormatString,
+                    result.Item,
+                    Title,
+                    XAxis.Title ?? DefaultXAxisTitle,
+                    XAxis.GetValue(result.DataPoint.X),
+                    YAxis.Title ?? DefaultYAxisTitle,
+                    YAxis.GetValue(result.DataPoint.Y));
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Updates the data.
         /// </summary>
         protected override void UpdateData()
@@ -1040,22 +952,25 @@ namespace Panoptes.ViewModels.Charts
             base.UpdateData();
 
             // determine minimum X gap between successive points
-            var items = this.Items;
+            var items = Items;
             var nitems = items.Count;
-            this.minDx = double.MaxValue;
+            minDx = double.MaxValue;
 
+            var previous = items[0];
             for (int i = 1; i < nitems; i++)
             {
-                this.minDx = Math.Min(this.minDx, items[i].X - items[i - 1].X);
-                if (this.minDx < 0)
+                var current = items[i];
+                minDx = Math.Min(minDx, current.X - previous.X);
+                if (minDx < 0)
                 {
                     throw new ArgumentException("bars are out of order, must be sequential in x");
                 }
+                previous = current;
             }
 
             if (nitems <= 1)
             {
-                this.minDx = 1;
+                minDx = 1;
             }
         }
     }

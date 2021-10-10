@@ -3,6 +3,7 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using Panoptes.Model;
 using Panoptes.Model.Charting;
 using Panoptes.Model.Messages;
 using System;
@@ -107,11 +108,11 @@ namespace Panoptes.ViewModels.Charts
         public bool IsLinePlotChecked => _plotSerieTypes == PlotSerieTypes.Line;
         public bool IsCandlePlotChecked => _plotSerieTypes == PlotSerieTypes.Candles;
 
-        public bool IsPlotAllChecked => _period.Equals(TimeSpan.Zero);
-        public bool IsPlot1mChecked => _period.Equals(TimeSpan.FromMinutes(1));
-        public bool IsPlot5mChecked => _period.Equals(TimeSpan.FromMinutes(5));
-        public bool IsPlot1hChecked => _period.Equals(TimeSpan.FromHours(1));
-        public bool IsPlot1dChecked => _period.Equals(TimeSpan.FromDays(1));
+        public bool IsPlotAllChecked => _period.Equals(Times.Zero);
+        public bool IsPlot1mChecked => _period.Equals(Times.OneMinute);
+        public bool IsPlot5mChecked => _period.Equals(Times.FiveMinutes);
+        public bool IsPlot1hChecked => _period.Equals(Times.OneHour);
+        public bool IsPlot1dChecked => _period.Equals(Times.OneDay);
 
         public OxyPlotSelectionViewModel()
         {
@@ -137,27 +138,27 @@ namespace Panoptes.ViewModels.Charts
 
         private Task ProcessPlotAll(CancellationToken cancelationToken)
         {
-            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.Zero, cancelationToken);
+            return SetAndProcessPlot(PlotSerieTypes, Times.Zero, cancelationToken);
         }
 
         private Task ProcessPlot1min(CancellationToken cancelationToken)
         {
-            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.FromMinutes(1), cancelationToken);
+            return SetAndProcessPlot(PlotSerieTypes, Times.OneMinute, cancelationToken);
         }
 
         private Task ProcessPlot5min(CancellationToken cancelationToken)
         {
-            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.FromMinutes(5), cancelationToken);
+            return SetAndProcessPlot(PlotSerieTypes, Times.FiveMinutes, cancelationToken);
         }
 
         private Task ProcessPlot1hour(CancellationToken cancelationToken)
         {
-            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.FromHours(1), cancelationToken);
+            return SetAndProcessPlot(PlotSerieTypes, Times.OneHour, cancelationToken);
         }
 
         private Task ProcessPlot1day(CancellationToken cancelationToken)
         {
-            return SetAndProcessPlot(PlotSerieTypes, TimeSpan.FromDays(1), cancelationToken);
+            return SetAndProcessPlot(PlotSerieTypes, Times.OneDay, cancelationToken);
         }
 
         private Task SetAndProcessPlot(PlotSerieTypes serieTypes, TimeSpan period, CancellationToken cancelationToken)
@@ -165,7 +166,7 @@ namespace Panoptes.ViewModels.Charts
             return Task.Run(() =>
             {
                 Trace.WriteLine($"OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period})...");
-                if (PlotSerieTypes == PlotSerieTypes.Candles && serieTypes == PlotSerieTypes.Candles && period == TimeSpan.Zero)
+                if (PlotSerieTypes == PlotSerieTypes.Candles && serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
                     Trace.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Exit - Trying to set to 'All' while in Candle mode");
@@ -174,11 +175,11 @@ namespace Panoptes.ViewModels.Charts
                 }
 
                 PlotSerieTypes = serieTypes;
-                if (serieTypes == PlotSerieTypes.Candles && period == TimeSpan.Zero)
+                if (serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
                     Trace.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Setting period to 1min bacause Candles");
-                    Period = TimeSpan.FromMinutes(1);
+                    Period = Times.OneMinute;
                 }
                 else
                 {
@@ -432,7 +433,7 @@ namespace Panoptes.ViewModels.Charts
                                         Tag = serie.Value.Name,
                                         Title = serie.Value.Name,
                                         SerieType = PlotSerieTypes.Candles,
-                                        Period = TimeSpan.FromMinutes(5)
+                                        Period = Times.FiveMinutes
                                     };
                                     plot.Series.Add(s);
                                     break;
@@ -444,7 +445,7 @@ namespace Panoptes.ViewModels.Charts
                                         Tag = serie.Value.Name,
                                         Title = serie.Value.Name,
                                         SerieType = PlotSerieTypes.Line,
-                                        Period = TimeSpan.FromMinutes(5)
+                                        Period = Times.FiveMinutes
                                     };
                                     plot.Series.Add(s);
                                     break;
@@ -560,39 +561,17 @@ namespace Panoptes.ViewModels.Charts
             _resultBgWorker.ReportProgress(0, plot);
         }
 
-        private bool _canInvalidatePlot = true;
-        private readonly object _canInvalidatePlotLock = new object();
-        public bool CanInvalidatePlot
-        {
-            get
-            {
-                lock (_canInvalidatePlotLock)
-                {
-                    return _canInvalidatePlot;
-                }
-            }
-
-            set
-            {
-                lock (_canInvalidatePlotLock)
-                {
-                    _canInvalidatePlot = value;
-                }
-            }
-        }
-
         private DateTime _lastInvalidatePlot = DateTime.MinValue;
-
         private void InvalidatePlotThreadUI()
         {
-            _resultBgWorker.ReportProgress(1);
+            ////_resultBgWorker.ReportProgress(1);
 
-            //var now = DateTime.UtcNow;
-            //if ((now - _lastInvalidatePlot).TotalMilliseconds > 250 && CanInvalidatePlot)
-            //{
-            //    _lastInvalidatePlot = now;
-            //    _resultBgWorker.ReportProgress(1);
-            //}
+            var now = DateTime.UtcNow;
+            if ((now - _lastInvalidatePlot).TotalMilliseconds > 250)
+            {
+                _lastInvalidatePlot = now;
+                _resultBgWorker.ReportProgress(1);
+            }
         }
 
         private void Clear()
