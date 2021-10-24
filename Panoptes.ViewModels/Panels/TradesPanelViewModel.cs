@@ -69,6 +69,22 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
+        private OrderViewModel _selectedItem;
+        public OrderViewModel SelectedItem
+        {
+            get { return _selectedItem; }
+            set
+            {
+                if (_selectedItem == value) return;
+                _selectedItem = value;
+                OnPropertyChanged();
+
+                if (_selectedItem == null) return; // We might want to be able to send null id
+                Trace.WriteLine($"Selected item #{_selectedItem.Id}");
+                _messenger.Send(new TradeSelectedMessage("trades", _selectedItem.Id));
+            }
+        }
+
         private DateTime? _fromDate;
         public DateTime? FromDate
         {
@@ -202,6 +218,8 @@ namespace Panoptes.ViewModels.Panels
 
             _messenger.Register<TradesPanelViewModel, FilterMessage>(this, async (r, _) => await r.ApplyFiltersHistoryOrders().ConfigureAwait(false));
 
+            _messenger.Register<TradesPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
+
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
@@ -240,6 +258,16 @@ namespace Panoptes.ViewModels.Panels
 
             _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _resultBgWorker.RunWorkerAsync();
+        }
+
+        private void ProcessTradeSelected(TradeSelectedMessage m)
+        {
+            if (m.Sender == "trades") return;
+
+            if (_ordersDic.TryGetValue(m.Value, out var ovm))
+            {
+                SelectedItem = ovm;
+            }
         }
 
         private void ProcessNewDay(TimerMessage.TimerEventType timerEventType)

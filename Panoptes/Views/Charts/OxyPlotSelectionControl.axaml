@@ -52,6 +52,11 @@
 			<Label Width="10"/>
 			<ToggleButton Content="Fit y-axis" IsChecked="{Binding IsAutoFitYAxis, Mode=OneWayToSource}"
 						  ToolTip.Tip="Automatically fit y-axis to data"/>
+			
+			<Label Width="10"/>
+			<ToggleButton Content="Plot trades" IsChecked="{Binding IsPlotTrades, Mode=OneWayToSource}"
+						  Command="{Binding PlotTrades}" ToolTip.Tip="Plot trades"/>
+
 		</StackPanel>
 
 		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"

@@ -1,11 +1,13 @@
 ﻿using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using OxyPlot;
+using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using Panoptes.Model;
 using Panoptes.Model.Charting;
 using Panoptes.Model.Messages;
+using QuantConnect.Orders;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -57,6 +59,8 @@ namespace Panoptes.ViewModels.Charts
         public AsyncRelayCommand PlotLines { get; }
 
         public AsyncRelayCommand PlotCandles { get; }
+
+        public AsyncRelayCommand PlotTrades { get; }
 
         private PlotSerieTypes _plotSerieTypes { get; set; }
 
@@ -116,6 +120,8 @@ namespace Panoptes.ViewModels.Charts
 
         public bool IsAutoFitYAxis { get; set; }
 
+        public bool IsPlotTrades { get; set; }
+
         public OxyPlotSelectionViewModel()
         {
             Name = "Charts";
@@ -126,6 +132,136 @@ namespace Panoptes.ViewModels.Charts
             Plot1d = new AsyncRelayCommand(ProcessPlot1day, CanDoBars1d);
             PlotLines = new AsyncRelayCommand(ProcessPlotLines, () => true);
             PlotCandles = new AsyncRelayCommand(ProcessPlotCandles, () => true);
+            PlotTrades = new AsyncRelayCommand(ProcessPlotTrades, () => true);
+        }
+
+        private static double GetNearestPointY(double x, Series series)
+        {
+            double minDist = double.MaxValue;
+            double y = double.NaN;
+            if (series is LineCandleStickSeries lcs)
+            {
+                foreach (var p in lcs.Points)
+                {
+                    var dist = Math.Abs(x - p.X);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        y = p.Y;
+                    }
+                }
+            }
+            else if (series is LineSeries l)
+            {
+                foreach (var p in l.Points)
+                {
+                    var dist = Math.Abs(x - p.X);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        y = p.Y;
+                    }
+                }
+            }
+            else if (series is ScatterSeries s)
+            {
+                foreach (var p in s.Points)
+                {
+                    var dist = Math.Abs(x - p.X);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        y = p.Y;
+                    }
+                }
+            }
+
+            return y;
+        }
+
+        private Task ProcessPlotTrades(CancellationToken cancelationToken)
+        {
+            return Task.Run(() =>
+            {
+                Trace.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Start ({IsPlotTrades})...");
+
+                lock (SelectedSeries.SyncRoot)
+                {
+                    if (!IsPlotTrades)
+                    {
+                        SelectedSeries.Annotations.Clear();
+                    }
+                    else
+                    {
+                        if (SelectedSeries.Series.Count == 0)
+                        {
+                            return;
+                        }
+
+                        foreach (var trade in _ordersDic)
+                        {
+                            bool isBuy = trade.Value.Direction == OrderDirection.Buy;
+                            var date = DateTimeAxis.ToDouble(trade.Value.Time);
+
+                            foreach (var series in SelectedSeries.Series)
+                            {
+                                var y = GetNearestPointY(date, series);
+                                var pointAnnotation = new PointAnnotation()
+                                {
+                                    X = date,
+                                    Y = y,
+                                    Fill = isBuy ? OxyColors.Green : OxyColors.Red,
+                                    TextColor = OxyColors.White,
+                                    Tag = $"trade_{series.Title}_{trade.Key}",
+                                    //ToolTip = trade.Value.Direction + "\n" + trade.Value.Tag,
+                                };
+
+                                pointAnnotation.MouseDown += PointAnnotation_MouseDown;
+                                SelectedSeries.Annotations.Add(pointAnnotation);
+                            }
+                            /*
+                            SelectedSeries.Annotations.Add(new ArrowAnnotation()
+                            {
+                                EndPoint = new DataPoint(DateTimeAxis.ToDouble(trade.Value.Time), 0),
+                                ArrowDirection = new ScreenVector(0, isBuy ? -10 : 10),
+                                Color = isBuy ? OxyColors.Green : OxyColors.Red,
+                                TextColor = OxyColors.White,
+                                ToolTip = trade.Value.Tag,
+                            });
+                            */
+                        }
+                    }
+                }
+
+                InvalidatePlotThreadUI();
+                Trace.WriteLine("OxyPlotSelectionViewModel.ProcessPlotTrades: Done.");
+            }, cancelationToken);
+        }
+
+        private void PointAnnotation_MouseDown(object sender, OxyMouseDownEventArgs e)
+        {
+            if (sender is not Annotation annotation)
+            {
+                return;
+            }
+
+            try
+            {
+                var tags = ((string)annotation.Tag).Split("_");
+                if (tags.Length > 0 && int.TryParse(tags[tags.Length - 1], out int id))
+                {
+                    Trace.WriteLine($"Clicked #{id} {annotation}");
+                    _messenger.Send(new TradeSelectedMessage("plot", id));
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"PointAnnotation_MouseDown: {ex}");
+            }
+            finally
+            {
+                e.Handled = true;
+            }
         }
 
         private Task ProcessPlotLines(CancellationToken cancelationToken)
@@ -278,10 +414,12 @@ namespace Panoptes.ViewModels.Charts
             _messenger = messenger;
             _messenger.Register<OxyPlotSelectionViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
-                if (m.ResultContext.Result.Charts.Count == 0) return;
+                if (m.ResultContext.Result.Charts.Count == 0 && m.ResultContext.Result.Orders.Count == 0) return;
                 r._resultsQueue.Add(m.ResultContext.Result);
             });
             _messenger.Register<OxyPlotSelectionViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+
+            _messenger.Register<OxyPlotSelectionViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
@@ -323,6 +461,16 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
+        private void ProcessTradeSelected(TradeSelectedMessage m)
+        {
+            //if (m.Sender == "plot") return;
+
+            if (_ordersDic.TryGetValue(m.Value, out var ovm))
+            {
+                
+            }
+        }
+
         private ObservableCollection<PlotModel> _plotModels = new ObservableCollection<PlotModel>();
         public ObservableCollection<PlotModel> PlotModels
         {
@@ -360,6 +508,8 @@ namespace Panoptes.ViewModels.Charts
 
             return string.Join(",", chartDefinition.Series?.Values?.Select(s => s.Unit).Distinct());
         }
+
+        private readonly ConcurrentDictionary<int, Order> _ordersDic = new ConcurrentDictionary<int, Order>();
 
         private void ParseResult(Result result)
         {
@@ -544,6 +694,11 @@ namespace Panoptes.ViewModels.Charts
                         }
                     }
                 }
+            }
+
+            foreach (var order in result.Orders)
+            {
+                _ordersDic.TryAdd(order.Key, order.Value);
             }
 
             InvalidatePlotThreadUI();
