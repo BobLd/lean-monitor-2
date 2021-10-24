@@ -316,7 +316,7 @@ namespace Panoptes.Model.Mock.Sessions
         {
             if (_currentTime.Second % 2 == 0)
             {
-                int orderCount = _random.Next(50, 150);
+                int orderCount = _random.Next(1, 5);
 
                 for (int i = 0; i < orderCount; i++)
                 {

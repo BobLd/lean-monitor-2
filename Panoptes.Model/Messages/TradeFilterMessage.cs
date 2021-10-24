@@ -3,9 +3,9 @@ using System;
 
 namespace Panoptes.Model.Messages
 {
-    public class FilterMessage : ValueChangedMessage<string>
+    public class TradeFilterMessage : ValueChangedMessage<string>
     {
-        public FilterMessage(string source, DateTime? fromDate, DateTime? toDate) : base(source)
+        public TradeFilterMessage(string source, DateTime? fromDate, DateTime? toDate) : base(source)
         {
             FromDate = fromDate;
             ToDate = toDate;

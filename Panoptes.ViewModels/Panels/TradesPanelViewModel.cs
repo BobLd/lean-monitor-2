@@ -98,7 +98,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_fromDate == value) return;
                 _fromDate = value;
                 OnPropertyChanged();
-                _messenger.Send(new FilterMessage("trades", _fromDate, _toDate));
+                _messenger.Send(new TradeFilterMessage("trades", _fromDate, _toDate));
             }
         }
 
@@ -115,7 +115,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_toDate == value) return;
                 _toDate = value;
                 OnPropertyChanged();
-                _messenger.Send(new FilterMessage("trades", _fromDate, _toDate));
+                _messenger.Send(new TradeFilterMessage("trades", _fromDate, _toDate));
             }
         }
 
@@ -216,7 +216,7 @@ namespace Panoptes.ViewModels.Panels
 
             _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m.Value));
 
-            _messenger.Register<TradesPanelViewModel, FilterMessage>(this, async (r, _) => await r.ApplyFiltersHistoryOrders().ConfigureAwait(false));
+            _messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, _) => await r.ApplyFiltersHistoryOrders().ConfigureAwait(false));
 
             _messenger.Register<TradesPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
@@ -304,7 +304,7 @@ namespace Panoptes.ViewModels.Panels
                     if (result.Orders.Count == 0) continue;
 
                     // Update orders
-                    foreach (var order in _ordersDic.Values) //OrdersToday) // TODO - collection was modified
+                    foreach (var order in _ordersDic.Values)
                     {
                         if (result.Orders.ContainsKey(order.Id))
                         {

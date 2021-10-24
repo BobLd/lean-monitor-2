@@ -141,7 +141,7 @@ namespace Panoptes.ViewModels.Charts
             double y = double.NaN;
             if (series is LineCandleStickSeries lcs)
             {
-                foreach (var p in lcs.Points)
+                foreach (var p in lcs.RawPoints)
                 {
                     var dist = Math.Abs(x - p.X);
                     if (dist < minDist)
@@ -179,6 +179,41 @@ namespace Panoptes.ViewModels.Charts
             return y;
         }
 
+        private void AddTradesToPlot(IDictionary<int, Order> orders)
+        {
+            foreach (var trade in orders)
+            {
+                bool isBuy = trade.Value.Direction == OrderDirection.Buy;
+                var date = DateTimeAxis.ToDouble(trade.Value.Time);
+
+                foreach (var series in SelectedSeries.Series)
+                {
+                    var y = GetNearestPointY(date, series);
+                    var pointAnnotation = new PointAnnotation()
+                    {
+                        X = date,
+                        Y = y,
+                        Fill = isBuy ? OxyColors.Green : OxyColors.Red,
+                        TextColor = OxyColors.White,
+                        Tag = $"trade_{series.Title}_{trade.Key}",
+                    };
+
+                    pointAnnotation.MouseDown += PointAnnotation_MouseDown;
+                    SelectedSeries.Annotations.Add(pointAnnotation);
+                }
+                /*
+                SelectedSeries.Annotations.Add(new ArrowAnnotation()
+                {
+                    EndPoint = new DataPoint(DateTimeAxis.ToDouble(trade.Value.Time), 0),
+                    ArrowDirection = new ScreenVector(0, isBuy ? -10 : 10),
+                    Color = isBuy ? OxyColors.Green : OxyColors.Red,
+                    TextColor = OxyColors.White,
+                    ToolTip = trade.Value.Tag,
+                });
+                */
+            }
+        }
+
         private Task ProcessPlotTrades(CancellationToken cancelationToken)
         {
             return Task.Run(() =>
@@ -198,38 +233,7 @@ namespace Panoptes.ViewModels.Charts
                             return;
                         }
 
-                        foreach (var trade in _ordersDic)
-                        {
-                            bool isBuy = trade.Value.Direction == OrderDirection.Buy;
-                            var date = DateTimeAxis.ToDouble(trade.Value.Time);
-
-                            foreach (var series in SelectedSeries.Series)
-                            {
-                                var y = GetNearestPointY(date, series);
-                                var pointAnnotation = new PointAnnotation()
-                                {
-                                    X = date,
-                                    Y = y,
-                                    Fill = isBuy ? OxyColors.Green : OxyColors.Red,
-                                    TextColor = OxyColors.White,
-                                    Tag = $"trade_{series.Title}_{trade.Key}",
-                                    //ToolTip = trade.Value.Direction + "\n" + trade.Value.Tag,
-                                };
-
-                                pointAnnotation.MouseDown += PointAnnotation_MouseDown;
-                                SelectedSeries.Annotations.Add(pointAnnotation);
-                            }
-                            /*
-                            SelectedSeries.Annotations.Add(new ArrowAnnotation()
-                            {
-                                EndPoint = new DataPoint(DateTimeAxis.ToDouble(trade.Value.Time), 0),
-                                ArrowDirection = new ScreenVector(0, isBuy ? -10 : 10),
-                                Color = isBuy ? OxyColors.Green : OxyColors.Red,
-                                TextColor = OxyColors.White,
-                                ToolTip = trade.Value.Tag,
-                            });
-                            */
-                        }
+                        AddTradesToPlot(_ordersDic);
                     }
                 }
 
@@ -456,7 +460,7 @@ namespace Panoptes.ViewModels.Charts
             while (!_resultBgWorker.CancellationPending)
             {
                 var result = _resultsQueue.Take(); // Need cancelation token
-                if (result.Charts.Count == 0) continue;
+                if (result.Charts.Count == 0 && result.Orders.Count == 0) continue;
                 ParseResult(result);
             }
         }
@@ -467,7 +471,7 @@ namespace Panoptes.ViewModels.Charts
 
             if (_ordersDic.TryGetValue(m.Value, out var ovm))
             {
-                
+                Trace.WriteLine($"PLot: Dislpay selected trade #{ovm.Id}");
             }
         }
 
@@ -694,6 +698,11 @@ namespace Panoptes.ViewModels.Charts
                         }
                     }
                 }
+            }
+
+            if (IsPlotTrades)
+            {
+                AddTradesToPlot(result.Orders);
             }
 
             foreach (var order in result.Orders)
