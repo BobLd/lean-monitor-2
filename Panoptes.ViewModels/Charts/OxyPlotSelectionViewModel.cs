@@ -114,6 +114,8 @@ namespace Panoptes.ViewModels.Charts
         public bool IsPlot1hChecked => _period.Equals(Times.OneHour);
         public bool IsPlot1dChecked => _period.Equals(Times.OneDay);
 
+        public bool IsAutoFitYAxis { get; set; }
+
         public OxyPlotSelectionViewModel()
         {
             Name = "Charts";
@@ -388,6 +390,7 @@ namespace Panoptes.ViewModels.Charts
                         ExtraGridlineColor = SciChartMajorGridLineOxy,
                         TicklineColor = SciChartTextOxy
                     };
+                    timeSpanAxis1.AxisChanged += TimeSpanAxis1_AxisChanged;
 
                     plot.Axes.Add(timeSpanAxis1);
                     var linearAxis1 = new LinearAxis
@@ -554,6 +557,50 @@ namespace Panoptes.ViewModels.Charts
                 IsNegative = p.Value < 0
             }));
             */
+        }
+
+        private void TimeSpanAxis1_AxisChanged(object sender, AxisChangedEventArgs e)
+        {
+            if (!IsAutoFitYAxis || sender is not Axis axis)
+            {
+                return;
+            }
+
+            double min = double.MaxValue;
+            double max = double.MinValue;
+
+            foreach (var series in SelectedSeries.Series)
+            {
+                if (series is LineCandleStickSeries lcs)
+                {
+                    foreach (var p in lcs.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                    {
+                        min = Math.Min(p.Y, min);
+                        max = Math.Max(p.Y, max);
+                    }
+                }
+                else if (series is LineSeries l)
+                {
+                    foreach (var p in l.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                    {
+                        min = Math.Min(p.Y, min);
+                        max = Math.Max(p.Y, max);
+                    }
+                }
+                else if (series is ScatterSeries s)
+                {
+                    foreach (var p in s.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                    {
+                        min = Math.Min(p.Y, min);
+                        max = Math.Max(p.Y, max);
+                    }
+                }
+            }
+
+            foreach (var vert in SelectedSeries.Axes.Where(s => s.IsVertical()))
+            {
+                vert.Zoom(min, max);
+            }
         }
 
         private void AddPlotThreadUI(PlotModel plot)

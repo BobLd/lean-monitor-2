@@ -48,6 +48,10 @@
 			<ToggleButton Content="1w" ToolTip.Tip="1-week"/>
 			<ToggleButton Content="1M" ToolTip.Tip="1-month"/>
 			<ToggleButton Content="1y" ToolTip.Tip="1-year"/>
+			
+			<Label Width="10"/>
+			<ToggleButton Content="Fit y-axis" IsChecked="{Binding IsAutoFitYAxis, Mode=OneWayToSource}"
+						  ToolTip.Tip="Automatically fit y-axis to data"/>
 		</StackPanel>
 
 		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"

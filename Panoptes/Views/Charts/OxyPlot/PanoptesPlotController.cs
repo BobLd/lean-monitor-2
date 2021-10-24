@@ -141,7 +141,7 @@ namespace Panoptes.Views.Charts
 
             IsPanEnabled = (XAxis?.IsPanEnabled == true) || (YAxis?.IsPanEnabled == true);
 
-            if (this.IsPanEnabled)
+            if (IsPanEnabled)
             {
                 if (XAxis != null && YAxis != null)
                 {
