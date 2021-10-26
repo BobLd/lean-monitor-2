@@ -18,7 +18,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         /// <summary>
         /// The position transformed to screen coordinates.
         /// </summary>
-        private IReadOnlyList<ScreenPoint> _screenPositions;
+        private IList<ScreenPoint> _screenPositions;
 
         private const int _lowLightAlpha = 150;
 
@@ -139,6 +139,11 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         {
             base.Render(rc);
 
+            if (Centers == null || Centers.Count == 0)
+            {
+                return;
+            }
+
             if (XAxis == null)
             {
                 Debug.WriteLine("OrderAnnotation.Render: Error - XAxis is null.");
@@ -158,8 +163,8 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             {
                 var screenPosition = Transform(center.X, center.Y);
                 // clip to the area defined by the axes
-                if (screenPosition.X < clippingRectangle.Left || screenPosition.X > clippingRectangle.Right ||
-                    screenPosition.Y < clippingRectangle.Top || screenPosition.Y > clippingRectangle.Bottom)
+                if (screenPosition.X + Size < clippingRectangle.Left || screenPosition.X - Size > clippingRectangle.Right ||
+                    screenPosition.Y + Size < clippingRectangle.Top || screenPosition.Y - Size > clippingRectangle.Bottom)
                 {
                     continue;
                 }
@@ -167,10 +172,18 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
                 polygons.Add(GetShape(Direction, screenPosition, Size));
             }
 
+            if (IsHighLighted)
+            {
+                var x = Transform(Centers[0]).X;
+                rc.DrawLine(x, 0, x, 1000, OxyPen.Create(OxyColors.White, 1.0), false);
+            }
+
             if (polygons.Count == 0) return;
 
             _screenPositions = positions.AsReadOnly();
             rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness);
+
+
 
             //if (!string.IsNullOrEmpty(Text))
             //{
@@ -267,7 +280,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         private static readonly double M1 = Math.Tan(Math.PI / 6);
 
         /// <summary>
-        /// The vertical distance to the top points of the triangles .
+        /// The vertical distance to the top points of the triangles.
         /// </summary>
         private static readonly double M2 = Math.Sqrt(1 + (M1 * M1));
 

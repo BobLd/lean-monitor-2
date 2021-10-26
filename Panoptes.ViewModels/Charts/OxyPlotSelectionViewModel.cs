@@ -640,14 +640,14 @@ namespace Panoptes.ViewModels.Charts
                                     break;
 
                                 /*
-                            case SeriesType.Bar:
-                                s = new RectangleSeries()
-                                {
-                                    Tag = serie.Value.Name,
-                                    Title = serie.Value.Name
-                                };
-                                plot.Series.Add(s);
-                                break;
+                                case SeriesType.Bar:
+                                    s = new RectangleSeries()
+                                    {
+                                        Tag = serie.Value.Name,
+                                        Title = serie.Value.Name
+                                    };
+                                    plot.Series.Add(s);
+                                    break;
                                 */
 
                                 default:
