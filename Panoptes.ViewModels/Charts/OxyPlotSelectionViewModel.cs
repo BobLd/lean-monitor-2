@@ -1,12 +1,12 @@
 ﻿using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using OxyPlot;
-using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using Panoptes.Model;
 using Panoptes.Model.Charting;
 using Panoptes.Model.Messages;
+using Panoptes.ViewModels.Charts.OxyPlot;
 using QuantConnect.Orders;
 using System;
 using System.Collections.Concurrent;
@@ -135,83 +135,74 @@ namespace Panoptes.ViewModels.Charts
             PlotTrades = new AsyncRelayCommand(ProcessPlotTrades, () => true);
         }
 
-        private static double GetNearestPointY(double x, Series series)
-        {
-            double minDist = double.MaxValue;
-            double y = double.NaN;
-            if (series is LineCandleStickSeries lcs)
-            {
-                foreach (var p in lcs.RawPoints)
-                {
-                    var dist = Math.Abs(x - p.X);
-                    if (dist < minDist)
-                    {
-                        minDist = dist;
-                        y = p.Y;
-                    }
-                }
-            }
-            else if (series is LineSeries l)
-            {
-                foreach (var p in l.Points)
-                {
-                    var dist = Math.Abs(x - p.X);
-                    if (dist < minDist)
-                    {
-                        minDist = dist;
-                        y = p.Y;
-                    }
-                }
-            }
-            else if (series is ScatterSeries s)
-            {
-                foreach (var p in s.Points)
-                {
-                    var dist = Math.Abs(x - p.X);
-                    if (dist < minDist)
-                    {
-                        minDist = dist;
-                        y = p.Y;
-                    }
-                }
-            }
-
-            return y;
-        }
-
         private void AddTradesToPlot(IDictionary<int, Order> orders)
         {
-            foreach (var trade in orders)
+            if (SelectedSeries == null) return;
+
+            lock (SelectedSeries.SyncRoot)
             {
-                bool isBuy = trade.Value.Direction == OrderDirection.Buy;
-                var date = DateTimeAxis.ToDouble(trade.Value.Time);
-
-                foreach (var series in SelectedSeries.Series)
+                foreach (var orderAsOf in orders.GroupBy(o => o.Value.Time))
                 {
-                    var y = GetNearestPointY(date, series);
-                    var pointAnnotation = new PointAnnotation()
-                    {
-                        X = date,
-                        Y = y,
-                        Fill = isBuy ? OxyColors.Green : OxyColors.Red,
-                        TextColor = OxyColors.White,
-                        Tag = $"trade_{series.Title}_{trade.Key}",
-                    };
+                    var ordersArr = orderAsOf.Select(o => o.Value).ToArray();
 
-                    pointAnnotation.MouseDown += PointAnnotation_MouseDown;
-                    SelectedSeries.Annotations.Add(pointAnnotation);
+                    var orderAnnotation = new OrderAnnotation(ordersArr, SelectedSeries.Series.ToList());
+                    orderAnnotation.MouseDown += OrderAnnotation_MouseDown;
+
+                    SelectedSeries.Annotations.Add(orderAnnotation);
                 }
-                /*
-                SelectedSeries.Annotations.Add(new ArrowAnnotation()
-                {
-                    EndPoint = new DataPoint(DateTimeAxis.ToDouble(trade.Value.Time), 0),
-                    ArrowDirection = new ScreenVector(0, isBuy ? -10 : 10),
-                    Color = isBuy ? OxyColors.Green : OxyColors.Red,
-                    TextColor = OxyColors.White,
-                    ToolTip = trade.Value.Tag,
-                });
-                */
             }
+        }
+
+        private void ClearHighlightSelectOrderPoints(int[] toKeep)
+        {
+            if (SelectedSeries == null) return;
+
+            foreach (int id in _selectedOrderIds.ToList())
+            {
+                if (toKeep.Contains(id))
+                {
+                    continue;
+                }
+
+                _selectedOrderIds.Remove(id);
+
+                foreach (var annot in SelectedSeries.Annotations.Where(a => a is OrderAnnotation oa && oa.OrderIds.Contains(id)))
+                {
+                    if (annot is OrderAnnotation point)
+                    {
+                        point.LowLight();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns true if order points were not already highlighted.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private bool HighlightSelectOrderPoints(int id)
+        {
+            if (SelectedSeries == null || _selectedOrderIds.Contains(id)) return false;
+
+            bool isFound = false;
+
+            foreach (var annot in SelectedSeries.Annotations.Where(a => a is OrderAnnotation oa && oa.OrderIds.Contains(id)))
+            {
+                isFound = true;
+                if (annot is OrderAnnotation point)
+                {
+                    point.HighLight();
+                }
+            }
+
+            if (isFound)
+            {
+                _selectedOrderIds.Add(id);
+                return true;
+            }
+
+            return false;
         }
 
         private Task ProcessPlotTrades(CancellationToken cancelationToken)
@@ -219,6 +210,8 @@ namespace Panoptes.ViewModels.Charts
             return Task.Run(() =>
             {
                 Trace.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Start ({IsPlotTrades})...");
+
+                if (SelectedSeries == null) return;
 
                 lock (SelectedSeries.SyncRoot)
                 {
@@ -232,35 +225,34 @@ namespace Panoptes.ViewModels.Charts
                         {
                             return;
                         }
-
                         AddTradesToPlot(_ordersDic);
                     }
                 }
 
-                InvalidatePlotThreadUI();
+                InvalidatePlotNoDataThreadUI();
+
                 Trace.WriteLine("OxyPlotSelectionViewModel.ProcessPlotTrades: Done.");
             }, cancelationToken);
         }
 
-        private void PointAnnotation_MouseDown(object sender, OxyMouseDownEventArgs e)
+        private readonly HashSet<int> _selectedOrderIds = new HashSet<int>();
+
+        private void OrderAnnotation_MouseDown(object sender, OxyMouseDownEventArgs e)
         {
-            if (sender is not Annotation annotation)
+            if (sender is not OrderAnnotation annotation)
             {
                 return;
             }
 
             try
             {
-                var tags = ((string)annotation.Tag).Split("_");
-                if (tags.Length > 0 && int.TryParse(tags[tags.Length - 1], out int id))
-                {
-                    Trace.WriteLine($"Clicked #{id} {annotation}");
-                    _messenger.Send(new TradeSelectedMessage("plot", id));
-                }
+                Trace.WriteLine($"OxyPlotSelectionViewModel.OrderAnnotation_MouseDown({string.Join(",", annotation.OrderIds)}) | IsAltDown: {e.IsAltDown}, IsControlDown: {e.IsControlDown}, IsShiftDown: {e.IsShiftDown}");
+
+                _messenger.Send(new TradeSelectedMessage(Name, annotation.OrderIds, e.IsControlDown));
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"PointAnnotation_MouseDown: {ex}");
+                Trace.WriteLine($"OrderAnnotation_MouseDown: {ex}");
             }
             finally
             {
@@ -446,6 +438,10 @@ namespace Panoptes.ViewModels.Charts
                         SelectedSeries?.InvalidatePlot(true);
                         break;
 
+                    case 2:
+                        SelectedSeries?.InvalidatePlot(false);
+                        break;
+
                     default:
                         throw new ArgumentOutOfRangeException(nameof(e), $"Unknown 'ProgressPercentage' value passed '{e.ProgressPercentage}'.");
                 }
@@ -467,12 +463,21 @@ namespace Panoptes.ViewModels.Charts
 
         private void ProcessTradeSelected(TradeSelectedMessage m)
         {
-            //if (m.Sender == "plot") return;
-
-            if (_ordersDic.TryGetValue(m.Value, out var ovm))
+            if (!m.IsCumulative)
             {
-                Trace.WriteLine($"PLot: Dislpay selected trade #{ovm.Id}");
+                // Not cumulative selection
+                ClearHighlightSelectOrderPoints(m.Value);
             }
+
+            foreach (var id in m.Value)
+            {
+                if (HighlightSelectOrderPoints(id) && _ordersDic.TryGetValue(id, out var ovm))
+                {
+                    Trace.WriteLine($"Plot: ProcessTradeSelected({ovm.Id})");
+                }
+            }
+
+            InvalidatePlotNoDataThreadUI();
         }
 
         private ObservableCollection<PlotModel> _plotModels = new ObservableCollection<PlotModel>();
@@ -492,6 +497,8 @@ namespace Panoptes.ViewModels.Charts
             get { return _selectedSeries; }
             set
             {
+                if (_selectedSeries == value) return;
+
                 _selectedSeries = value;
                 // Need to update toggle buttons for candles/lines, period selected
                 // or deactivate them
@@ -761,10 +768,14 @@ namespace Panoptes.ViewModels.Charts
                 }
             }
 
+            SelectedSeries.DefaultYAxis.Zoom(min, max);
+
+            /*
             foreach (var vert in SelectedSeries.Axes.Where(s => s.IsVertical()))
             {
                 vert.Zoom(min, max);
             }
+            */
         }
 
         private void AddPlotThreadUI(PlotModel plot)
@@ -783,6 +794,18 @@ namespace Panoptes.ViewModels.Charts
                 _lastInvalidatePlot = now;
                 _resultBgWorker.ReportProgress(1);
             }
+        }
+
+        private void InvalidatePlotNoDataThreadUI()
+        {
+            _resultBgWorker.ReportProgress(2);
+
+            //var now = DateTime.UtcNow;
+            //if ((now - _lastInvalidatePlot).TotalMilliseconds > 250)
+            //{
+            //    _lastInvalidatePlot = now;
+            //    _resultBgWorker.ReportProgress(2);
+            //}
         }
 
         private void Clear()

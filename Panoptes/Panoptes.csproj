@@ -3,7 +3,14 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>Resources\icon\halloween53_109170.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Resources\icon\halloween53_109170.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Resources\icon\halloween53_109170.ico" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.10.8" />
     <PackageReference Include="Avalonia.Desktop" Version="0.10.8" />

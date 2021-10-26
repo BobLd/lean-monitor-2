@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:newSession="clr-namespace:Panoptes.ViewModels.NewSession;assembly=Panoptes.ViewModels"
         xmlns:newSession1="clr-namespace:Panoptes.Views.NewSession"
+		Icon="/Resources/icon/halloween53_109170.ico"
 		DataContext="{Binding NewSessionWindow, Source={StaticResource Locator}}"
 		d:DesignHeight="500" d:DesignWidth="600"        
         Height="500" Width="600"

@@ -2,12 +2,19 @@
 
 namespace Panoptes.Model.Messages
 {
-    public class TradeSelectedMessage : ValueChangedMessage<int>
+    public sealed class TradeSelectedMessage : ValueChangedMessage<int[]>
     {
         public string Sender { get; }
-        public TradeSelectedMessage(string sender, int value) : base(value)
+
+        /// <summary>
+        /// Is it a cumulative selection (e.i. Ctrl is press down).
+        /// </summary>
+        public bool IsCumulative { get; }
+
+        public TradeSelectedMessage(string sender, int[] ids, bool isCumulative) : base(ids)
         {
             Sender = sender;
+            IsCumulative = isCumulative;
         }
     }
 }

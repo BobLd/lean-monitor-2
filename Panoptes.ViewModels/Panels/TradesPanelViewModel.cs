@@ -75,14 +75,19 @@ namespace Panoptes.ViewModels.Panels
             get { return _selectedItem; }
             set
             {
-                if (_selectedItem == value) return;
-                _selectedItem = value;
-                OnPropertyChanged();
+                SetSelectedItem(value);
 
                 if (_selectedItem == null) return; // We might want to be able to send null id
-                Trace.WriteLine($"Selected item #{_selectedItem.Id}");
-                _messenger.Send(new TradeSelectedMessage("trades", _selectedItem.Id));
+                Trace.WriteLine($"Selected item #{_selectedItem.Id} and sending message.");
+                _messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
             }
+        }
+
+        private void SetSelectedItem(OrderViewModel ovm)
+        {
+            if (_selectedItem == ovm) return;
+            _selectedItem = ovm;
+            OnPropertyChanged(nameof(SelectedItem));
         }
 
         private DateTime? _fromDate;
@@ -98,7 +103,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_fromDate == value) return;
                 _fromDate = value;
                 OnPropertyChanged();
-                _messenger.Send(new TradeFilterMessage("trades", _fromDate, _toDate));
+                _messenger.Send(new TradeFilterMessage(Name, _fromDate, _toDate));
             }
         }
 
@@ -115,7 +120,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_toDate == value) return;
                 _toDate = value;
                 OnPropertyChanged();
-                _messenger.Send(new TradeFilterMessage("trades", _fromDate, _toDate));
+                _messenger.Send(new TradeFilterMessage(Name, _fromDate, _toDate));
             }
         }
 
@@ -191,7 +196,6 @@ namespace Panoptes.ViewModels.Panels
                 OrdersHistory.Add(ovm);
             }
         }
-
         public TradesPanelViewModel()
         {
             Name = "Trades";
@@ -262,11 +266,13 @@ namespace Panoptes.ViewModels.Panels
 
         private void ProcessTradeSelected(TradeSelectedMessage m)
         {
-            if (m.Sender == "trades") return;
+            if (m.Sender == Name) return;
 
-            if (_ordersDic.TryGetValue(m.Value, out var ovm))
+            // Trade selected message received from another ViewModel
+            if (_ordersDic.TryGetValue(m.Value[0], out var ovm)) // TODO: support multiple orders id
             {
-                SelectedItem = ovm;
+                // We don't wnat to send another message of trade selected
+                SetSelectedItem(ovm);
             }
         }
 
