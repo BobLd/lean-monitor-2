@@ -117,5 +117,8 @@
 		</oxy:PlotView>
 
 		<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1" Grid.RowSpan="2"/>
+
+		<Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+			   Content="LOADING..." Grid.Row="1" IsVisible="{Binding DisplayLoading}"/>
 	</Grid>
 </UserControl>

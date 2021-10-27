@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
 {
+    // TODO - Avalonia 0.10.9
+    // #6730 Add ability to programmatically sort the DataGrid
+
     public sealed class TradesPanelViewModel : ToolPaneViewModel
     {
         private enum ActionsThreadUI : byte

@@ -12,9 +12,9 @@
     <AvaloniaResource Include="Resources\icon\halloween53_109170.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.8" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.8" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.8" />
+    <PackageReference Include="Avalonia" Version="0.10.9" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.9" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.9" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
     <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-20210915.2" />
    </ItemGroup>

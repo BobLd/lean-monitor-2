@@ -20,6 +20,17 @@ namespace Panoptes.Views.Panels
         {
             InitializeComponent();
             _dataGrid = this.Get<DataGrid>("_dataGrid");
+
+            _dataGrid.SelectionChanged += _dataGrid_SelectionChanged;
+        }
+
+        private void _dataGrid_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems == null || e.AddedItems.Count == 0) return;
+            if (e.AddedItems[0] is OrderViewModel ovm)
+            {
+                _dataGrid.ScrollIntoView(ovm, null);
+            }
         }
 
         private void InitializeComponent()

@@ -1,5 +1,6 @@
 ﻿using OxyPlot;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace Panoptes.ViewModels.Charts
@@ -19,6 +20,51 @@ namespace Panoptes.ViewModels.Charts
         }
 
         private const double epsilon = 1e-5;
+
+        /// <summary>
+        /// Gets the y coordinate of the point with the x coordinate that seats on the line, with interpolation.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="points"></param>
+        /// <returns></returns>
+        internal static double GetYCoordinateOnSeries(double x, List<DataPoint> points)
+        {
+            if (points.Count == 0)
+            {
+                return double.NaN;
+            }
+
+            var indexBefore = points.FindLastIndex(points.Count - 1, k => k.X <= x);
+            var indexAfter = indexBefore + 1;
+
+            if (indexBefore == -1)
+            {
+                // No point before current point's X
+                return points[indexAfter].Y;
+            }
+
+            DataPoint before = points[indexBefore];
+            if (indexAfter == points.Count || x.Equals(before.X))
+            {
+                // the after point is outside the array
+                // or the x is on the before point
+                return before.Y;
+            }
+
+            DataPoint after = points[indexAfter];
+            if (before.Equals(after))
+            {
+                return after.Y;
+            }
+
+            var (slope, intercept) = OxyPlotExtensions.GetSlopeIntercept(before, after);
+            if (double.IsNaN(slope))
+            {
+                return after.Y;
+            }
+
+            return slope * x + intercept;
+        }
 
         internal static (double Slope, double Intercept) GetSlopeIntercept(DataPoint point1, DataPoint point2)
         {

@@ -50,6 +50,22 @@ namespace Panoptes.ViewModels.Charts
 
         private readonly Dictionary<string, PlotModel> _plotModelsDict = new Dictionary<string, PlotModel>();
 
+        private bool _displayLoading;
+        public bool DisplayLoading
+        {
+            get
+            {
+                return _displayLoading;
+            }
+
+            set
+            {
+                if (_displayLoading == value) return;
+                _displayLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
         public AsyncRelayCommand PlotAll { get; }
         public AsyncRelayCommand Plot1m { get; }
         public AsyncRelayCommand Plot5m { get; }
@@ -141,17 +157,16 @@ namespace Panoptes.ViewModels.Charts
 
             var series = SelectedSeries.Series.ToList();
 
-            lock (SelectedSeries.SyncRoot)
+            // Do not use SelectedSeries.SyncRoot
+            // This will prevent async
+
+            foreach (var orderAsOf in orders.GroupBy(o => o.Value.Time))
             {
-                foreach (var orderAsOf in orders.GroupBy(o => o.Value.Time))
-                {
-                    var ordersArr = orderAsOf.Select(o => o.Value).ToArray();
+                var ordersArr = orderAsOf.Select(o => o.Value).ToArray();
 
-                    var orderAnnotation = new OrderAnnotation(ordersArr, series);
-                    orderAnnotation.MouseDown += OrderAnnotation_MouseDown;
-
-                    SelectedSeries.Annotations.Add(orderAnnotation);
-                }
+                var orderAnnotation = new OrderAnnotation(ordersArr, series);
+                orderAnnotation.MouseDown += OrderAnnotation_MouseDown;
+                SelectedSeries.Annotations.Add(orderAnnotation);
             }
         }
 
@@ -211,29 +226,32 @@ namespace Panoptes.ViewModels.Charts
         {
             return Task.Run(() =>
             {
+                // need try/catch + finally
                 Trace.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Start ({IsPlotTrades})...");
+                DisplayLoading = true;
 
                 if (SelectedSeries == null) return;
 
-                lock (SelectedSeries.SyncRoot)
+                // Do not use SelectedSeries.SyncRoot
+                // This will prevent async
+
+                if (!IsPlotTrades)
                 {
-                    if (!IsPlotTrades)
+                    SelectedSeries.Annotations.Clear();
+                }
+                else
+                {
+                    if (SelectedSeries.Series.Count == 0)
                     {
-                        SelectedSeries.Annotations.Clear();
+                        return;
                     }
-                    else
-                    {
-                        if (SelectedSeries.Series.Count == 0)
-                        {
-                            return;
-                        }
-                        AddTradesToPlot(_ordersDic);
-                    }
+                    AddTradesToPlot(_ordersDic);
                 }
 
                 InvalidatePlotNoDataThreadUI();
 
                 Trace.WriteLine("OxyPlotSelectionViewModel.ProcessPlotTrades: Done.");
+                DisplayLoading = false;
             }, cancelationToken);
         }
 
@@ -301,7 +319,10 @@ namespace Panoptes.ViewModels.Charts
         {
             return Task.Run(() =>
             {
+                // need try/catch + finally
                 Trace.WriteLine($"OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period})...");
+                DisplayLoading = true;
+
                 if (PlotSerieTypes == PlotSerieTypes.Candles && serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
@@ -322,20 +343,21 @@ namespace Panoptes.ViewModels.Charts
                     Period = period;
                 }
 
-                lock (SelectedSeries.SyncRoot)
+                //lock (SelectedSeries.SyncRoot)
+                //{
+                foreach (var serie in SelectedSeries.Series)
                 {
-                    foreach (var serie in SelectedSeries.Series)
+                    if (serie is LineCandleStickSeries candleStickSeries)
                     {
-                        if (serie is LineCandleStickSeries candleStickSeries)
-                        {
-                            candleStickSeries.SerieType = PlotSerieTypes;
-                            candleStickSeries.SetPeriod(Period);
-                        }
+                        candleStickSeries.SerieType = PlotSerieTypes;
+                        candleStickSeries.SetPeriod(Period);
                     }
                 }
+                //}
 
                 InvalidatePlotThreadUI();
                 Trace.WriteLine($"OxyPlotSelectionViewModelSetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}).");
+                DisplayLoading = false;
             }, cancelationToken);
         }
 
