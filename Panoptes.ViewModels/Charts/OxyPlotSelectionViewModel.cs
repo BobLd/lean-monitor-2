@@ -139,13 +139,15 @@ namespace Panoptes.ViewModels.Charts
         {
             if (SelectedSeries == null) return;
 
+            var series = SelectedSeries.Series.ToList();
+
             lock (SelectedSeries.SyncRoot)
             {
                 foreach (var orderAsOf in orders.GroupBy(o => o.Value.Time))
                 {
                     var ordersArr = orderAsOf.Select(o => o.Value).ToArray();
 
-                    var orderAnnotation = new OrderAnnotation(ordersArr, SelectedSeries.Series.ToList());
+                    var orderAnnotation = new OrderAnnotation(ordersArr, series);
                     orderAnnotation.MouseDown += OrderAnnotation_MouseDown;
 
                     SelectedSeries.Annotations.Add(orderAnnotation);

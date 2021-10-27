@@ -183,8 +183,6 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             _screenPositions = positions.AsReadOnly();
             rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness);
 
-
-
             //if (!string.IsNullOrEmpty(Text))
             //{
             //    var dx = -(int)TextHorizontalAlignment * (Size + TextMargin);
@@ -231,11 +229,12 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
 
         private static double GetNearestPointY(double x, Series series)
         {
-            double minDist = double.MaxValue;
-            double y = double.NaN;
             if (series is LineCandleStickSeries lcs)
             {
-                foreach (var p in lcs.RawPoints)
+                // TODO: need to check what's going on here
+                double minDist = double.MaxValue;
+                double y = double.NaN;
+                foreach (var p in lcs.RawPoints.Where(k => k.X <= x).OrderByDescending(k => k.X))
                 {
                     var dist = Math.Abs(x - p.X);
                     if (dist < minDist)
@@ -244,33 +243,84 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
                         y = p.Y;
                     }
                 }
+
+                return y;
+
+                //if (lcs.RawPoints.Count == 0)
+                //{
+                //    return double.NaN;
+                //}
+
+                //DataPoint before;
+                //if (!lcs.RawPoints.Any(k => k.X <= x))
+                //{
+                //    if (!lcs.RawPoints.Any(k => k.X >= x))
+                //    {
+                //        return double.NaN;
+                //    }
+                //    else
+                //    {
+                //        DataPoint after = lcs.RawPoints.Where(k => k.X >= x).OrderBy(k => k.X).First();
+                //        return after.Y;
+                //    }
+                //}
+
+                //before = lcs.RawPoints.Where(k => k.X <= x).OrderByDescending(k => k.X).First();
+                //if (!lcs.RawPoints.Any(k => k.X >= x))
+                //{
+                //    return before.Y;
+                //}
+                //else
+                //{
+                //    DataPoint after = lcs.RawPoints.Where(k => k.X >= x).OrderBy(k => k.X).First();
+                //    var (slope, intercept) = OxyPlotExtensions.GetSlopeIntercept(before, after);
+                //    return slope * x + intercept;
+                //}
             }
             else if (series is LineSeries l)
             {
-                foreach (var p in l.Points)
+                if (l.Points.Count == 0)
                 {
-                    var dist = Math.Abs(x - p.X);
-                    if (dist < minDist)
+                    return double.NaN;
+                }
+
+                DataPoint before;
+                if (!l.Points.Any(k => k.X <= x))
+                {
+                    if (!l.Points.Any(k => k.X >= x))
                     {
-                        minDist = dist;
-                        y = p.Y;
+                        return double.NaN;
                     }
+                    else
+                    {
+                        DataPoint after = l.Points.Where(k => k.X >= x).OrderBy(k => k.X).First();
+                        return after.Y;
+                    }
+                }
+
+                before = l.Points.Where(k => k.X <= x).OrderByDescending(k => k.X).First();
+                if (!l.Points.Any(k => k.X >= x))
+                {
+                    return before.Y;
+                }
+                else
+                {
+                    DataPoint after = l.Points.Where(k => k.X >= x).OrderBy(k => k.X).First();
+                    var (slope, intercept) = OxyPlotExtensions.GetSlopeIntercept(before, after);
+                    return slope * x + intercept;
                 }
             }
             else if (series is ScatterSeries s)
             {
-                foreach (var p in s.Points)
+                if (s.Points.Count == 0)
                 {
-                    var dist = Math.Abs(x - p.X);
-                    if (dist < minDist)
-                    {
-                        minDist = dist;
-                        y = p.Y;
-                    }
+                    return double.NaN;
                 }
+
+                return s.Points.Where(k => k.X <= x).OrderByDescending(k => k.X).FirstOrDefault()?.Y ?? double.NaN;
             }
 
-            return y;
+            return double.NaN;
         }
 
         #region RenderingExtensions
