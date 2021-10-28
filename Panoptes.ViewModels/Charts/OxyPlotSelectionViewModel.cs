@@ -161,7 +161,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 if (cancelationToken.IsCancellationRequested)
                 {
-                    Trace.WriteLine("OxyPlotSelectionViewModel.AddTradesToPlot: Canceled.");
+                    Debug.WriteLine("OxyPlotSelectionViewModel.AddTradesToPlot: Canceled.");
                     return;
                 }
 
@@ -230,7 +230,7 @@ namespace Panoptes.ViewModels.Charts
             // https://github.com/CommunityToolkit/WindowsCommunityToolkit/blob/rel/7.1.0/UnitTests/UnitTests.Shared/Mvvm/Test_AsyncRelayCommand.cs
             if (PlotTrades.IsRunning)
             {
-                Trace.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Canceling ({PlotTrades.ExecutionTask.Id}, {PlotTrades.ExecutionTask.Status})...");
+                Debug.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Canceling ({PlotTrades.ExecutionTask.Id}, {PlotTrades.ExecutionTask.Status})...");
                 PlotTrades.Cancel();
                 return Task.FromCanceled(cancelationToken); // or PlotTrades.ExecutionTask?
             }
@@ -238,7 +238,7 @@ namespace Panoptes.ViewModels.Charts
             return Task.Run(() =>
             {
                 // need try/catch + finally
-                Trace.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Start ({IsPlotTrades})...");
+                Debug.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Start ({IsPlotTrades})...");
                 DisplayLoading = true;
 
                 if (SelectedSeries == null) return;
@@ -261,13 +261,13 @@ namespace Panoptes.ViewModels.Charts
                     if (cancelationToken.IsCancellationRequested)
                     {
                         SelectedSeries.Annotations.Clear();
-                        Trace.WriteLine("OxyPlotSelectionViewModel.ProcessPlotTrades: Task was cancelled, annotations cleared.");
+                        Debug.WriteLine("OxyPlotSelectionViewModel.ProcessPlotTrades: Task was cancelled, annotations cleared.");
                     }
                 }
 
                 InvalidatePlotNoDataThreadUI();
 
-                Trace.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Done ({IsPlotTrades}).");
+                Debug.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Done ({IsPlotTrades}).");
                 DisplayLoading = false;
             }, cancelationToken);
         }
@@ -283,13 +283,13 @@ namespace Panoptes.ViewModels.Charts
 
             try
             {
-                Trace.WriteLine($"OxyPlotSelectionViewModel.OrderAnnotation_MouseDown({string.Join(",", annotation.OrderIds)}) | IsAltDown: {e.IsAltDown}, IsControlDown: {e.IsControlDown}, IsShiftDown: {e.IsShiftDown}");
+                Debug.WriteLine($"OxyPlotSelectionViewModel.OrderAnnotation_MouseDown({string.Join(",", annotation.OrderIds)}) | IsAltDown: {e.IsAltDown}, IsControlDown: {e.IsControlDown}, IsShiftDown: {e.IsShiftDown}");
 
                 _messenger.Send(new TradeSelectedMessage(Name, annotation.OrderIds, e.IsControlDown));
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"OrderAnnotation_MouseDown: {ex}");
+                Debug.WriteLine($"OrderAnnotation_MouseDown: {ex}");
             }
             finally
             {
@@ -337,13 +337,13 @@ namespace Panoptes.ViewModels.Charts
             return Task.Run(() =>
             {
                 // need try/catch + finally
-                Trace.WriteLine($"OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period})...");
+                Debug.WriteLine($"OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period})...");
                 DisplayLoading = true;
 
                 if (PlotSerieTypes == PlotSerieTypes.Candles && serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
-                    Trace.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Exit - Trying to set to 'All' while in Candle mode");
+                    Debug.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Exit - Trying to set to 'All' while in Candle mode");
                     Period = _period;
                     return;
                 }
@@ -352,7 +352,7 @@ namespace Panoptes.ViewModels.Charts
                 if (serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
-                    Trace.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Setting period to 1min bacause Candles");
+                    Debug.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Setting period to 1min bacause Candles");
                     Period = Times.OneMinute;
                 }
                 else
@@ -373,7 +373,7 @@ namespace Panoptes.ViewModels.Charts
                 //}
 
                 InvalidatePlotThreadUI();
-                Trace.WriteLine($"OxyPlotSelectionViewModelSetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}).");
+                Debug.WriteLine($"OxyPlotSelectionViewModelSetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}).");
                 DisplayLoading = false;
             }, cancelationToken);
         }
@@ -514,7 +514,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 if (HighlightSelectOrderPoints(id) && _ordersDic.TryGetValue(id, out var ovm))
                 {
-                    Trace.WriteLine($"Plot: ProcessTradeSelected({ovm.Id})");
+                    Debug.WriteLine($"Plot: ProcessTradeSelected({ovm.Id})");
                 }
             }
 

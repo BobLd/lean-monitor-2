@@ -194,7 +194,7 @@ namespace Panoptes.Model.Sessions.Stream
                     break;
 
                 default:
-                    Trace.WriteLine(packet);
+                    Debug.WriteLine(packet);
                     return false;
             }
 
@@ -290,7 +290,7 @@ namespace Panoptes.Model.Sessions.Stream
                     break;
 
                 default:
-                    Trace.WriteLine($"Type: {packetType}");
+                    Debug.WriteLine($"Type: {packetType}");
                     return false;
             }
             return true;

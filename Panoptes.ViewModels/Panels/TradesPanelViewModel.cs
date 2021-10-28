@@ -81,7 +81,7 @@ namespace Panoptes.ViewModels.Panels
                 SetSelectedItem(value);
 
                 if (_selectedItem == null) return; // We might want to be able to send null id
-                Trace.WriteLine($"Selected item #{_selectedItem.Id} and sending message.");
+                Debug.WriteLine($"Selected item #{_selectedItem.Id} and sending message.");
                 _messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
             }
         }
@@ -164,7 +164,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Trace.WriteLine("TradesPanelViewModel: Start applying filters...");
+                Debug.WriteLine("TradesPanelViewModel: Start applying filters...");
                 var (Add, Remove) = await GetFilteredOrders().ConfigureAwait(false);
 
                 foreach (var remove in Remove)
@@ -176,10 +176,11 @@ namespace Panoptes.ViewModels.Panels
                 {
                     _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderAddHistory, add);
                 }
-                Trace.WriteLine("TradesPanelViewModel: Done applying filters!");
+                Debug.WriteLine("TradesPanelViewModel: Done applying filters!");
             }
             catch (Exception ex)
             {
+                // Need to log
                 Trace.WriteLine(ex);
             }
         }
@@ -286,11 +287,11 @@ namespace Panoptes.ViewModels.Panels
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
                     // - Clear 'Today' order (now yesterday's one)
-                    Trace.WriteLine($"TradesPanelViewModel: NewDay @ {DateTime.Now:O}");
+                    Debug.WriteLine($"TradesPanelViewModel: NewDay @ {DateTime.Now:O}");
                     break;
 
                 default:
-                    Trace.WriteLine($"TradesPanelViewModel: {timerEventType} @ {DateTime.Now:O}");
+                    Debug.WriteLine($"TradesPanelViewModel: {timerEventType} @ {DateTime.Now:O}");
                     break;
             }
         }

@@ -53,7 +53,7 @@ namespace Panoptes
         private void OnMinute(object? state)
         {
 #if DEBUG
-            Trace.WriteLine($"GC.GetTotalMemory={GC.GetTotalMemory(false) / 1048576:0.0}MB");
+            Debug.WriteLine($"GC.GetTotalMemory={GC.GetTotalMemory(false) / 1048576:0.0}MB");
 #endif
 
             var utcNow = DateTime.UtcNow;
@@ -188,7 +188,7 @@ namespace Panoptes
         {
             if (_session == null)
             {
-                Trace.WriteLine("Cannot shutdown session. No session exists");
+                Debug.WriteLine("Cannot shutdown session. No session exists");
                 return;
             }
 

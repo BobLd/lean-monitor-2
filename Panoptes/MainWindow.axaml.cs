@@ -57,6 +57,7 @@ namespace Panoptes
             }
             catch (Exception ex)
             {
+                // Need to log
                 Trace.WriteLine(ex);
             }
         }
@@ -95,6 +96,7 @@ namespace Panoptes
             }
             catch (Exception e)
             {
+                // Need to log
                 Trace.WriteLine(e);
             }
         }
