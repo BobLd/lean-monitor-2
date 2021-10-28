@@ -216,13 +216,29 @@ namespace Panoptes.ViewModels.Charts
         /// Read-only copy of raw points.
         /// <para>Supposed to be thrad safe - TODO</para>
         /// </summary>
-        public IReadOnlyList<DataPoint> RawPoints //=> _rawPoints.AsReadOnly();
+        public IReadOnlyList<DataPoint> RawPoints
         {
             get
             {
                 lock(_rawPoints)
                 {
                     return _rawPoints.ToList();
+                }
+            }
+        }
+
+        private readonly List<DataPoint> _points = new List<DataPoint>();
+
+        /// <summary>
+        /// The points to display.
+        /// </summary>
+        public IReadOnlyList<DataPoint> Points
+        {
+            get
+            {
+                lock(_points)
+                {
+                    return _points.ToList();
                 }
             }
         }
@@ -290,7 +306,12 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         private void RenderLineSerie(IRenderContext rc)
         {
-            var actualPoints = _points;
+            List<DataPoint> actualPoints;
+            lock (_points)
+            {
+                actualPoints = _points.ToList();
+            }
+
             if (actualPoints == null || actualPoints.Count == 0)
             {
                 return;
@@ -455,39 +476,35 @@ namespace Panoptes.ViewModels.Charts
                 GetSelectableColor(LineColor), StrokeThickness, dashArray, LineJoin, false, outputBuffer);
         }
 
-        private readonly List<DataPoint> _points = new List<DataPoint>();
-
-        /// <summary>
-        /// The points to display.
-        /// </summary>
-        public IReadOnlyList<DataPoint> Points => _points.AsReadOnly();
-
         /// <summary>
         /// Update Candles
         /// </summary>
         /// <param name="newPoints">Must be distinct</param>
         private void UpdateLine(IReadOnlyList<DataPoint> newPoints, bool reset)
         {
-            if (reset)
+            lock (_points)
             {
-                _points.Clear();
-            }
-            else if (_points.Count > 0)
-            {
-                // Check if last point needs update
-                var last = _points[_points.Count - 1];
-                var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); //.ToList();
-                if (update.Any())
+                if (reset)
                 {
-                    newPoints = newPoints.Except(update).ToList();
-                    _points[_points.Count - 1] = new DataPoint(last.X, update.Last().Y);
-                    if (newPoints.Count == 0) return;
+                    _points.Clear();
                 }
-            }
+                else if (_points.Count > 0)
+                {
+                    // Check if last point needs update
+                    var last = _points[_points.Count - 1];
+                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); //.ToList();
+                    if (update.Any())
+                    {
+                        newPoints = newPoints.Except(update).ToList();
+                        _points[_points.Count - 1] = new DataPoint(last.X, update.Last().Y);
+                        if (newPoints.Count == 0) return;
+                    }
+                }
 
-            // Add new point
-            // need to check if there's more than 1 datapoint in each group...
-            _points.AddRange(newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y)));
+                // Add new point
+                // need to check if there's more than 1 datapoint in each group...
+                _points.AddRange(newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y)));
+            }
         }
         #endregion
 

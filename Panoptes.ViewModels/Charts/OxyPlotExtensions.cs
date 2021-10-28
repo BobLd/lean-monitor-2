@@ -57,7 +57,7 @@ namespace Panoptes.ViewModels.Charts
                 return after.Y;
             }
 
-            var (slope, intercept) = OxyPlotExtensions.GetSlopeIntercept(before, after);
+            var (slope, intercept) = GetSlopeIntercept(before, after);
             if (double.IsNaN(slope))
             {
                 return after.Y;

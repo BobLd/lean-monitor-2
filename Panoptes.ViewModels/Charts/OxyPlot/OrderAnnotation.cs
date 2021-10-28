@@ -232,12 +232,12 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             var copy = new List<DataPoint>();
             if (series is LineCandleStickSeries lcs)
             {
-                if (lcs.RawPoints.Count == 0)
+                if (lcs.Points.Count == 0)
                 {
                     return double.NaN;
                 }
 
-                copy = lcs.RawPoints.ToList();
+                copy = lcs.Points.ToList();
             }
             else if (series is LineSeries l)
             {
@@ -308,7 +308,6 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
 
             throw new NotImplementedException();
         }
-
         #endregion
     }
 }
