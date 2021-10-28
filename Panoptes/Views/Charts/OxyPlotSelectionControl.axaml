@@ -118,7 +118,10 @@
 
 		<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1" Grid.RowSpan="2"/>
 
-		<Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-			   Content="LOADING..." Grid.Row="1" IsVisible="{Binding DisplayLoading}"/>
+		<Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+			  IsVisible="{Binding DisplayLoading}" IsEnabled="{Binding DisplayLoading}">
+			<ProgressBar HorizontalAlignment="Center" VerticalAlignment="Center" IsIndeterminate="{Binding DisplayLoading}"/>
+			<Label HorizontalAlignment="Center" VerticalAlignment="Center" Content="LOADING..."/>
+		</Grid>
 	</Grid>
 </UserControl>

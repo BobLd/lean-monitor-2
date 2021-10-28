@@ -151,7 +151,7 @@ namespace Panoptes.ViewModels.Charts
             PlotTrades = new AsyncRelayCommand(ProcessPlotTrades, () => true);
         }
 
-        private void AddTradesToPlot(IDictionary<int, Order> orders)
+        private void AddTradesToPlot(IDictionary<int, Order> orders, CancellationToken cancelationToken)
         {
             if (SelectedSeries == null) return;
 
@@ -162,6 +162,12 @@ namespace Panoptes.ViewModels.Charts
 
             foreach (var orderAsOf in orders.GroupBy(o => o.Value.Time))
             {
+                if (cancelationToken.IsCancellationRequested)
+                {
+                    Trace.WriteLine("OxyPlotSelectionViewModel.AddTradesToPlot: Canceled.");
+                    return;
+                }
+
                 var ordersArr = orderAsOf.Select(o => o.Value).ToArray();
 
                 var orderAnnotation = new OrderAnnotation(ordersArr, series);
@@ -224,6 +230,14 @@ namespace Panoptes.ViewModels.Charts
 
         private Task ProcessPlotTrades(CancellationToken cancelationToken)
         {
+            // https://github.com/CommunityToolkit/WindowsCommunityToolkit/blob/rel/7.1.0/UnitTests/UnitTests.Shared/Mvvm/Test_AsyncRelayCommand.cs
+            if (PlotTrades.IsRunning)
+            {
+                Trace.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Canceling ({PlotTrades.ExecutionTask.Id}, {PlotTrades.ExecutionTask.Status})...");
+                PlotTrades.Cancel();
+                return Task.FromCanceled(cancelationToken); // or PlotTrades.ExecutionTask?
+            }
+
             return Task.Run(() =>
             {
                 // need try/catch + finally
@@ -245,12 +259,18 @@ namespace Panoptes.ViewModels.Charts
                     {
                         return;
                     }
-                    AddTradesToPlot(_ordersDic);
+                    AddTradesToPlot(_ordersDic, cancelationToken);
+
+                    if (cancelationToken.IsCancellationRequested)
+                    {
+                        SelectedSeries.Annotations.Clear();
+                        Trace.WriteLine("OxyPlotSelectionViewModel.ProcessPlotTrades: Task was cancelled, annotations cleared.");
+                    }
                 }
 
                 InvalidatePlotNoDataThreadUI();
 
-                Trace.WriteLine("OxyPlotSelectionViewModel.ProcessPlotTrades: Done.");
+                Trace.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Done ({IsPlotTrades}).");
                 DisplayLoading = false;
             }, cancelationToken);
         }
@@ -733,7 +753,7 @@ namespace Panoptes.ViewModels.Charts
 
             if (IsPlotTrades)
             {
-                AddTradesToPlot(result.Orders);
+                AddTradesToPlot(result.Orders, CancellationToken.None); // TODO ct
             }
 
             foreach (var order in result.Orders)

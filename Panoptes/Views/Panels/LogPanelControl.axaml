@@ -20,7 +20,7 @@
 					<DataGridTemplateColumn.CellTemplate>
 						<DataTemplate>
 							<StackPanel Orientation="Horizontal">
-								<DrawingPresenter Height="20" Width="20" Classes="logoType" VerticalAlignment="Center"/>
+								<DrawingPresenter Margin="1" Classes="logoType" VerticalAlignment="Center"/>
 								<Label Content="{Binding EntryType, Mode=OneWay}" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
 							</StackPanel>
 						</DataTemplate>

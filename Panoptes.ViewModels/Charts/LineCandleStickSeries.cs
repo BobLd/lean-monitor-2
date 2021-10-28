@@ -213,19 +213,34 @@ namespace Panoptes.ViewModels.Charts
         private readonly List<DataPoint> _rawPoints = new List<DataPoint>();
 
         /// <summary>
-        /// Copy of raw points.
+        /// Read-only copy of raw points.
+        /// <para>Supposed to be thrad safe - TODO</para>
         /// </summary>
-        public IReadOnlyList<DataPoint> RawPoints => _rawPoints.AsReadOnly();
+        public IReadOnlyList<DataPoint> RawPoints //=> _rawPoints.AsReadOnly();
+        {
+            get
+            {
+                lock(_rawPoints)
+                {
+                    return _rawPoints.ToList();
+                }
+            }
+        }
 
         public void AddRange(IEnumerable<DataPoint> dataPoints)
         {
             if (!dataPoints.Any()) return;
 
-            // Get distinct new data points
-            var newPoints = dataPoints.Except(_rawPoints).OrderBy(x => x.X).ToList();
+            List<DataPoint> newPoints;
 
-            // Add new data points to the raw data points
-            _rawPoints.AddRange(newPoints);
+            lock (_rawPoints)
+            {
+                // Get distinct new data points
+                newPoints = dataPoints.Except(_rawPoints).OrderBy(x => x.X).ToList();
+
+                // Add new data points to the raw data points
+                _rawPoints.AddRange(newPoints);
+            }
 
             // Update the line
             UpdateLine(newPoints, false);

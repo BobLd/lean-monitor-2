@@ -229,13 +229,15 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
 
         private static double GetNearestPointY(double x, Series series)
         {
+            var copy = new List<DataPoint>();
             if (series is LineCandleStickSeries lcs)
             {
                 if (lcs.RawPoints.Count == 0)
                 {
                     return double.NaN;
                 }
-                return OxyPlotExtensions.GetYCoordinateOnSeries(x, lcs.RawPoints.ToList());
+
+                copy = lcs.RawPoints.ToList();
             }
             else if (series is LineSeries l)
             {
@@ -243,10 +245,11 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
                 {
                     return double.NaN;
                 }
-                return OxyPlotExtensions.GetYCoordinateOnSeries(x, l.Points.ToList());
+
+                copy = l.Points.ToList();
             }
 
-            return double.NaN;
+            return OxyPlotExtensions.GetYCoordinateOnSeries(x, copy);
         }
 
         #region RenderingExtensions
