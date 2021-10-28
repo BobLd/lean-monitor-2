@@ -492,7 +492,7 @@ namespace Panoptes.ViewModels.Charts
                 {
                     // Check if last point needs update
                     var last = _points[_points.Count - 1];
-                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); //.ToList();
+                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); // Need to do particular case for Period=0 (All)
                     if (update.Any())
                     {
                         newPoints = newPoints.Except(update).ToList();
@@ -503,7 +503,7 @@ namespace Panoptes.ViewModels.Charts
 
                 // Add new point
                 // need to check if there's more than 1 datapoint in each group...
-                _points.AddRange(newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y)));
+                _points.AddRange(newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y))); // Need to do particular case for Period=0 (All)
             }
         }
         #endregion
@@ -677,6 +677,11 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="legendBox">The bounding rectangle of the legend box.</param>
         public override void RenderLegend(IRenderContext rc, OxyRect legendBox)
         {
+            if (Items == null || Items.Count == 0)
+            {
+                return;
+            }
+
             double xmid = (legendBox.Left + legendBox.Right) / 2;
             double yopen = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.7);
             double yclose = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.3);
@@ -982,6 +987,11 @@ namespace Panoptes.ViewModels.Charts
         protected override void UpdateData()
         {
             base.UpdateData();
+
+            if (Items == null || Items.Count == 0)
+            {
+                return;
+            }
 
             // determine minimum X gap between successive points
             var items = Items;

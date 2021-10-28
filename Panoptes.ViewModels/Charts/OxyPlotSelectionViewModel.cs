@@ -71,11 +71,8 @@ namespace Panoptes.ViewModels.Charts
         public AsyncRelayCommand Plot5m { get; }
         public AsyncRelayCommand Plot1h { get; }
         public AsyncRelayCommand Plot1d { get; }
-
         public AsyncRelayCommand PlotLines { get; }
-
         public AsyncRelayCommand PlotCandles { get; }
-
         public AsyncRelayCommand PlotTrades { get; }
 
         private PlotSerieTypes _plotSerieTypes { get; set; }
@@ -620,135 +617,135 @@ namespace Panoptes.ViewModels.Charts
                     AddPlotThreadUI(plot);
                 }
 
-                lock (plot.SyncRoot)
+                //lock (plot.SyncRoot)
+                //{
+                foreach (var serie in chart.Value.Series.OrderBy(x => x.Key))
                 {
-                    foreach (var serie in chart.Value.Series.OrderBy(x => x.Key))
+                    if (serie.Value.Values.Count == 0) continue;
+                    var s = plot.Series.FirstOrDefault(k => (string)k.Tag == serie.Value.Name);
+
+                    // Create Series
+                    if (s == null)
                     {
-                        if (serie.Value.Values.Count == 0) continue;
-                        var s = plot.Series.FirstOrDefault(k => (string)k.Tag == serie.Value.Name);
-
-                        // Create Series
-                        if (s == null)
-                        {
-                            //serie.Value.Unit
-                            switch (serie.Value.SeriesType)
-                            {
-                                // Handle candle and line series the same way, choice is done in UI
-                                case SeriesType.Candle:
-                                    s = new LineCandleStickSeries()
-                                    {
-                                        LineColor = serie.Value.Color.ToOxyColor().Negative(),
-                                        Tag = serie.Value.Name,
-                                        Title = serie.Value.Name,
-                                        SerieType = PlotSerieTypes.Candles,
-                                        Period = Times.FiveMinutes
-                                    };
-                                    plot.Series.Add(s);
-                                    break;
-
-                                case SeriesType.Line:
-                                    s = new LineCandleStickSeries()
-                                    {
-                                        LineColor = serie.Value.Color.ToOxyColor().Negative(),
-                                        Tag = serie.Value.Name,
-                                        Title = serie.Value.Name,
-                                        SerieType = PlotSerieTypes.Line,
-                                        Period = Times.FiveMinutes
-                                    };
-                                    plot.Series.Add(s);
-                                    break;
-
-                                case SeriesType.Bar:
-                                    s = new LineSeries()
-                                    {
-                                        Color = serie.Value.Color.ToOxyColor().Negative(),
-                                        Tag = serie.Value.Name,
-                                        Title = serie.Value.Name,
-                                        MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
-                                        CanTrackerInterpolatePoints = false
-                                    };
-                                    plot.Series.Add(s);
-                                    break;
-
-                                case SeriesType.Treemap: // todo
-                                case SeriesType.Scatter:
-                                    s = new ScatterSeries()
-                                    {
-                                        MarkerFill = serie.Value.Color.ToOxyColor().Negative(),
-                                        Tag = serie.Value.Name,
-                                        Title = serie.Value.Name,
-                                        MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
-                                        MarkerOutline = null,
-                                    };
-                                    plot.Series.Add(s);
-                                    break;
-
-                                /*
-                                case SeriesType.Bar:
-                                    s = new RectangleSeries()
-                                    {
-                                        Tag = serie.Value.Name,
-                                        Title = serie.Value.Name
-                                    };
-                                    plot.Series.Add(s);
-                                    break;
-                                */
-
-                                default:
-#pragma warning disable RCS1079 // Throwing of new NotImplementedException.
-                                    throw new NotImplementedException($"Chart type '{serie.Value.SeriesType}' is not implemented.");
-#pragma warning restore RCS1079 // Throwing of new NotImplementedException.
-                            }
-                        }
-
+                        //serie.Value.Unit
                         switch (serie.Value.SeriesType)
                         {
+                            // Handle candle and line series the same way, choice is done in UI
                             case SeriesType.Candle:
+                                s = new LineCandleStickSeries()
+                                {
+                                    LineColor = serie.Value.Color.ToOxyColor().Negative(),
+                                    Tag = serie.Value.Name,
+                                    Title = serie.Value.Name,
+                                    SerieType = PlotSerieTypes.Candles,
+                                    Period = Times.FiveMinutes
+                                };
+                                plot.Series.Add(s);
+                                break;
+
                             case SeriesType.Line:
-                                ((LineCandleStickSeries)s).AddRange(serie.Value.Values.Select(p =>
-                                            DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y)));
+                                s = new LineCandleStickSeries()
+                                {
+                                    LineColor = serie.Value.Color.ToOxyColor().Negative(),
+                                    Tag = serie.Value.Name,
+                                    Title = serie.Value.Name,
+                                    SerieType = PlotSerieTypes.Line,
+                                    Period = Times.FiveMinutes
+                                };
+                                plot.Series.Add(s);
                                 break;
 
                             case SeriesType.Bar:
-                                // Handle candle and line series the same way, choice is done in UI
-                                var lineSeriesBar = (LineSeries)s;
-                                var newLinePointsBar = serie.Value.Values.Select(p => DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y));
-                                var currentLineBar = lineSeriesBar.Points;
-                                var filteredLineBar = newLinePointsBar.Except(currentLineBar).ToList();
-                                if (filteredLineBar.Count == 0) break;
-                                lineSeriesBar.Points.AddRange(filteredLineBar);
+                                s = new LineSeries()
+                                {
+                                    Color = serie.Value.Color.ToOxyColor().Negative(),
+                                    Tag = serie.Value.Name,
+                                    Title = serie.Value.Name,
+                                    MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
+                                    CanTrackerInterpolatePoints = false
+                                };
+                                plot.Series.Add(s);
                                 break;
 
+                            case SeriesType.Treemap: // todo
                             case SeriesType.Scatter:
-                                var scatterSeries = (ScatterSeries)s;
-                                var newScatterSeries = serie.Value.Values.Select(p => new ScatterPoint(DateTimeAxis.ToDouble(p.X.ToDateTimeUtc()), (double)p.Y));
-                                var currentScatter = scatterSeries.Points;
-                                var filteredScatter = newScatterSeries.Except(currentScatter, ScatterPointComparer).ToList();
-                                if (filteredScatter.Count == 0) break;
-                                scatterSeries.Points.AddRange(filteredScatter);
+                                s = new ScatterSeries()
+                                {
+                                    MarkerFill = serie.Value.Color.ToOxyColor().Negative(),
+                                    Tag = serie.Value.Name,
+                                    Title = serie.Value.Name,
+                                    MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
+                                    MarkerOutline = null,
+                                };
+                                plot.Series.Add(s);
                                 break;
+
                             /*
-                        case SeriesType.Bar:
-                            var barSeries = (RectangleSeries)s;
-                            var newBarSeries = serie.Value.Values.Select(p =>
-                                new RectangleItem(DateTimeAxis.ToDouble(p.X.ToDateTimeUtc()),
-                                                  DateTimeAxis.ToDouble(p.X.ToDateTimeUtc().AddDays(1)),
-                                                  (double)p.Y, (double)p.Y, (double)p.Y));
-                            var currentBar = barSeries.Items;
-                            var filteredBar = newBarSeries.Except(currentBar).ToList();
-                            if (filteredBar.Count == 0) break;
-                            barSeries.Items.AddRange(filteredBar);
-                            break;
+                            case SeriesType.Bar:
+                                s = new RectangleSeries()
+                                {
+                                    Tag = serie.Value.Name,
+                                    Title = serie.Value.Name
+                                };
+                                plot.Series.Add(s);
+                                break;
                             */
 
-                            case SeriesType.Pie:
-                            case SeriesType.StackedArea:
                             default:
-                                continue; // TODO
-                                //throw new NotImplementedException();
+#pragma warning disable RCS1079 // Throwing of new NotImplementedException.
+                                throw new NotImplementedException($"Chart type '{serie.Value.SeriesType}' is not implemented.");
+#pragma warning restore RCS1079 // Throwing of new NotImplementedException.
                         }
                     }
+
+                    switch (serie.Value.SeriesType)
+                    {
+                        case SeriesType.Candle:
+                        case SeriesType.Line:
+                            ((LineCandleStickSeries)s).AddRange(serie.Value.Values.Select(p =>
+                                        DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y)));
+                            break;
+
+                        case SeriesType.Bar:
+                            // Handle candle and line series the same way, choice is done in UI
+                            var lineSeriesBar = (LineSeries)s;
+                            var newLinePointsBar = serie.Value.Values.Select(p => DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y));
+                            var currentLineBar = lineSeriesBar.Points;
+                            var filteredLineBar = newLinePointsBar.Except(currentLineBar).ToList();
+                            if (filteredLineBar.Count == 0) break;
+                            lineSeriesBar.Points.AddRange(filteredLineBar);
+                            break;
+
+                        case SeriesType.Scatter:
+                            var scatterSeries = (ScatterSeries)s;
+                            var newScatterSeries = serie.Value.Values.Select(p => new ScatterPoint(DateTimeAxis.ToDouble(p.X.ToDateTimeUtc()), (double)p.Y));
+                            var currentScatter = scatterSeries.Points;
+                            var filteredScatter = newScatterSeries.Except(currentScatter, ScatterPointComparer).ToList();
+                            if (filteredScatter.Count == 0) break;
+                            scatterSeries.Points.AddRange(filteredScatter);
+                            break;
+                        /*
+                    case SeriesType.Bar:
+                        var barSeries = (RectangleSeries)s;
+                        var newBarSeries = serie.Value.Values.Select(p =>
+                            new RectangleItem(DateTimeAxis.ToDouble(p.X.ToDateTimeUtc()),
+                                              DateTimeAxis.ToDouble(p.X.ToDateTimeUtc().AddDays(1)),
+                                              (double)p.Y, (double)p.Y, (double)p.Y));
+                        var currentBar = barSeries.Items;
+                        var filteredBar = newBarSeries.Except(currentBar).ToList();
+                        if (filteredBar.Count == 0) break;
+                        barSeries.Items.AddRange(filteredBar);
+                        break;
+                        */
+
+                        case SeriesType.Pie:
+                        case SeriesType.StackedArea:
+                        default:
+                            continue; // TODO
+                                      //throw new NotImplementedException();
+                    }
                 }
+                //}
             }
 
             if (IsPlotTrades)
