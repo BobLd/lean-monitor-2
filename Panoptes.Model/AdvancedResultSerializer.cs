@@ -24,7 +24,19 @@ namespace Panoptes.Model
 
             _options = new System.Text.Json.JsonSerializerOptions()
             {
-                 Converters = { new Serialization.OrderEventJsonConverter(), new Serialization.OrderJsonConverter() }
+                Converters =
+                {
+                    new Serialization.OrderEventJsonConverter(),
+                    new Serialization.OrderJsonConverter(),
+                    new Serialization.TimeSpanJsonConverter(),
+                    new Serialization.SymbolJsonConverter(),
+                    new Serialization.ColorJsonConverter(),
+                    new Serialization.ScatterMarkerSymbolJsonConverter()
+                },
+                //PropertyNamingPolicy = new Serialization.MappingJsonNamingPolicy(),
+                IncludeFields = true,
+                IgnoreNullValues = true,
+                NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString,
             };
         }
 
@@ -32,27 +44,36 @@ namespace Panoptes.Model
         {
             // https://github.com/JamesNK/Newtonsoft.Json/issues/1193
 
-            List<OrderEvent> orderEvents = null;
-            string orederEvents = GetOrderEvents(pathToResult);
-            if (File.Exists(orederEvents))
+            try
             {
-                using (var s = File.Open(orederEvents, FileMode.Open))
+                List<OrderEvent> orderEvents = null;
+                string orederEvents = GetOrderEvents(pathToResult);
+                if (File.Exists(orederEvents))
                 {
-                    orderEvents = await System.Text.Json.JsonSerializer.DeserializeAsync<List<OrderEvent>>(s, _options, cancellationToken).ConfigureAwait(false);
-                }
-            }
-
-            using (var s = File.Open(pathToResult, FileMode.Open))
-            {
-                var backtestResult = await System.Text.Json.JsonSerializer.DeserializeAsync<BacktestResult>(s, _options, cancellationToken: cancellationToken).ConfigureAwait(false);
-                if (backtestResult.OrderEvents != null)
-                {
-                    throw new ArgumentException();
+                    using (var s = File.Open(orederEvents, FileMode.Open))
+                    {
+                        orderEvents = await System.Text.Json.JsonSerializer.DeserializeAsync<List<OrderEvent>>(s, _options, cancellationToken).ConfigureAwait(false);
+                    }
                 }
 
-                backtestResult.OrderEvents = orderEvents;
-                return _resultConverter.FromBacktestResult(backtestResult);
+                using (var s = File.Open(pathToResult, FileMode.Open))
+                {
+                    var backtestResult = await System.Text.Json.JsonSerializer.DeserializeAsync<BacktestResult>(s, _options, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    if (backtestResult.OrderEvents != null)
+                    {
+                        throw new ArgumentException();
+                    }
+
+                    backtestResult.OrderEvents = orderEvents;
+                    return _resultConverter.FromBacktestResult(backtestResult);
+                }
             }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
         }
 
         public Result Deserialize(string pathToResult)

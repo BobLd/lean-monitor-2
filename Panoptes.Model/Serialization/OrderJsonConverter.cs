@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Panoptes.Model.Serialization
 {
+    // https://github.com/QuantConnect/Lean/blob/master/Common/Orders/OrderJsonConverter.cs
     public class OrderJsonConverter : JsonConverter<Order>
     {
         public override Order Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
