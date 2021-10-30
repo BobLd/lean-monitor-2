@@ -11,6 +11,7 @@ using Panoptes.Views.NewSession;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Panoptes
 {
@@ -131,6 +132,13 @@ namespace Panoptes
 
         private void MainWindow_OnDragOver(object sender, DragEventArgs e)
         {
+            var fileNames = e.Data.GetFileNames()?.ToArray();
+            if (fileNames?.Length == 1)
+            {
+                // Drag drop validated.
+                return;
+            }
+
             /*
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -141,11 +149,11 @@ namespace Panoptes
                     return;
                 }
             }
+            */
 
             // Drag drop invalidated.
             e.DragEffects = DragDropEffects.None;
             e.Handled = true;
-            */
         }
     }
 }

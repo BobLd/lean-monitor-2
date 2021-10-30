@@ -49,7 +49,7 @@
 
 		<StackPanel Grid.Row="1"  Orientation="Horizontal" HorizontalAlignment="Right">
 			<Button Margin="5" Width="80" IsDefault="True" Content="Open" Command="{Binding SelectedViewModel.OpenCommandAsync}"/>
-			<Button Margin="5" Width="80" IsCancel="True" Content="Cancel" Click="CloseButton_OnClick"/>
+			<Button Margin="5" Width="80" IsCancel="True" Content="Cancel" Command="{Binding SelectedViewModel.CancelCommand}" Click="CloseButton_OnClick"/>
 		</StackPanel>
 	</Grid>
 </Window>

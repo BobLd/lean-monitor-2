@@ -3,6 +3,7 @@ using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -16,7 +17,7 @@ namespace Panoptes.ViewModels.NewSession
         private readonly FileSessionParameters _fileSessionParameters = new FileSessionParameters
         {
 #if DEBUG
-            FileName = @"", // to change
+            FileName = @"C:\Users\Bob\Desktop\bt\SableSMA_4_14\SableSMA_4_14.json", // to change
 #else
             FileName = "",
 #endif
@@ -26,7 +27,22 @@ namespace Panoptes.ViewModels.NewSession
         public NewFileSessionViewModel(ISessionService sessionService)
         {
             _sessionService = sessionService;
-            OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
+            OpenCommandAsync = new AsyncRelayCommand(OpenAsync, () => CanOpen());
+            OpenCommandAsync.PropertyChanged += OpenCommandAsync_PropertyChanged;
+
+            CancelCommand = new RelayCommand(() =>
+            {
+                if (OpenCommandAsync.CanBeCanceled)
+                {
+                    OpenCommandAsync.Cancel();
+                }
+            });
+        }
+
+        private void OpenCommandAsync_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            Debug.WriteLine($"NewFileSessionViewModel: OpenCommandAsync_PropertyChanged({e.PropertyName})");
+            OpenCommandAsync.NotifyCanExecuteChanged();
         }
 
         private Task OpenAsync(CancellationToken cancellationToken)
@@ -35,7 +51,6 @@ namespace Panoptes.ViewModels.NewSession
             {
                 try
                 {
-                    // TODO: start waiting icon
                     _sessionService.Open(_fileSessionParameters);
                 }
                 catch (System.Exception)
@@ -51,6 +66,11 @@ namespace Panoptes.ViewModels.NewSession
 
         private bool CanOpen()
         {
+            if (OpenCommandAsync.IsRunning)
+            {
+                return false;
+            }
+
             var fieldsToValidate = new[]
             {
                 nameof(FileName),
@@ -81,6 +101,8 @@ namespace Panoptes.ViewModels.NewSession
         }
 
         public AsyncRelayCommand OpenCommandAsync { get; }
+
+        public RelayCommand CancelCommand { get; }
 
         public string Header { get; } = "File";
 

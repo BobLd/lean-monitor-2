@@ -20,6 +20,14 @@ namespace Panoptes.ViewModels.NewSession
         {
             _sessionService = sessionService;
             OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
+
+            CancelCommand = new RelayCommand(() =>
+            {
+                if (OpenCommandAsync.CanBeCanceled)
+                {
+                    OpenCommandAsync.Cancel();
+                }
+            });
         }
 
         private Task OpenAsync(CancellationToken cancellationToken)
@@ -93,6 +101,8 @@ namespace Panoptes.ViewModels.NewSession
         }
 
         public AsyncRelayCommand OpenCommandAsync { get; }
+
+        public RelayCommand CancelCommand { get; }
 
         public string Header { get; } = "MongoDB";
 

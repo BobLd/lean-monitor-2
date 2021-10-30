@@ -6,6 +6,8 @@ namespace Panoptes.ViewModels.NewSession
     {
         AsyncRelayCommand OpenCommandAsync { get; }
 
+        RelayCommand CancelCommand { get; }
+
         string Header { get; }
     }
 }

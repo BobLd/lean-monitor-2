@@ -22,6 +22,22 @@ namespace Panoptes.Model.MongoDB.Sessions
                 Credential = MongoCredential.CreateCredential(null, parameters.UserName, parameters.Password),
                 Server = new MongoServerAddress(_host, _port)
             });
+
+            try
+            {
+                // Check if password is correct
+                var names = _client.ListDatabaseNames();
+            }
+            catch (TimeoutException toEx)
+            {
+                // timeout
+                throw;
+            }
+            catch (MongoAuthenticationException authEx)
+            {
+                // wrong user/password
+                throw;
+            }
         }
 
         public override void Initialize()
@@ -31,7 +47,6 @@ namespace Panoptes.Model.MongoDB.Sessions
             _collection = _database.GetCollection<MongoDbPacket>("bar-3"); // algo name / id
 
             //LoadPreviousData();
-
             base.Initialize();
         }
 
