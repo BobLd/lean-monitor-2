@@ -4,6 +4,8 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes.Model
 {
@@ -59,6 +61,17 @@ namespace Panoptes.Model
 
             var backtestResult = JsonConvert.DeserializeObject<BacktestResult>(serializedResult);
             return _resultConverter.FromBacktestResult(backtestResult);
+        }
+
+        /// <summary>
+        /// Not implemented.
+        /// </summary>
+        /// <param name="pathToResult"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<Result> DeserializeAsync(string pathToResult, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
 
         public string Serialize(Result result)

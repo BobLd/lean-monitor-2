@@ -5,6 +5,8 @@ using QuantConnect.Packets;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes.Model
 {
@@ -13,10 +15,44 @@ namespace Panoptes.Model
         private readonly IResultConverter _resultConverter;
         private readonly JsonSerializer _serializer;
 
+        private readonly System.Text.Json.JsonSerializerOptions _options;
+
         public AdvancedResultSerializer(IResultConverter resultConverter)
         {
             _resultConverter = resultConverter;
             _serializer = new JsonSerializer() { Converters = { new OrderJsonConverter(), new OrderEventJsonConverter() } };
+
+            _options = new System.Text.Json.JsonSerializerOptions()
+            {
+                 Converters = { new Serialization.OrderEventJsonConverter(), new Serialization.OrderJsonConverter() }
+            };
+        }
+
+        public async Task<Result> DeserializeAsync(string pathToResult, CancellationToken cancellationToken)
+        {
+            // https://github.com/JamesNK/Newtonsoft.Json/issues/1193
+
+            List<OrderEvent> orderEvents = null;
+            string orederEvents = GetOrderEvents(pathToResult);
+            if (File.Exists(orederEvents))
+            {
+                using (var s = File.Open(orederEvents, FileMode.Open))
+                {
+                    orderEvents = await System.Text.Json.JsonSerializer.DeserializeAsync<List<OrderEvent>>(s, _options, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            using (var s = File.Open(pathToResult, FileMode.Open))
+            {
+                var backtestResult = await System.Text.Json.JsonSerializer.DeserializeAsync<BacktestResult>(s, _options, cancellationToken: cancellationToken).ConfigureAwait(false);
+                if (backtestResult.OrderEvents != null)
+                {
+                    throw new ArgumentException();
+                }
+
+                backtestResult.OrderEvents = orderEvents;
+                return _resultConverter.FromBacktestResult(backtestResult);
+            }
         }
 
         public Result Deserialize(string pathToResult)

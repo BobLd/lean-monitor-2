@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes.Model.Sessions
 {
@@ -20,6 +22,6 @@ namespace Panoptes.Model.Sessions
         /// Need to make Async
         /// </summary>
         /// <param name="parameters"></param>
-        void Open(ISessionParameters parameters);
+        Task Open(ISessionParameters parameters, CancellationToken cancellationToken);
     }
 }

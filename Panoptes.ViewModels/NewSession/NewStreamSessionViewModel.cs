@@ -4,6 +4,7 @@ using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.Stream;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.NewSession
@@ -27,7 +28,7 @@ namespace Panoptes.ViewModels.NewSession
             });
         }
 
-        private Task OpenAsync()
+        private Task OpenAsync(CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
@@ -36,8 +37,8 @@ namespace Panoptes.ViewModels.NewSession
                     CloseAfterCompleted = true,
                     Host = Host,
                     Port = int.Parse(Port)
-                });
-            });
+                }, cancellationToken);
+            }, cancellationToken);
         }
 
         private bool CanOpen()

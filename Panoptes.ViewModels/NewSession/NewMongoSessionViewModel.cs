@@ -49,7 +49,7 @@ namespace Panoptes.ViewModels.NewSession
                     Port = int.Parse(Port),
                     UserName = UserName,
                     Password = secureString
-                });
+                }, cancellationToken);
             }, cancellationToken);
         }
 

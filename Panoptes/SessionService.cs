@@ -11,6 +11,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes
 {
@@ -152,6 +153,7 @@ namespace Panoptes
                 var argument = arguments.Last();
 
                 // First try whether it is a port
+                /*
                 if (int.TryParse(argument, out int port))
                 {
                     Open(new StreamSessionParameters
@@ -161,6 +163,7 @@ namespace Panoptes
                     });
                     return;
                 }
+                */
 
                 /*
                 if (argument.EndsWith(".json"))
@@ -209,7 +212,7 @@ namespace Panoptes
             }
         }
 
-        public void Open(ISessionParameters parameters)
+        public Task Open(ISessionParameters parameters, CancellationToken cancellationToken)
         {
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -264,7 +267,7 @@ namespace Panoptes
                 throw new NullReferenceException("SessionService.Open: current session is null.");
             }
 
-            OpenSession(session);
+            return OpenSession(session, cancellationToken);
         }
 
         /*
@@ -282,12 +285,12 @@ namespace Panoptes
         }
         */
 
-        private void OpenSession(ISession session)
+        private Task OpenSession(ISession session, CancellationToken cancellationToken)
         {
             try
             {
                 _session = session;
-                _session.Initialize();
+                return _session.InitializeAsync(cancellationToken);
             }
             catch (Exception e)
             {

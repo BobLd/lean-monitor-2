@@ -51,7 +51,7 @@ namespace Panoptes.ViewModels.NewSession
             {
                 try
                 {
-                    _sessionService.Open(_fileSessionParameters);
+                    _sessionService.Open(_fileSessionParameters, cancellationToken);
                 }
                 catch (System.Exception)
                 {

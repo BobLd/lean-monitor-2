@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes.Model.Sessions.File
 {
@@ -44,6 +45,18 @@ namespace Panoptes.Model.Sessions.File
             Name = parameters.FileName;
         }
 
+        public async Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            // Initially open the file
+            await ReadFromFileAsync(cancellationToken).ConfigureAwait(false);
+
+            // Return when we do not have to configure the file system watcher
+            if (!_watchFile) return;
+
+            // Open a monitoring sessionss
+            Subscribe(); // async?
+        }
+
         public void Initialize()
         {
             // Initially open the file
@@ -59,6 +72,32 @@ namespace Panoptes.Model.Sessions.File
         public void Shutdown()
         {
             Unsubscribe();
+        }
+
+        private async Task ReadFromFileAsync(CancellationToken cancellationToken)
+        {
+            if (!System.IO.File.Exists(Name))
+            {
+                throw new FileNotFoundException($"File '{Name}' does not exist");
+            }
+
+            var result = await _resultSerializer.DeserializeAsync(Name, cancellationToken).ConfigureAwait(false);
+
+            var context = new ResultContext
+            {
+                Name = Name,
+                Result = result,
+                Progress = 1
+            };
+
+            // Send order events
+            result.OrderEvents.ForEach(oe =>
+            {
+                _syncContext.Send(_ => _sessionHandler.HandleOrderEvent(new OrderEventPacket() { Event = oe, Type = PacketType.OrderEvent }), null);
+            });
+
+            // Send results
+            _syncContext.Send(_ => _sessionHandler.HandleResult(context), null);
         }
 
         private void ReadFromFile()

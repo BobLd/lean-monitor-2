@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes.Model.Sessions.Stream
 {
@@ -61,6 +62,11 @@ namespace Panoptes.Model.Sessions.Stream
             };
 
             Subscribe();
+        }
+
+        public Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            return Task.Run(() => Initialize(), cancellationToken);
         }
 
         public virtual void Shutdown()
