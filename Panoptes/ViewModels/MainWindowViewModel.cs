@@ -202,10 +202,13 @@ namespace Panoptes.ViewModels
         private void InvalidateCommands()
         {
             OnPropertyChanged(nameof(IsSessionActive));
-            CloseCommand.NotifyCanExecuteChanged();
-            ExportCommand.NotifyCanExecuteChanged();
-            ConnectCommand.NotifyCanExecuteChanged();
-            DisconnectCommand.NotifyCanExecuteChanged();
+
+            // this need to be called from the UI thread.
+            // This is not the case anymore since Seesion open async
+            //CloseCommand.NotifyCanExecuteChanged();
+            //ExportCommand.NotifyCanExecuteChanged();
+            //ConnectCommand.NotifyCanExecuteChanged();
+            //DisconnectCommand.NotifyCanExecuteChanged();
         }
     }
 }

@@ -1,9 +1,10 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
-using Panoptes.Model;
 using Panoptes.Model.Messages;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Panoptes.ViewModels.Panels
@@ -13,6 +14,10 @@ namespace Panoptes.ViewModels.Panels
         private readonly IMessenger _messenger;
 
         private readonly Dictionary<DateTime, ProfitLossItemViewModel> _profitLossDico = new Dictionary<DateTime, ProfitLossItemViewModel>();
+
+        private readonly BackgroundWorker _pnlBgWorker;
+
+        private readonly BlockingCollection<Dictionary<DateTime, decimal>> _pnlQueue = new BlockingCollection<Dictionary<DateTime, decimal>>();
 
         private ObservableCollection<ProfitLossItemViewModel> _profitLoss = new ObservableCollection<ProfitLossItemViewModel>();
 
@@ -38,28 +43,55 @@ namespace Panoptes.ViewModels.Panels
             _messenger.Register<ProfitLossPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 if (m.Value.Result.ProfitLoss == null || m.Value.Result.ProfitLoss.Count == 0) return;
-                r.ParseResult(m.ResultContext.Result);
+                r._pnlQueue.Add(m.Value.Result.ProfitLoss);
             });
-            _messenger.Register<ProfitLossPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            _messenger.Register<ProfitLossPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear()); // Do we want to do that in ui thread?
+
+            _pnlBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _pnlBgWorker.DoWork += PnlQueueReader;
+            _pnlBgWorker.ProgressChanged += (s, e) =>
+            {
+                switch (e.ProgressPercentage)
+                {
+                    case 0:
+                        if (e.UserState is not ProfitLossItemViewModel item)
+                        {
+                            throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'ProfitLossItemViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        ProfitLoss.Add(item);
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(e), "Unknown 'ProgressPercentage' passed.");
+                }
+            };
+
+            _pnlBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
+            _pnlBgWorker.RunWorkerAsync();
         }
 
         private void Clear()
         {
+            // Do we want to do that in ui thread?
             ProfitLoss.Clear();
         }
 
-        private void ParseResult(Result result)
+        private void PnlQueueReader(object sender, DoWorkEventArgs e)
         {
-            foreach (var item in result.ProfitLoss.OrderBy(o => o.Key).Select(p => new ProfitLossItemViewModel { DateTime = p.Key, Profit = p.Value }))
+            while (!_pnlBgWorker.CancellationPending)
             {
-                if (_profitLossDico.ContainsKey(item.DateTime))
+                var pnls = _pnlQueue.Take(); // Need cancelation token
+                foreach (var item in pnls.OrderBy(o => o.Key).Select(p => new ProfitLossItemViewModel { DateTime = p.Key, Profit = p.Value }))
                 {
-                    _profitLossDico[item.DateTime].Profit = item.Profit;
-                }
-                else
-                {
-                    _profitLossDico[item.DateTime] = item;
-                    ProfitLoss.Add(item);
+                    if (_profitLossDico.ContainsKey(item.DateTime))
+                    {
+                        _profitLossDico[item.DateTime].Profit = item.Profit;
+                    }
+                    else
+                    {
+                        _profitLossDico[item.DateTime] = item;
+                        _pnlBgWorker.ReportProgress(0, item);
+                    }
                 }
             }
         }

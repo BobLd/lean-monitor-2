@@ -3,6 +3,7 @@ using OxyPlot.Series;
 using Panoptes.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Panoptes.ViewModels.Charts
@@ -194,8 +195,11 @@ namespace Panoptes.ViewModels.Charts
                     break;
 
                 case PlotSerieTypes.Line:
-                    MinX = MinY = MaxX = MaxY = double.NaN;
-                    InternalUpdateMaxMin(_points);
+                    lock (_points)
+                    {
+                        MinX = MinY = MaxX = MaxY = double.NaN;
+                        InternalUpdateMaxMin(_points);
+                    }
                     break;
             }
         }
@@ -317,7 +321,19 @@ namespace Panoptes.ViewModels.Charts
                 return;
             }
 
-            VerifyAxes();
+            if (XAxis == null)
+            {
+                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - XAxis is null.");
+                return;
+            }
+
+            if (YAxis == null)
+            {
+                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - YAxis is null.");
+                return;
+            }
+
+            VerifyAxes(); // this is prevented by the checks above
 
             var clippingRect = GetClippingRect();
             rc.SetClip(clippingRect);
@@ -522,7 +538,19 @@ namespace Panoptes.ViewModels.Charts
                 return;
             }
 
-            VerifyAxes();
+            if (XAxis == null)
+            {
+                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - XAxis is null.");
+                return;
+            }
+
+            if (YAxis == null)
+            {
+                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - YAxis is null.");
+                return;
+            }
+
+            VerifyAxes(); // this is prevented by the checks above
 
             var dashArray = LineStyle.GetDashArray();
 
@@ -688,6 +716,18 @@ namespace Panoptes.ViewModels.Charts
             double[] dashArray = LineStyle.GetDashArray();
 
             var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
+
+            if (XAxis == null)
+            {
+                Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - XAxis is null.");
+                return;
+            }
+
+            if (YAxis == null)
+            {
+                Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - YAxis is null.");
+                return;
+            }
 
             var first = Items[0];
             var candlewidth = Math.Min(

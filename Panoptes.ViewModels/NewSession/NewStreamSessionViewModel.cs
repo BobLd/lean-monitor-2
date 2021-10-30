@@ -4,6 +4,7 @@ using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.Stream;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.NewSession
 {
@@ -15,16 +16,19 @@ namespace Panoptes.ViewModels.NewSession
         {
             _sessionService = sessionService;
 
-            OpenCommand = new RelayCommand(Open, CanOpen);
+            OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
         }
 
-        private void Open()
+        private Task OpenAsync()
         {
-            _sessionService.Open(new StreamSessionParameters
+            return Task.Run(() =>
             {
-                CloseAfterCompleted = true,
-                Host = Host,
-                Port = int.Parse(Port)
+                _sessionService.Open(new StreamSessionParameters
+                {
+                    CloseAfterCompleted = true,
+                    Host = Host,
+                    Port = int.Parse(Port)
+                });
             });
         }
 
@@ -47,7 +51,7 @@ namespace Panoptes.ViewModels.NewSession
             {
                 _host = value;
                 OnPropertyChanged();
-                OpenCommand.NotifyCanExecuteChanged();
+                OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
 
@@ -59,11 +63,11 @@ namespace Panoptes.ViewModels.NewSession
             {
                 _port = value;
                 OnPropertyChanged();
-                OpenCommand.NotifyCanExecuteChanged();
+                OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
 
-        public RelayCommand OpenCommand { get; }
+        public AsyncRelayCommand OpenCommandAsync { get; }
 
         public string Header { get; } = "Stream";
 

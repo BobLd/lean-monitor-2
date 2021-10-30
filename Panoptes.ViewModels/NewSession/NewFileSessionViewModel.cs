@@ -5,6 +5,8 @@ using Panoptes.Model.Sessions.File;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.NewSession
 {
@@ -14,7 +16,7 @@ namespace Panoptes.ViewModels.NewSession
         private readonly FileSessionParameters _fileSessionParameters = new FileSessionParameters
         {
 #if DEBUG
-            FileName = @"D:\qc\results\BasicTemplateCryptoAlgorithm.json",
+            FileName = @"", // to change
 #else
             FileName = "",
 #endif
@@ -24,24 +26,27 @@ namespace Panoptes.ViewModels.NewSession
         public NewFileSessionViewModel(ISessionService sessionService)
         {
             _sessionService = sessionService;
-            OpenCommand = new RelayCommand(Open, CanOpen);
+            OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
         }
 
-        private void Open()
+        private Task OpenAsync(CancellationToken cancellationToken)
         {
-            try
+            return Task.Run(() =>
             {
-                // TODO: start waiting icon
-                _sessionService.Open(_fileSessionParameters);
-            }
-            catch (System.Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                // 
-            }
+                try
+                {
+                    // TODO: start waiting icon
+                    _sessionService.Open(_fileSessionParameters);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
+                finally
+                {
+                    // 
+                }
+            }, cancellationToken);
         }
 
         private bool CanOpen()
@@ -61,7 +66,7 @@ namespace Panoptes.ViewModels.NewSession
             {
                 _fileSessionParameters.FileName = value;
                 OnPropertyChanged();
-                OpenCommand.NotifyCanExecuteChanged();
+                OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
 
@@ -75,7 +80,7 @@ namespace Panoptes.ViewModels.NewSession
             }
         }
 
-        public RelayCommand OpenCommand { get; }
+        public AsyncRelayCommand OpenCommandAsync { get; }
 
         public string Header { get; } = "File";
 

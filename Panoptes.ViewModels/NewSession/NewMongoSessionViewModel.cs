@@ -5,6 +5,8 @@ using Panoptes.Model.Sessions;
 using System.ComponentModel;
 using System.Linq;
 using System.Security;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.NewSession
 {
@@ -17,26 +19,30 @@ namespace Panoptes.ViewModels.NewSession
         public NewMongoSessionViewModel(ISessionService sessionService)
         {
             _sessionService = sessionService;
-            OpenCommand = new RelayCommand(Open, CanOpen);
+            OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
         }
 
-        private void Open()
+        private Task OpenAsync(CancellationToken cancellationToken)
         {
-            var secureString = new SecureString();
-            foreach (var c in Password)
+            return Task.Run(() =>
             {
-                secureString.AppendChar(c);
-            }
-            Password = string.Empty;
+                var secureString = new SecureString();
+                foreach (var c in Password)
+                {
+                    secureString.AppendChar(c);
+                }
+                Password = string.Empty;
 
-            _sessionService.Open(new MongoSessionParameters
-            {
-                CloseAfterCompleted = true,
-                Host = Host,
-                Port = int.Parse(Port),
-                UserName = UserName,
-                Password = secureString
-            });
+                // Need to open async
+                _sessionService.Open(new MongoSessionParameters
+                {
+                    CloseAfterCompleted = true,
+                    Host = Host,
+                    Port = int.Parse(Port),
+                    UserName = UserName,
+                    Password = secureString
+                });
+            }, cancellationToken);
         }
 
         private bool CanOpen()
@@ -58,7 +64,7 @@ namespace Panoptes.ViewModels.NewSession
             {
                 _host = value;
                 OnPropertyChanged();
-                OpenCommand.NotifyCanExecuteChanged();
+                OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
 
@@ -70,7 +76,7 @@ namespace Panoptes.ViewModels.NewSession
             {
                 _port = value;
                 OnPropertyChanged();
-                OpenCommand.NotifyCanExecuteChanged();
+                OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
 
@@ -82,11 +88,11 @@ namespace Panoptes.ViewModels.NewSession
             {
                 _username = value;
                 OnPropertyChanged();
-                OpenCommand.NotifyCanExecuteChanged();
+                OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
 
-        public RelayCommand OpenCommand { get; }
+        public AsyncRelayCommand OpenCommandAsync { get; }
 
         public string Header { get; } = "MongoDB";
 

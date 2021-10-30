@@ -1,9 +1,11 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
-using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Statistics;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace Panoptes.ViewModels.Panels
 {
@@ -11,6 +13,11 @@ namespace Panoptes.ViewModels.Panels
     {
         private readonly IMessenger _messenger;
         private readonly IStatisticsFormatter _statisticsFormatter;
+
+        private readonly BackgroundWorker _pnlBgWorker;
+
+        private readonly BlockingCollection<Dictionary<string, string>> _statisticsQueue = new BlockingCollection<Dictionary<string, string>>();
+
         private readonly Dictionary<string, StatisticViewModel> _statisticsDico = new Dictionary<string, StatisticViewModel>();
 
         public RuntimeStatisticsPanelViewModel()
@@ -22,8 +29,34 @@ namespace Panoptes.ViewModels.Panels
         {
             _messenger = messenger;
             _statisticsFormatter = statisticsFormatter;
-            _messenger.Register<RuntimeStatisticsPanelViewModel, SessionUpdateMessage>(this, (r, m) => r.ParseResult(m.ResultContext.Result));
-            _messenger.Register<RuntimeStatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            _messenger.Register<RuntimeStatisticsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
+            {
+                if (m.Value.Result.RuntimeStatistics == null || m.Value.Result.RuntimeStatistics.Count == 0) return;
+                r._statisticsQueue.Add(m.Value.Result.RuntimeStatistics);
+            });
+            _messenger.Register<RuntimeStatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear()); // Do we want to do that in ui thread?
+
+            _pnlBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _pnlBgWorker.DoWork += PnlQueueReader;
+            _pnlBgWorker.ProgressChanged += (s, e) =>
+            {
+                switch (e.ProgressPercentage)
+                {
+                    case 0:
+                        if (e.UserState is not StatisticViewModel item)
+                        {
+                            throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'StatisticViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        Statistics.Add(item);
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(e), "Unknown 'ProgressPercentage' passed.");
+                }
+            };
+
+            _pnlBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
+            _pnlBgWorker.RunWorkerAsync();
         }
 
         private ObservableCollection<StatisticViewModel> _statistics = new ObservableCollection<StatisticViewModel>();
@@ -39,40 +72,35 @@ namespace Panoptes.ViewModels.Panels
 
         private void Clear()
         {
+            // Do we want to do that in ui thread?
             Statistics.Clear();
         }
 
-        private void ParseResult(Result result)
+        private void PnlQueueReader(object sender, DoWorkEventArgs e)
         {
-            if (result.RuntimeStatistics.Count == 0) return;
-            foreach (var stat in result.RuntimeStatistics)
+            while (!_pnlBgWorker.CancellationPending)
             {
-                if (!_statisticsDico.ContainsKey(stat.Key))
+                var statistics = _statisticsQueue.Take(); // Need cancelation token
+                foreach (var stat in statistics)
                 {
-                    var vm = new StatisticViewModel
+                    if (!_statisticsDico.ContainsKey(stat.Key))
                     {
-                        Name = stat.Key,
-                        Value = stat.Value,
-                        State = _statisticsFormatter.Format(stat.Key, stat.Value)
-                    };
-                    _statisticsDico.Add(stat.Key, vm);
-                    Statistics.Add(vm);
-                }
-                else
-                {
-                    _statisticsDico[stat.Key].Value = stat.Value;
-                    _statisticsDico[stat.Key].State = _statisticsFormatter.Format(stat.Key, stat.Value);
+                        var vm = new StatisticViewModel
+                        {
+                            Name = stat.Key,
+                            Value = stat.Value,
+                            State = _statisticsFormatter.Format(stat.Key, stat.Value)
+                        };
+                        _statisticsDico.Add(stat.Key, vm);
+                        _pnlBgWorker.ReportProgress(0, vm);
+                    }
+                    else
+                    {
+                        _statisticsDico[stat.Key].Value = stat.Value;
+                        _statisticsDico[stat.Key].State = _statisticsFormatter.Format(stat.Key, stat.Value);
+                    }
                 }
             }
-
-            /*
-            Statistics = new ObservableCollection<StatisticViewModel>(result.RuntimeStatistics.Select(s => new StatisticViewModel
-            {
-                Name = s.Key,
-                Value = s.Value,
-                State = _statisticsFormatter.Format(s.Key, s.Value)
-            }));
-            */
         }
     }
 }

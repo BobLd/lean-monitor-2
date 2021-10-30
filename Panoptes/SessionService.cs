@@ -219,6 +219,8 @@ namespace Panoptes
                 ShutdownSession();
             }
 
+            ISession session = null;
+
             if (parameters is MongoSessionParameters mongoParameters)
             {
                 if (string.IsNullOrWhiteSpace(mongoParameters.Host))
@@ -227,8 +229,8 @@ namespace Panoptes
                 }
 
                 // Open a new session and open it
-                var session = new MongoSession(this, _resultConverter, mongoParameters);
-                OpenSession(session);
+                session = new MongoSession(this, _resultConverter, mongoParameters);
+                //OpenSession(session);
             }
             else if (parameters is StreamSessionParameters streamParameters)
             {
@@ -239,21 +241,33 @@ namespace Panoptes
 
                 // Open a new session and open it
 #if DEBUG
-                var session = new Model.Mock.Sessions.MockStreamSession(this, _resultConverter, streamParameters);
+                // We need to make sure to create the session in UI thread. If not, SynchronizationContext.Current will be null
+                // Because Open() is now call async, it's not the case anymore
+                // https://stackoverflow.com/questions/7075491/why-is-synchronizationcontext-current-null
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    session = new Model.Mock.Sessions.MockStreamSession(this, _resultConverter, streamParameters);
+                }).Wait();
 #else
-                var session = new StreamSession(this, _resultConverter, streamParameters);
+                session = new StreamSession(this, _resultConverter, streamParameters);
 #endif
-                OpenSession(session);
+                //OpenSession(session);
             }
             else if (parameters is FileSessionParameters fileParameters)
-            {
-                var session = new FileSession(this, _resultSerializer, fileParameters);
-                OpenSession(session);
+            {                // We need to make sure to create the session in UI thread. If not, SynchronizationContext.Current will be null
+                // Because Open() is now call async, it's not the case anymore
+                // https://stackoverflow.com/questions/7075491/why-is-synchronizationcontext-current-null
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    session = new FileSession(this, _resultSerializer, fileParameters);
+                }).Wait();
             }
             else
             {
                 throw new ArgumentException($"Unknown ISessionParameters of type '{parameters.GetType()}'.", nameof(parameters));
             }
+
+            OpenSession(session);
         }
 
         /*
@@ -276,7 +290,7 @@ namespace Panoptes
             try
             {
                 _session = session;
-                session.Initialize();
+                _session.Initialize();
             }
             catch (Exception e)
             {

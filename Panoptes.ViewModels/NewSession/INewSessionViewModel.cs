@@ -4,7 +4,7 @@ namespace Panoptes.ViewModels.NewSession
 {
     public interface INewSessionViewModel
     {
-        RelayCommand OpenCommand { get; }
+        AsyncRelayCommand OpenCommandAsync { get; }
 
         string Header { get; }
     }

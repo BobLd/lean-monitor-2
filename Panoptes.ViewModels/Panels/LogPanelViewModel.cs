@@ -28,7 +28,7 @@ namespace Panoptes.ViewModels.Panels
         {
             _messenger = messenger;
             _messenger.Register<LogPanelViewModel, LogEntryReceivedMessage>(this, (r, m) => r.ParseResult(m));
-            _messenger.Register<LogPanelViewModel, SessionClosedMessage>(this, (recipient, _) => recipient.Clear());
+            _messenger.Register<LogPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
         }
 
         private void Clear()
@@ -38,6 +38,7 @@ namespace Panoptes.ViewModels.Panels
 
         private void ParseResult(LogEntryReceivedMessage message)
         {
+            // Need to use BackgroundWorker
             LogEntries.Add(new LogPanelItemViewModel
             {
                 DateTime = message.DateTime,

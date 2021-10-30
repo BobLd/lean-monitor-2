@@ -45,6 +45,11 @@ namespace Panoptes.Model.Sessions.Stream
             _closeAfterCompleted = parameters.CloseAfterCompleted;
 
             _syncContext = SynchronizationContext.Current;
+
+            if (_syncContext == null)
+            {
+                throw new NullReferenceException($"BaseStreamSession: {SynchronizationContext.Current} is null, please make sure the seesion was created in UI thread.");
+            }
         }
 
         public virtual void Initialize()

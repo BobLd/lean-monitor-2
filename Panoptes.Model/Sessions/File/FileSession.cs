@@ -33,6 +33,11 @@ namespace Panoptes.Model.Sessions.File
             _watchFile = parameters.Watch;
             _syncContext = SynchronizationContext.Current;
 
+            if (_syncContext == null)
+            {
+                throw new NullReferenceException($"FileSession: {SynchronizationContext.Current} is null, please make sure the seesion was created in UI thread.");
+            }
+
             _resultSerializer = resultSerializer;
             _sessionHandler = resultHandler;
 
@@ -73,10 +78,13 @@ namespace Panoptes.Model.Sessions.File
             };
 
             // Send order events
-            result.OrderEvents.ForEach(oe => _sessionHandler.HandleOrderEvent(new OrderEventPacket() { Event = oe, Type = PacketType.OrderEvent }));
+            result.OrderEvents.ForEach(oe =>
+            {
+                _syncContext.Send(_ => _sessionHandler.HandleOrderEvent(new OrderEventPacket() { Event = oe, Type = PacketType.OrderEvent }), null);
+            });
 
             // Send results
-            _sessionHandler.HandleResult(context);
+            _syncContext.Send(_ => _sessionHandler.HandleResult(context), null);
         }
 
         public void Subscribe()
@@ -131,7 +139,7 @@ namespace Panoptes.Model.Sessions.File
             private set
             {
                 _state = value;
-                _sessionHandler.HandleStateChanged(value);
+                _sessionHandler.HandleStateChanged(value); // _syncContext??
             }
         }
 

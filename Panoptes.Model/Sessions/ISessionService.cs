@@ -16,6 +16,10 @@ namespace Panoptes.Model.Sessions
 
         bool CanSubscribe { get; }
 
+        /// <summary>
+        /// Need to make Async
+        /// </summary>
+        /// <param name="parameters"></param>
         void Open(ISessionParameters parameters);
     }
 }
