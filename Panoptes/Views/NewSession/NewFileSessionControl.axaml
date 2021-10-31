@@ -13,6 +13,7 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="5"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
@@ -20,7 +21,7 @@
 		<TextBox Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding FileName}"/>
 
 		<CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding FileWatch}" Content="Monitor for changes"/>
-		<ProgressBar Grid.Row="2" Grid.ColumnSpan="3" VerticalAlignment="Center" HorizontalAlignment="Center"
-					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}"/>
+		<ProgressBar Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>
 	</Grid>
 </UserControl>

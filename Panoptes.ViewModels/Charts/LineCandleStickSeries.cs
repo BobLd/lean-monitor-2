@@ -708,49 +708,59 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="legendBox">The bounding rectangle of the legend box.</param>
         public override void RenderLegend(IRenderContext rc, OxyRect legendBox)
         {
-            var item = Items.ToList();
-            if (item == null || item.Count == 0)
+            try
             {
-                return;
+                lock (Items)
+                {
+                    var item = Items.ToList();
+                    if (item == null || item.Count == 0)
+                    {
+                        return;
+                    }
+
+                    double xmid = (legendBox.Left + legendBox.Right) / 2;
+                    double yopen = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.7);
+                    double yclose = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.3);
+                    double[] dashArray = LineStyle.GetDashArray();
+
+                    var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
+
+                    if (XAxis == null)
+                    {
+                        Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - XAxis is null.");
+                        return;
+                    }
+
+                    if (YAxis == null)
+                    {
+                        Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - YAxis is null.");
+                        return;
+                    }
+
+                    var first = item[0];
+                    var candlewidth = Math.Min(
+                        legendBox.Width,
+                        XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X));
+
+                    rc.DrawLine(
+                        new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
+                        GetSelectableColor(ActualColor),
+                        StrokeThickness,
+                        dashArray,
+                        LineJoin.Miter,
+                        true);
+
+                    rc.DrawRectangleAsPolygon(
+                        new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
+                        GetSelectableFillColor(IncreasingColor),
+                        GetSelectableColor(ActualColor),
+                        StrokeThickness);
+                }
             }
-
-            double xmid = (legendBox.Left + legendBox.Right) / 2;
-            double yopen = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.7);
-            double yclose = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.3);
-            double[] dashArray = LineStyle.GetDashArray();
-
-            var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
-
-            if (XAxis == null)
+            catch (Exception ex)
             {
-                Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - XAxis is null.");
-                return;
+                Debug.WriteLine($"LineCandleStickSeries.RenderLegend: Error - {ex}.");
             }
-
-            if (YAxis == null)
-            {
-                Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - YAxis is null.");
-                return;
-            }
-
-            var first = item[0];
-            var candlewidth = Math.Min(
-                legendBox.Width,
-                XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X));
-
-            rc.DrawLine(
-                new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
-                GetSelectableColor(ActualColor),
-                StrokeThickness,
-                dashArray,
-                LineJoin.Miter,
-                true);
-
-            rc.DrawRectangleAsPolygon(
-                new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
-                GetSelectableFillColor(IncreasingColor),
-                GetSelectableColor(ActualColor),
-                StrokeThickness);
         }
 
         private Tuple<ScreenPoint, TrackerHitResult> previousPoint;

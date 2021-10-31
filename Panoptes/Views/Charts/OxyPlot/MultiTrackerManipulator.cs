@@ -2,7 +2,10 @@
 using Avalonia.VisualTree;
 using OxyPlot;
 using OxyPlot.Avalonia;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Series = OxyPlot.Series.Series;
 
 namespace Panoptes.Views.Charts
@@ -61,7 +64,7 @@ namespace Panoptes.Views.Charts
         /// <summary>
         /// Occurs when a manipulation is complete.
         /// </summary>
-        /// <param name="e">The <see cref="OxyPlot.OxyMouseEventArgs" /> instance containing the event data.</param>
+        /// <param name="e">The <see cref="OxyMouseEventArgs" /> instance containing the event data.</param>
         public override void Completed(OxyMouseEventArgs e)
         {
             base.Completed(e);
@@ -85,7 +88,7 @@ namespace Panoptes.Views.Charts
             if (currentSeries == null || !LockToInitialSeries)
             {
                 // get the nearest
-                currentSeries = PlotView.ActualModel?.GetSeriesFromPoint(e.Position, FiresDistance);
+                currentSeries = GetSeriesFromPoint(PlotView.ActualModel, e.Position, FiresDistance);
             }
 
             if (currentSeries == null)
@@ -117,6 +120,56 @@ namespace Panoptes.Views.Charts
                 PlotView.ShowTracker(result);
                 ShowExtraTrackers(result);
                 PlotView.ActualModel?.RaiseTrackerChanged(result);
+            }
+        }
+
+        /// <summary>
+        /// Gets a series from the specified point.
+        /// </summary>
+        /// <param name="point">The point.</param>
+        /// <param name="limit">The limit.</param>
+        /// <returns>The nearest series.</returns>
+        public static Series GetSeriesFromPoint(PlotModel plotModel, ScreenPoint point, double limit = 100)
+        {
+            if (plotModel == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                double mindist = double.MaxValue;
+                Series nearestSeries = null;
+
+                foreach (var series in plotModel.Series.Reverse().Where(s => s.IsVisible))
+                {
+                    var thr = series.GetNearestPoint(point, true) ?? series.GetNearestPoint(point, false);
+
+                    if (thr == null)
+                    {
+                        continue;
+                    }
+
+                    // find distance to this point on the screen
+                    double dist = point.DistanceTo(thr.Position);
+                    if (dist < mindist)
+                    {
+                        nearestSeries = series;
+                        mindist = dist;
+                    }
+                }
+
+                if (mindist < limit)
+                {
+                    return nearestSeries;
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"MultiTrackerManipulator.GetSeriesFromPoint: Error - {ex.Message}");
+                return null;
             }
         }
 
@@ -206,40 +259,42 @@ namespace Panoptes.Views.Charts
         /// <paramref name="checkDistanceBetweenPoints" /> is ignored if <paramref name="pointsOnly"/> is equal to <c>False</c>.
         /// </remarks>
         /// <returns>A tracker hit result.</returns>
-        public static TrackerHitResult GetNearestHit(
-            Series series,
-            ScreenPoint point,
-            bool snap,
-            bool pointsOnly,
-            double firesDistance,
-            bool checkDistanceBetweenPoints)
+        public static TrackerHitResult GetNearestHit(Series series, ScreenPoint point, bool snap, bool pointsOnly, double firesDistance, bool checkDistanceBetweenPoints)
         {
             if (series == null)
             {
                 return null;
             }
 
-            // Check data points only
-            if (snap || pointsOnly)
+            try
             {
-                var result = series.GetNearestPoint(point, false);
-                if (ShouldTrackerOpen(result, point, firesDistance))
+                // Check data points only
+                if (snap || pointsOnly)
                 {
-                    return result;
+                    var result = series.GetNearestPoint(point, false);
+                    if (ShouldTrackerOpen(result, point, firesDistance))
+                    {
+                        return result;
+                    }
                 }
-            }
 
-            // Check between data points (if possible)
-            if (!pointsOnly)
+                // Check between data points (if possible)
+                if (!pointsOnly)
+                {
+                    var result = series.GetNearestPoint(point, true);
+                    if (!checkDistanceBetweenPoints || ShouldTrackerOpen(result, point, firesDistance))
+                    {
+                        return result;
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception ex)
             {
-                var result = series.GetNearestPoint(point, true);
-                if (!checkDistanceBetweenPoints || ShouldTrackerOpen(result, point, firesDistance))
-                {
-                    return result;
-                }
+                Debug.WriteLine($"MultiTrackerManipulator.GetNearestHit: Error - {ex.Message}");
+                return null;
             }
-
-            return null;
         }
 
         private static bool ShouldTrackerOpen(TrackerHitResult result, ScreenPoint point, double firesDistance) => result?.Position.DistanceTo(point) < firesDistance;
