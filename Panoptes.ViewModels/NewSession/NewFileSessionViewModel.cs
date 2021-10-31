@@ -47,21 +47,7 @@ namespace Panoptes.ViewModels.NewSession
 
         private Task OpenAsync(CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
-            {
-                try
-                {
-                    _sessionService.Open(_fileSessionParameters, cancellationToken);
-                }
-                catch (System.Exception)
-                {
-                    throw;
-                }
-                finally
-                {
-                    // 
-                }
-            }, cancellationToken);
+            return _sessionService.Open(_fileSessionParameters, cancellationToken);
         }
 
         private bool CanOpen()

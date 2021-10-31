@@ -215,7 +215,7 @@ namespace Panoptes
             }
         }
 
-        public Task Open(ISessionParameters parameters, CancellationToken cancellationToken)
+        public async Task Open(ISessionParameters parameters, CancellationToken cancellationToken)
         {
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -240,7 +240,7 @@ namespace Panoptes
                 }
 
                 // Open a new session and open it
-                Dispatcher.UIThread.InvokeAsync(() => session = new MongoSession(this, _resultConverter, mongoParameters)).Wait();
+                await Dispatcher.UIThread.InvokeAsync(() => session = new MongoSession(this, _resultConverter, mongoParameters)).ConfigureAwait(false);
             }
             else if (parameters is StreamSessionParameters streamParameters)
             {
@@ -254,11 +254,11 @@ namespace Panoptes
                 var mockMessageHandler = new Model.Mock.Sessions.MockStreamingMessageHandler(streamParameters);
                 Task.Run(() => mockMessageHandler.Initialize(), cancellationToken);
 #endif
-                Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters)).Wait();
+                await Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters)).ConfigureAwait(false);
             }
             else if (parameters is FileSessionParameters fileParameters)
             {
-                Dispatcher.UIThread.InvokeAsync(() => session = new FileSession(this, _resultSerializer, fileParameters)).Wait();
+                await Dispatcher.UIThread.InvokeAsync(() => session = new FileSession(this, _resultSerializer, fileParameters)).ConfigureAwait(false);
             }
             else
             {
@@ -270,7 +270,7 @@ namespace Panoptes
                 throw new NullReferenceException("SessionService.Open: current session is null.");
             }
 
-            return OpenSession(session, cancellationToken);
+            await OpenSession(session, cancellationToken).ConfigureAwait(false);
         }
 
         /*
@@ -288,12 +288,12 @@ namespace Panoptes
         }
         */
 
-        private Task OpenSession(ISession session, CancellationToken cancellationToken)
+        private async Task OpenSession(ISession session, CancellationToken cancellationToken)
         {
             try
             {
                 _session = session;
-                return _session.InitializeAsync(cancellationToken);
+                await _session.InitializeAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (Exception e)
             {

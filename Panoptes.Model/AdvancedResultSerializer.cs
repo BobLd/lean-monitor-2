@@ -27,21 +27,22 @@ namespace Panoptes.Model
         {
             // https://github.com/JamesNK/Newtonsoft.Json/issues/1193
 
+            List<OrderEvent> orderEvents = null;
+            BacktestResult backtestResult;
             try
             {
-                List<OrderEvent> orderEvents = null;
-                string orederEvents = GetOrderEvents(pathToResult);
-                if (File.Exists(orederEvents))
+                string orderEventsPath = GetOrderEvents(pathToResult);
+                if (File.Exists(orderEventsPath))
                 {
-                    using (var s = File.Open(orederEvents, FileMode.Open))
+                    using (var orderEventsStream = File.Open(orderEventsPath, FileMode.Open))
                     {
-                        orderEvents = await JsonSerializer.DeserializeAsync<List<OrderEvent>>(s, _options, cancellationToken).ConfigureAwait(false);
+                        orderEvents = await JsonSerializer.DeserializeAsync<List<OrderEvent>>(orderEventsStream, _options, cancellationToken).ConfigureAwait(false);
                     }
                 }
 
-                using (var s = File.Open(pathToResult, FileMode.Open))
+                using (var backtestResultStream = File.Open(pathToResult, FileMode.Open))
                 {
-                    var backtestResult = await JsonSerializer.DeserializeAsync<BacktestResult>(s, _options, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    backtestResult = await JsonSerializer.DeserializeAsync<BacktestResult>(backtestResultStream, _options, cancellationToken).ConfigureAwait(false);
                     if (backtestResult.OrderEvents != null)
                     {
                         throw new ArgumentException();
@@ -50,6 +51,12 @@ namespace Panoptes.Model
                     backtestResult.OrderEvents = orderEvents;
                     return _resultConverter.FromBacktestResult(backtestResult);
                 }
+            }
+            catch (TaskCanceledException tcex)
+            {
+                orderEvents.Clear();
+                backtestResult = null;
+                throw;
             }
             catch (Exception ex)
             {
