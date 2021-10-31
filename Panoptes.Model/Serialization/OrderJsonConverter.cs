@@ -1,11 +1,13 @@
-﻿using QuantConnect.Orders;
+﻿using QuantConnect;
+using QuantConnect.Brokerages;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Serialization;
+using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Securities;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Panoptes.Model.Serialization
 {
@@ -14,7 +16,7 @@ namespace Panoptes.Model.Serialization
     {
         public override Order Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var jObject = JsonDocument.ParseValue(ref reader); //JObject.Load(reader);
+            var jObject = JsonDocument.ParseValue(ref reader);
 
             var order = CreateOrderFromJObject(jObject);
 
@@ -26,214 +28,238 @@ namespace Panoptes.Model.Serialization
             throw new NotImplementedException();
         }
 
-        public static Order CreateOrderFromJObject(JsonDocument jObject)
-        {
-            throw new NotImplementedException();
-        }
-
-        /*
         /// <summary>
         /// Create an order from a simple JObject
         /// </summary>
         /// <param name="jObject"></param>
         /// <returns>Order Object</returns>
-        public static Order CreateOrderFromJObject(JObject jObject)
+        public static Order CreateOrderFromJObject(JsonDocument jObject)
         {
             // create order instance based on order type field
-            var orderType = (OrderType)jObject["Type"].Value<int>();
+            var orderType = (OrderType)jObject.RootElement.GetProperty("Type").GetInt32();
             var order = CreateOrder(orderType, jObject);
 
             // populate common order properties
-            order.Id = jObject["Id"].Value<int>();
+            order.OrderId = jObject.RootElement.GetProperty("Id").GetInt32(); // order.Id
 
-            var jsonStatus = jObject["Status"];
-            var jsonTime = jObject["Time"];
-            if (jsonStatus.Type == JTokenType.Integer)
+            var jsonStatus = jObject.RootElement.GetProperty("Status");
+            if (jsonStatus.ValueKind == JsonValueKind.Number)
             {
-                order.Status = (OrderStatus)jsonStatus.Value<int>();
+                order.Status = (OrderStatus)jsonStatus.GetInt32();
             }
-            else if (jsonStatus.Type == JTokenType.Null)
+            else if (jsonStatus.ValueKind == JsonValueKind.Null)
             {
                 order.Status = OrderStatus.Canceled;
             }
             else
             {
                 // The `Status` tag can sometimes appear as a string of the enum value in the LiveResultPacket.
-                order.Status = (OrderStatus)Enum.Parse(typeof(OrderStatus), jsonStatus.Value<string>(), true);
+                order.Status = (OrderStatus)Enum.Parse(typeof(OrderStatus), jsonStatus.GetString(), true);
             }
-            if (jsonTime != null && jsonTime.Type != JTokenType.Null)
+
+            if (jObject.RootElement.TryGetProperty("Time", out var jsonTime) && jsonTime.ValueKind != JsonValueKind.Null) // jsonTime != null && 
             {
-                order.Time = jsonTime.Value<DateTime>();
+                order.CreatedTime = Time.DateTimeToUnixTimeStamp(jsonTime.GetDateTime());
             }
             else
             {
                 // `Time` can potentially be null in some LiveResultPacket instances, but
                 // `CreatedTime` will always be there if `Time` is absent.
-                order.Time = jObject["CreatedTime"].Value<DateTime>();
+                order.CreatedTime = Time.DateTimeToUnixTimeStamp(jObject.RootElement.GetProperty("CreatedTime").GetDateTime());
             }
 
-            var orderSubmissionData = jObject["OrderSubmissionData"];
-            if (orderSubmissionData != null && orderSubmissionData.Type != JTokenType.Null)
+            OrderSubmissionData osd; // order.OrderSubmissionData
+            if (jObject.RootElement.TryGetProperty("OrderSubmissionData", out var orderSubmissionData) && orderSubmissionData.ValueKind != JsonValueKind.Null)
             {
-                var bidPrice = orderSubmissionData["BidPrice"].Value<decimal>();
-                var askPrice = orderSubmissionData["AskPrice"].Value<decimal>();
-                var lastPrice = orderSubmissionData["LastPrice"].Value<decimal>();
-                order.OrderSubmissionData = new OrderSubmissionData(bidPrice, askPrice, lastPrice);
+                order.SubmissionBidPrice = orderSubmissionData.GetProperty("BidPrice").GetDecimal();
+                order.SubmissionAskPrice = orderSubmissionData.GetProperty("AskPrice").GetDecimal();
+                order.SubmissionLastPrice = orderSubmissionData.GetProperty("LastPrice").GetDecimal();
             }
 
-            var lastFillTime = jObject["LastFillTime"];
-            var lastUpdateTime = jObject["LastUpdateTime"];
-            var canceledTime = jObject["CanceledTime"];
-
-            if (canceledTime != null && canceledTime.Type != JTokenType.Null)
+            if (jObject.RootElement.TryGetProperty("CanceledTime", out var canceledTime) && canceledTime.ValueKind != JsonValueKind.Null)
             {
-                order.CanceledTime = canceledTime.Value<DateTime>();
-            }
-            if (lastFillTime != null && lastFillTime.Type != JTokenType.Null)
-            {
-                order.LastFillTime = lastFillTime.Value<DateTime>();
-            }
-            if (lastUpdateTime != null && lastUpdateTime.Type != JTokenType.Null)
-            {
-                order.LastUpdateTime = lastUpdateTime.Value<DateTime>();
-            }
-            var tag = jObject["Tag"];
-            if (tag != null && tag.Type != JTokenType.Null)
-            {
-                order.Tag = tag.Value<string>();
-            }
-            else
-            {
-                order.Tag = "";
+                order.CanceledTime = Time.DateTimeToUnixTimeStamp(canceledTime.GetDateTime());
             }
 
-            order.Quantity = jObject["Quantity"].Value<decimal>();
-            var orderPrice = jObject["Price"];
-            if (orderPrice != null && orderPrice.Type != JTokenType.Null)
+            if (jObject.RootElement.TryGetProperty("LastFillTime", out var lastFillTime) && lastFillTime.ValueKind != JsonValueKind.Null)
             {
-                order.Price = orderPrice.Value<decimal>();
-            }
-            else
-            {
-                order.Price = default(decimal);
+                order.LastFillTime = Time.DateTimeToUnixTimeStamp(lastFillTime.GetDateTime());
             }
 
-            var priceCurrency = jObject["PriceCurrency"];
-            if (priceCurrency != null && priceCurrency.Type != JTokenType.Null)
+            if (jObject.RootElement.TryGetProperty("LastUpdateTime", out var lastUpdateTime) && lastUpdateTime.ValueKind != JsonValueKind.Null)
             {
-                order.PriceCurrency = priceCurrency.Value<string>();
+                order.LastUpdateTime = Time.DateTimeToUnixTimeStamp(lastUpdateTime.GetDateTime());
             }
-            var securityType = (SecurityType)jObject["SecurityType"].Value<int>();
-            order.BrokerId = jObject["BrokerId"].Select(x => x.Value<string>()).ToList();
-            order.ContingentId = jObject["ContingentId"].Value<int>();
 
-            var timeInForce = jObject["Properties"]?["TimeInForce"] ?? jObject["TimeInForce"] ?? jObject["Duration"];
-            order.Properties.TimeInForce = timeInForce != null
-                ? CreateTimeInForce(timeInForce, jObject)
-                : TimeInForce.GoodTilCanceled;
+            if (jObject.RootElement.TryGetProperty("Tag", out var tag) && tag.ValueKind != JsonValueKind.Null)
+            {
+                order.Tag = tag.GetString();
+            }
+
+            order.Quantity = jObject.RootElement.GetProperty("Quantity").GetDecimal(); // order.Quantity
+            if (jObject.RootElement.TryGetProperty("Price", out var orderPrice) && orderPrice.ValueKind != JsonValueKind.Null)
+            {
+                order.Price = orderPrice.GetDecimal();
+            }
+
+            if (jObject.RootElement.TryGetProperty("PriceCurrency", out var priceCurrency) && priceCurrency.ValueKind != JsonValueKind.Null)
+            {
+                order.PriceCurrency = priceCurrency.GetString();
+            }
+
+            var securityType = (SecurityType)jObject.RootElement.GetProperty("SecurityType").GetInt32();
+            order.BrokerId = jObject.RootElement.GetProperty("BrokerId").EnumerateArray().Select(x => x.GetString()).ToList();
+            order.ContingentId = jObject.RootElement.GetProperty("ContingentId").GetInt32();
+
+            //var timeInForce = jObject["Properties"]?["TimeInForce"] ?? jObject["TimeInForce"] ?? jObject["Duration"];
+            JsonElement? timeInForce = null;
+            if (jObject.RootElement.TryGetProperty("Properties", out var property) && property.TryGetProperty("TimeInForce", out var tif))
+            {
+                timeInForce = tif;
+            }
+            else if (jObject.RootElement.TryGetProperty("TimeInForce", out tif))
+            {
+                timeInForce = tif;
+            }
+            else if (jObject.RootElement.TryGetProperty("Duration", out tif))
+            {
+                timeInForce = tif;
+            }
+
+            //  order.Properties.TimeInForce 
+            var objTimeInForce = timeInForce.HasValue ? CreateTimeInForce(timeInForce.Value, jObject) : TimeInForce.GoodTilCanceled;
+
+            var timeInForceType = objTimeInForce.GetType().Name;
+            // camelcase the type name, lowering the first char
+            order.TimeInForceType = char.ToLowerInvariant(timeInForceType[0]) + timeInForceType.Substring(1);
+            if (objTimeInForce is GoodTilDateTimeInForce goodTilDate)
+            {
+                var expiry = goodTilDate.Expiry;
+                order.TimeInForceExpiry = Time.DateTimeToUnixTimeStamp(expiry);
+            }
 
             string market = null;
 
             //does data have market?
-            var suppliedMarket = jObject.SelectTokens("Symbol.ID.Market");
-            if (suppliedMarket.Any())
+            //Symbol symbol; // order.Symbol
+
+            if (jObject.RootElement.TryGetProperty("Symbol", out var sm) &&
+                sm.ValueKind == JsonValueKind.Object && sm.TryGetProperty("ID", out var im) &&
+                im.ValueKind == JsonValueKind.Object && im.TryGetProperty("Market", out var suppliedMarket))
             {
-                market = suppliedMarket.Single().Value<string>();
+                market = suppliedMarket.GetString();
             }
 
-            if (jObject.SelectTokens("Symbol.ID").Any())
+            if (jObject.RootElement.TryGetProperty("Symbol", out var s))
             {
-                var sid = SecurityIdentifier.Parse(jObject.SelectTokens("Symbol.ID").Single().Value<string>());
-                var ticker = jObject.SelectTokens("Symbol.Value").Single().Value<string>();
-                order.Symbol = new Symbol(sid, ticker);
-            }
-            else if (jObject.SelectTokens("Symbol.Value").Any())
-            {
-                // provide for backwards compatibility
-                var ticker = jObject.SelectTokens("Symbol.Value").Single().Value<string>();
-
-                if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, securityType, out market))
+                if (s.ValueKind == JsonValueKind.Object)
                 {
-                    market = DefaultBrokerageModel.DefaultMarketMap[securityType];
-                }
-                order.Symbol = Symbol.Create(ticker, securityType, market);
-            }
-            else
-            {
-                var tickerstring = jObject["Symbol"].Value<string>();
+                    if (s.TryGetProperty("ID", out var i))
+                    {
+                        var sid = SecurityIdentifier.Parse(i.GetString()); //jObject.SelectTokens("Symbol.ID").Single().Value<string>());
+                        var ticker = s.GetProperty("Value").GetString(); //jObject.SelectTokens("Symbol.Value").Single().Value<string>();
+                        order.Symbol = new Symbol(sid, ticker).ID.ToString();
+                    }
+                    else if (s.TryGetProperty("Value", out var v))
+                    {
+                        // provide for backwards compatibility
+                        var ticker = v.GetString(); //jObject.SelectTokens("Symbol.Value").Single().Value<string>();
 
-                if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(tickerstring, securityType, out market))
+                        if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, securityType, out market))
+                        {
+                            market = DefaultBrokerageModel.DefaultMarketMap[securityType];
+                        }
+                        order.Symbol = Symbol.Create(ticker, securityType, market).ID.ToString();
+                    }
+                }
+                else
                 {
-                    market = DefaultBrokerageModel.DefaultMarketMap[securityType];
+                    var tickerstring = s.GetString(); //jObject["Symbol"].Value<string>();
+
+                    if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(tickerstring, securityType, out market))
+                    {
+                        market = DefaultBrokerageModel.DefaultMarketMap[securityType];
+                    }
+                    order.Symbol = Symbol.Create(tickerstring, securityType, market).ID.ToString();
                 }
-                order.Symbol = Symbol.Create(tickerstring, securityType, market);
             }
 
-            return order;
+            var orderFinal = Order.FromSerialized(order);
+
+            return orderFinal;
         }
 
         /// <summary>
         /// Creates an order of the correct type
         /// </summary>
-        private static Order CreateOrder(OrderType orderType, JObject jObject)
+        private static SerializedOrder CreateOrder(OrderType orderType, JsonDocument jObject)
         {
-            Order order;
+            SerializedOrder serializedOrder;
+
+            decimal GetPropery(string name)
+            {
+                if (jObject.RootElement.TryGetProperty(name, out var property))
+                {
+                    return property.GetDecimal();
+                }
+                //throw new ArgumentException("Property not found", nameof(name));
+                return default;
+            }
+
             switch (orderType)
             {
                 case OrderType.Market:
-                    order = new MarketOrder();
+                    serializedOrder = new SerializedOrder(new MarketOrder(), "");
                     break;
 
                 case OrderType.Limit:
-                    order = new LimitOrder { LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>() };
+                    serializedOrder = new SerializedOrder(new LimitOrder(), "");
+                    serializedOrder.LimitPrice = GetPropery("LimitPrice");
                     break;
 
                 case OrderType.StopMarket:
-                    order = new StopMarketOrder
-                    {
-                        StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>()
-                    };
+                    serializedOrder = new SerializedOrder(new StopMarketOrder(), "");
+                    serializedOrder.StopPrice = GetPropery("StopPrice");
                     break;
 
                 case OrderType.StopLimit:
-                    order = new StopLimitOrder
-                    {
-                        LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>(),
-                        StopPrice = jObject["StopPrice"] == null ? default(decimal) : jObject["StopPrice"].Value<decimal>()
-                    };
+                    serializedOrder = new SerializedOrder(new StopLimitOrder(), "");
+                    serializedOrder.StopPrice = GetPropery("StopPrice");
+                    serializedOrder.LimitPrice = GetPropery("LimitPrice");
                     break;
 
                 case OrderType.LimitIfTouched:
-                    order = new LimitIfTouchedOrder
-                    {
-                        LimitPrice = jObject["LimitPrice"] == null ? default(decimal) : jObject["LimitPrice"].Value<decimal>(),
-                        TriggerPrice = jObject["TriggerPrice"] == null ? default(decimal) : jObject["TriggerPrice"].Value<decimal>()
-                    };
+                    serializedOrder = new SerializedOrder(new LimitIfTouchedOrder(), "");
+                    serializedOrder.LimitPrice = GetPropery("LimitPrice");
+                    serializedOrder.TriggerPrice = GetPropery("TriggerPrice");
                     break;
 
                 case OrderType.MarketOnOpen:
-                    order = new MarketOnOpenOrder();
+                    serializedOrder = new SerializedOrder(new MarketOnOpenOrder(), "");
                     break;
 
                 case OrderType.MarketOnClose:
-                    order = new MarketOnCloseOrder();
+                    serializedOrder = new SerializedOrder(new MarketOnCloseOrder(), "");
                     break;
 
                 case OrderType.OptionExercise:
-                    order = new OptionExerciseOrder();
+                    serializedOrder = new SerializedOrder(new OptionExerciseOrder(), "");
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException($"Unknown order type '{orderType}'.");
             }
-            return order;
+
+            return serializedOrder;
         }
 
         /// <summary>
         /// Creates a Time In Force of the correct type
         /// </summary>
-        private static TimeInForce CreateTimeInForce(JToken timeInForce, JObject jObject)
+        private static TimeInForce CreateTimeInForce(JsonElement timeInForce, JsonDocument jObject)
         {
+            return TimeInForce.GoodTilCanceled;
+            /*
             // for backward-compatibility support deserialization of old JSON format
             if (timeInForce is JValue)
             {
@@ -248,7 +274,7 @@ namespace Panoptes.Model.Serialization
                         return TimeInForce.Day;
 
                     case 2:
-                        var expiry = jObject["DurationValue"].Value<DateTime>();
+                        var expiry = jObject.RootElement.GetProperty("DurationValue").GetDateTime();
                         return TimeInForce.GoodTilDate(expiry);
 
                     default:
@@ -258,7 +284,7 @@ namespace Panoptes.Model.Serialization
 
             // convert with TimeInForceJsonConverter
             return timeInForce.ToObject<TimeInForce>();
+            */
         }
-        */
     }
 }

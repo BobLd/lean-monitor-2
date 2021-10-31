@@ -1,7 +1,6 @@
 ﻿using QuantConnect;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.Serialization;
 using QuantConnect.Securities;
 using System;
 using System.Text.Json;
@@ -16,8 +15,8 @@ namespace Panoptes.Model.Serialization
         {
             if (reader.TokenType == JsonTokenType.StartObject)
             {
-                string id = null; // $"{AlgorithmId}-{OrderId}-{OrderEventId}";
-                string algorithm_id = null;
+                //string id = null; // $"{AlgorithmId}-{OrderId}-{OrderEventId}";
+                //string algorithm_id = null;
                 int order_id = 0;
                 int order_event_id = 0;
                 Symbol symbol = null;
@@ -42,13 +41,9 @@ namespace Panoptes.Model.Serialization
                         switch (reader.GetString())
                         {
                             case "id":
-                                reader.Read();
-                                id = reader.GetString();
-                                break;
-
                             case "algorithm-id":
                                 reader.Read();
-                                algorithm_id = reader.GetString();
+                                //algorithm_id = reader.GetString();
                                 break;
 
                             case "order-id":
@@ -140,20 +135,16 @@ namespace Panoptes.Model.Serialization
                 }
 
                 var dt = DateTime.SpecifyKind(Time.UnixTimeStampToDateTime(time), DateTimeKind.Utc);
-
-                var orderEvent = new OrderEvent(order_id, symbol, dt, status, direction, fill_price, fill_quantity,
-                    new OrderFee(new CashAmount(order_fee_amount, order_fee_currency)), message);
-
-                var serializedOrderEvent = new SerializedOrderEvent(orderEvent, algorithm_id)
+                return new OrderEvent(order_id, symbol, dt, status, direction, fill_price, fill_quantity,
+                    new OrderFee(new CashAmount(order_fee_amount, order_fee_currency)), message)
                 {
+                    Id = order_event_id,
                     IsAssignment = is_assignment,
                     FillPriceCurrency = fill_price_currency,
                     LimitPrice = limitPrice,
                     StopPrice = stopPrice,
                     Quantity = quantity
                 };
-
-                return OrderEvent.FromSerialized(serializedOrderEvent);
             }
             throw new NotImplementedException();
         }
