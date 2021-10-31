@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
-using QuantConnect.Orders;
-using QuantConnect.Orders.Serialization;
-using QuantConnect.Packets;
+﻿using Panoptes.Model.Serialization;
+using Panoptes.Model.Serialization.Packets;
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using PacketType = QuantConnect.Packets.PacketType;
 
 namespace Panoptes.Model.Sessions.Stream
 {
@@ -30,7 +30,7 @@ namespace Panoptes.Model.Sessions.Stream
         protected readonly int _port;
         protected readonly bool _closeAfterCompleted;
 
-        private readonly OrderEventJsonConverter orderConverterId = new OrderEventJsonConverter("id");
+        protected JsonSerializerOptions _options;
 
         public string Name => $"{_host}:{_port}";
 
@@ -56,11 +56,7 @@ namespace Panoptes.Model.Sessions.Stream
         public virtual void Initialize()
         {
             // Allow proper decoding of orders.
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Converters = { new OrderJsonConverter() }
-            };
-
+            _options = DefaultJsonSerializerOptions.Default;
             Subscribe();
         }
 
@@ -265,43 +261,43 @@ namespace Panoptes.Model.Sessions.Stream
             switch (packetType)
             {
                 case PacketType.AlgorithmStatus:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<AlgorithmStatusPacket>(payload));
+                    _packetQueue.Add(JsonSerializer.Deserialize<AlgorithmStatusPacket>(payload, _options));
                     break;
 
                 case PacketType.LiveNode:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<LiveNodePacket>(payload));
+                    _packetQueue.Add(JsonSerializer.Deserialize<LiveNodePacket>(payload, _options));
                     break;
 
                 case PacketType.AlgorithmNode:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<AlgorithmNodePacket>(payload));
+                    _packetQueue.Add(JsonSerializer.Deserialize<AlgorithmNodePacket>(payload, _options));
                     break;
 
                 case PacketType.LiveResult:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<LiveResultPacket>(payload, orderConverterId));
+                    _packetQueue.Add(JsonSerializer.Deserialize<LiveResultPacket>(payload, _options));
                     break;
 
                 case PacketType.BacktestResult:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<BacktestResultPacket>(payload, orderConverterId));
+                    _packetQueue.Add(JsonSerializer.Deserialize<BacktestResultPacket>(payload, _options));
                     break;
 
                 case PacketType.OrderEvent:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<OrderEventPacket>(payload, orderConverterId));
+                    _packetQueue.Add(JsonSerializer.Deserialize<OrderEventPacket>(payload, _options));
                     break;
 
                 case PacketType.Log:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<LogPacket>(payload));
+                    _packetQueue.Add(JsonSerializer.Deserialize<LogPacket>(payload, _options));
                     break;
 
                 case PacketType.Debug:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<DebugPacket>(payload));
+                    _packetQueue.Add(JsonSerializer.Deserialize<DebugPacket>(payload, _options));
                     break;
 
                 case PacketType.HandledError:
-                    _packetQueue.Add(JsonConvert.DeserializeObject<HandledErrorPacket>(payload));
+                    _packetQueue.Add(JsonSerializer.Deserialize<HandledErrorPacket>(payload, _options));
                     break;
 
                 default:
-                    Debug.WriteLine($"Type: {packetType}");
+                    Debug.WriteLine($"HandlePacketEventsListener: Unknown packet type '{packetType}'.");
                     return false;
             }
             return true;

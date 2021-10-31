@@ -1,8 +1,9 @@
-﻿using QuantConnect.Packets;
+﻿using Panoptes.Model.Serialization.Packets;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using PacketType = QuantConnect.Packets.PacketType;
 
 namespace Panoptes.Model.Sessions.File
 {

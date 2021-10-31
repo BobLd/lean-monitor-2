@@ -10,5 +10,7 @@ namespace Panoptes.Model
         Task<Result> DeserializeAsync(string pathToResult, CancellationToken cancellationToken);
 
         string Serialize(Result result);
+
+        Task<string> SerializeAsync(Result result, CancellationToken cancellationToken);
     }
 }

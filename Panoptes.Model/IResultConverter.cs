@@ -1,4 +1,4 @@
-﻿using QuantConnect.Packets;
+﻿using Panoptes.Model.Serialization.Packets;
 
 namespace Panoptes.Model
 {

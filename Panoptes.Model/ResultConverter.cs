@@ -1,8 +1,10 @@
-﻿using QuantConnect.Orders;
-using QuantConnect.Packets;
+﻿using Panoptes.Model.Serialization.Packets;
+using QuantConnect.Orders;
 using QuantConnect.Statistics;
 using System;
 using System.Collections.Generic;
+using BacktestResultParameters = QuantConnect.Packets.BacktestResultParameters;
+using LiveResultParameters = QuantConnect.Packets.LiveResultParameters;
 
 namespace Panoptes.Model
 {

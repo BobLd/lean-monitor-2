@@ -17,7 +17,7 @@ namespace Panoptes.ViewModels.NewSession
         private readonly FileSessionParameters _fileSessionParameters = new FileSessionParameters
         {
 #if DEBUG
-            FileName = @"",
+            FileName = @"C:\Users\Bob\Desktop\bt\SableSMA_4_14\SableSMA_4_14.json",
 #else
             FileName = "",
 #endif

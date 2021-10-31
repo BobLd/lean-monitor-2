@@ -1,59 +1,164 @@
-﻿using Newtonsoft.Json;
-using Panoptes.Model.Sessions;
+﻿using NetMQ;
+using NetMQ.Sockets;
+using Newtonsoft.Json;
 using Panoptes.Model.Sessions.Stream;
 using QuantConnect;
+using QuantConnect.Notifications;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 
 namespace Panoptes.Model.Mock.Sessions
 {
-    public class MockStreamSession : BaseStreamSession
+    public class MockStreamingMessageHandler
     {
-        private static readonly Random _random = new Random();
-        private DateTime _currentTime;
-        private readonly int _sleep = 10; // ms
-        private readonly int _stepSecond = 10;
+        private int _port;
+        private PushSocket _server;
+        private AlgorithmNodePacket _job;
+        private OrderEventJsonConverter _orderEventJsonConverter;
 
-        private readonly string[] _symbols = new string[] { "BTCUSD", "ETHUSD", "LTCUSD" };
+        protected readonly BackgroundWorker _eternalQueueListener = new BackgroundWorker();
+        protected readonly BackgroundWorker _queueReader = new BackgroundWorker();
+        protected CancellationTokenSource _cts;
 
-        private int _orderId;
+        protected readonly BlockingCollection<Packet> _packetQueue = new BlockingCollection<Packet>();
 
-        private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
+        /// <summary>
+        /// Gets or sets whether this messaging handler has any current subscribers.
+        /// This is not used in this message handler.  Messages are sent via tcp as they arrive
+        /// </summary>
+        public bool HasSubscribers { get; set; }
 
-        private readonly Dictionary<string, decimal> _lastSeriesPoint = new Dictionary<string, decimal>();
-        private readonly Dictionary<string, decimal> _lastPrice = new Dictionary<string, decimal>();
-        private const decimal maximumPercentDeviation = 0.1m;
-
-        public const string AlgorithmId = "mock-algo-id";
-        public const int ProjectId = 42;
-        public const int UserId = 99;
-        public const string Channel = "Channel-algo-status";
-        public const string CompileId = "CompileId-algo-status";
-        public const string SessionId = "SessionId-algo-status";
-        public const string DeployId = "DeployId-algo-status";
-        private readonly Dictionary<string, (string, SeriesType, ScatterMarkerSymbol?)[]> Charts = new Dictionary<string, (string, SeriesType, ScatterMarkerSymbol?)[]>()
+        public MockStreamingMessageHandler(StreamSessionParameters streamParameters)
         {
-            { "Strategy Equity", new (string, SeriesType, ScatterMarkerSymbol?)[] { ("Equity", (SeriesType)2, null) } },
-            { "MACD",            new (string, SeriesType, ScatterMarkerSymbol?)[] { ("Price", (SeriesType)2, null), ("MACD-10d", SeriesType.Line, null), ("MACD-100d", SeriesType.Line, null) } },
-            { "Markers",         new (string, SeriesType, ScatterMarkerSymbol?)[] { ("Line-Diamond", (SeriesType)2, ScatterMarkerSymbol.Diamond), ("Scatter-Square", SeriesType.Scatter, ScatterMarkerSymbol.Square), ("Line-Null", SeriesType.Line, null) } }
-        };
-
-        public MockStreamSession(ISessionHandler sessionHandler, IResultConverter resultConverter, StreamSessionParameters parameters)
-            : base(sessionHandler, resultConverter, parameters)
-        {
+            _port = streamParameters.Port;
             _currentTime = DateTime.Now;
+            _orderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
         }
 
-        protected override void EventsListener(object sender, DoWorkEventArgs e)
+        /// <summary>
+        /// Initialize the messaging system
+        /// </summary>
+        public void Initialize()
+        {
+            CheckPort();
+            _server = new PushSocket($"@tcp://*:{_port}");
+
+            _cts = new CancellationTokenSource();
+
+            // Configure the worker threads
+            _eternalQueueListener.WorkerSupportsCancellation = true;
+            _eternalQueueListener.DoWork += EventsListener;
+            _eternalQueueListener.RunWorkerAsync();
+
+            _queueReader.WorkerSupportsCancellation = true;
+            _queueReader.DoWork += QueueReader;
+            _queueReader.RunWorkerAsync();
+        }
+
+        /// <summary>
+        /// Set the user communication channel
+        /// </summary>
+        /// <param name="job"></param>
+        public void SetAuthentication(AlgorithmNodePacket job)
+        {
+            _job = job;
+            _orderEventJsonConverter = new OrderEventJsonConverter(job.AlgorithmId);
+            Transmit(_job);
+        }
+
+        /// <summary>
+        /// Send any notification with a base type of Notification.
+        /// </summary>
+        /// <param name="notification">The notification to be sent.</param>
+        public void SendNotification(Notification notification)
+        {
+            var type = notification.GetType();
+            if (type == typeof(NotificationEmail) || type == typeof(NotificationWeb) || type == typeof(NotificationSms) || type == typeof(NotificationTelegram))
+            {
+                Trace.TraceError("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
+                //Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
+                return;
+            }
+            notification.Send();
+        }
+
+        /// <summary>
+        /// Send all types of packets
+        /// </summary>
+        public void Send(Packet packet)
+        {
+            Transmit(packet);
+        }
+
+        /// <summary>
+        /// Send a message to the _server using ZeroMQ
+        /// </summary>
+        /// <param name="packet">Packet to transmit</param>
+        public void Transmit(Packet packet)
+        {
+            var payload = JsonConvert.SerializeObject(packet, _orderEventJsonConverter);
+
+            var message = new NetMQMessage();
+
+            message.Append(payload);
+
+            _server.SendMultipartMessage(message);
+        }
+
+        /// <summary>
+        /// Check if port to be used by the desktop application is available.
+        /// </summary>
+        private void CheckPort()
+        {
+            try
+            {
+                TcpListener tcpListener = new TcpListener(IPAddress.Any, _port);
+                tcpListener.Start();
+                tcpListener.Stop();
+            }
+            catch
+            {
+                throw new Exception("The port configured in config.json is either being used or blocked by a firewall." +
+                    "Please choose a new port or open the port in the firewall.");
+            }
+        }
+
+        protected virtual void QueueReader(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                while (!_queueReader.CancellationPending && !_cts.Token.IsCancellationRequested)
+                {
+                    var p = _packetQueue.Take(_cts.Token);
+                    Transmit(p);
+                }
+            }
+            catch (OperationCanceledException)
+            { }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                //_resetEvent.Set();
+            }
+        }
+
+        protected void EventsListener(object sender, DoWorkEventArgs e)
         {
             int deltaMinutes = _random.Next(1, 60);
             _currentTime = _currentTime.AddMinutes(deltaMinutes);
@@ -144,6 +249,37 @@ namespace Panoptes.Model.Mock.Sessions
                 Thread.Sleep(_sleep);
             }
         }
+
+        #region Mock data
+        private static readonly Random _random = new Random();
+        private DateTime _currentTime;
+        private readonly int _sleep = 10; // ms
+        private readonly int _stepSecond = 10;
+
+        private readonly string[] _symbols = new string[] { "BTCUSD", "ETHUSD", "LTCUSD" };
+
+        private int _orderId;
+
+        private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
+
+        private readonly Dictionary<string, decimal> _lastSeriesPoint = new Dictionary<string, decimal>();
+        private readonly Dictionary<string, decimal> _lastPrice = new Dictionary<string, decimal>();
+        private const decimal maximumPercentDeviation = 0.1m;
+
+        public const string AlgorithmId = "mock-algo-id";
+        public const int ProjectId = 42;
+        public const int UserId = 99;
+        public const string Channel = "Channel-algo-status";
+        public const string CompileId = "CompileId-algo-status";
+        public const string SessionId = "SessionId-algo-status";
+        public const string DeployId = "DeployId-algo-status";
+        private readonly Dictionary<string, (string, SeriesType, ScatterMarkerSymbol?)[]> Charts = new Dictionary<string, (string, SeriesType, ScatterMarkerSymbol?)[]>()
+        {
+            { "Strategy Equity", new (string, SeriesType, ScatterMarkerSymbol?)[] { ("Equity", (SeriesType)2, null) } },
+            { "MACD",            new (string, SeriesType, ScatterMarkerSymbol?)[] { ("Price", (SeriesType)2, null), ("MACD-10d", SeriesType.Line, null), ("MACD-100d", SeriesType.Line, null) } },
+            { "Markers",         new (string, SeriesType, ScatterMarkerSymbol?)[] { ("Line-Diamond", (SeriesType)2, ScatterMarkerSymbol.Diamond), ("Scatter-Square", SeriesType.Scatter, ScatterMarkerSymbol.Square), ("Line-Null", SeriesType.Line, null) } }
+        };
+
 
         private static readonly Array algoStatus = Enum.GetValues(typeof(AlgorithmStatus));
         private static readonly Array orderTypes = Enum.GetValues(typeof(OrderType));
@@ -459,6 +595,8 @@ namespace Panoptes.Model.Mock.Sessions
                 message = new string(Enumerable.Repeat(chars, _random.Next(15, 60)).Select(s => s[_random.Next(s.Length)]).ToArray());
             }
 
+            Debug.Assert(!string.IsNullOrEmpty(message));
+
             return new DebugPacket(ProjectId, AlgorithmId, CompileId, message, toast);
         }
 
@@ -543,5 +681,6 @@ namespace Panoptes.Model.Mock.Sessions
                 }
             }
         }
+        #endregion
     }
 }

@@ -3,10 +3,10 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.MongoDB.Sessions;
+using Panoptes.Model.Serialization.Packets;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
 using Panoptes.Model.Sessions.Stream;
-using QuantConnect.Packets;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -123,6 +123,9 @@ namespace Panoptes
         public void HandleLogMessage(string message, LogItemType type)
         {
             // Live log message, use current DateTime
+
+            Debug.Assert(!string.IsNullOrEmpty(message));
+
             _messenger.Send(new LogEntryReceivedMessage(DateTime.Now, message, type));
         }
 
@@ -248,10 +251,10 @@ namespace Panoptes
 
                 // Open a new session and open it
 #if DEBUG
-                Dispatcher.UIThread.InvokeAsync(() => session = new Model.Mock.Sessions.MockStreamSession(this, _resultConverter, streamParameters)).Wait();
-#else
-                Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters)).Wait();
+                var mockMessageHandler = new Model.Mock.Sessions.MockStreamingMessageHandler(streamParameters);
+                Task.Run(() => mockMessageHandler.Initialize(), cancellationToken);
 #endif
+                Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters)).Wait();
             }
             else if (parameters is FileSessionParameters fileParameters)
             {

@@ -1,9 +1,9 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
-using Newtonsoft.Json;
-using QuantConnect.Packets;
+using Panoptes.Model.Serialization.Packets;
 using System;
 using System.ComponentModel;
+using System.Text.Json;
 
 namespace Panoptes.Model.Sessions.Stream
 {
@@ -33,8 +33,7 @@ namespace Panoptes.Model.Sessions.Stream
                         if (message.FrameCount != 1) continue;
 
                         var payload = message[0].ConvertToString();
-                        var packet = JsonConvert.DeserializeObject<Packet>(payload);
-
+                        var packet = JsonSerializer.Deserialize<Packet>(payload, _options);
                         HandlePacketEventsListener(payload, packet.Type);
                     }
                 }

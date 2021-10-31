@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Panoptes.Model.Serialization.Packets;
 using QuantConnect.Orders;
-using QuantConnect.Packets;
 using System;
 using System.Linq;
 using System.Threading;
@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Panoptes.Model
 {
+    [Obsolete("Use AdvancedResultSerializer instead.")]
     public class ResultSerializer : IResultSerializer
     {
         private readonly IResultConverter _resultConverter;
@@ -91,6 +92,11 @@ namespace Panoptes.Model
                 default:
                     throw new ArgumentException($"Unknown ResultType of type {result.ResultType}.", nameof(result));
             }
+        }
+
+        public Task<string> SerializeAsync(Result result, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }
