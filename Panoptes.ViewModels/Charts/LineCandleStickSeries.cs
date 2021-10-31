@@ -164,7 +164,7 @@ namespace Panoptes.ViewModels.Charts
                 startIndex = WindowStartIndex;
             }
 
-            return FindWindowStartIndex(Items, item => item.X, x, startIndex);
+            return FindWindowStartIndex(Items.ToList(), item => item.X, x, startIndex);
         }
 
         public override void Render(IRenderContext rc)
@@ -187,7 +187,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 case PlotSerieTypes.Candles:
                     MinX = MinY = MaxX = MaxY = double.NaN;
-                    InternalUpdateMaxMin(Items,
+                    InternalUpdateMaxMin(Items.ToList(),
                         i => i.X - (Period.TotalDays / 2.0),
                         i => i.X + (Period.TotalDays * 5), // / 2.0),
                         i => Min(i.Low, i.Open, i.Close, i.High),
@@ -275,32 +275,35 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="newPoints">Must be distinct</param>
         private void UpdateCandles(IReadOnlyList<DataPoint> newPoints, bool reset)
         {
-            if (reset)
+            lock (Items)
             {
-                Items.Clear();
-            }
-            else if (Items.Count > 0)
-            {
-                // Check if last candle needs update
-                var last = Items.Last();
-                var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)).ToList();
-                if (update.Count > 0)
+                if (reset)
                 {
-                    newPoints = newPoints.Except(update).ToList();
-                    last.Close = update.Last().Y;
-                    last.Low = Math.Min(last.Low, update.Min(x => x.Y));
-                    last.High = Math.Max(last.Low, update.Max(x => x.Y));
-                    if (newPoints.Count == 0) return;
+                    Items.Clear();
                 }
-            }
+                else if (Items.Count > 0)
+                {
+                    // Check if last candle needs update
+                    var last = Items.Last();
+                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)).ToList();
+                    if (update.Count > 0)
+                    {
+                        newPoints = newPoints.Except(update).ToList();
+                        last.Close = update.Last().Y;
+                        last.Low = Math.Min(last.Low, update.Min(x => x.Y));
+                        last.High = Math.Max(last.Low, update.Max(x => x.Y));
+                        if (newPoints.Count == 0) return;
+                    }
+                }
 
-            // Add new candles
-            // need to check if there's more than 1 datapoint in each group...
-            var grp = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
-                               .Select(g => new HighLowItem(g.Key,
-                                                            g.Max(p => p.Y), g.Min(p => p.Y),
-                                                            g.First().Y, g.Last().Y)).ToList();
-            Items.AddRange(grp);
+                // Add new candles
+                // need to check if there's more than 1 datapoint in each group...
+                var grp = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
+                                   .Select(g => new HighLowItem(g.Key,
+                                                                g.Max(p => p.Y), g.Min(p => p.Y),
+                                                                g.First().Y, g.Last().Y)).ToList();
+                Items.AddRange(grp);
+            }
         }
 
         #region Line series rendering
@@ -530,7 +533,7 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         private void RenderCandlesSerie(IRenderContext rc)
         {
-            var items = Items;
+            var items = Items.ToList();
             var nitems = items.Count;
 
             if (nitems == 0 || StrokeThickness <= 0 || LineStyle == LineStyle.None)
@@ -705,7 +708,8 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="legendBox">The bounding rectangle of the legend box.</param>
         public override void RenderLegend(IRenderContext rc, OxyRect legendBox)
         {
-            if (Items == null || Items.Count == 0)
+            var item = Items.ToList();
+            if (item == null || item.Count == 0)
             {
                 return;
             }
@@ -729,7 +733,7 @@ namespace Panoptes.ViewModels.Charts
                 return;
             }
 
-            var first = Items[0];
+            var first = item[0];
             var candlewidth = Math.Min(
                 legendBox.Width,
                 XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X));
@@ -781,17 +785,19 @@ namespace Panoptes.ViewModels.Charts
                 return previousPoint.Item2;
             }
 
-            if (XAxis == null || YAxis == null || interpolate || Items.Count == 0)
+            var items = Items.ToList();
+
+            if (XAxis == null || YAxis == null || interpolate || items.Count == 0)
             {
                 return null;
             }
 
-            var nbars = Items.Count;
+            var nbars = items.Count;
             var xy = InverseTransform(point);
             var targetX = xy.X;
 
             // punt if beyond start & end of series
-            if (targetX > (Items[nbars - 1].X + minDx) || targetX < (Items[0].X - minDx))
+            if (targetX > (items[nbars - 1].X + minDx) || targetX < (items[0].X - minDx))
             {
                 return null;
             }
@@ -801,17 +807,17 @@ namespace Panoptes.ViewModels.Charts
 
             if (nbars > 1000)
             {
-                var filteredItems = Items//.AsParallel()
+                var filteredItems = items//.AsParallel()
                     .Where(x => x.X <= XAxis.ActualMaximum)
                     .ToList();
                 pidx = FindWindowStartIndex(filteredItems, item => item.X, targetX, WindowStartIndex);
             }
             else
             {
-                pidx = FindWindowStartIndex(Items, item => item.X, targetX, WindowStartIndex);
+                pidx = FindWindowStartIndex(items, item => item.X, targetX, WindowStartIndex);
             }
 
-            var nidx = ((pidx + 1) < Items.Count) ? pidx + 1 : pidx;
+            var nidx = ((pidx + 1) < items.Count) ? pidx + 1 : pidx;
 
             double distance(HighLowItem bar)
             {
@@ -830,8 +836,8 @@ namespace Panoptes.ViewModels.Charts
             }
 
             // determine closest point
-            var midx = distance(Items[pidx]) <= distance(Items[nidx]) ? pidx : nidx;
-            var mbar = Items[midx];
+            var midx = distance(items[pidx]) <= distance(items[nidx]) ? pidx : nidx;
+            var mbar = items[midx];
 
             //DataPoint hit = new DataPoint(mbar.X, mbar.Close);
 
@@ -917,8 +923,10 @@ namespace Panoptes.ViewModels.Charts
                     minimumDistance = d2;
                 }
             }
+
+            var items = Items.ToList();
             int i = 0;
-            foreach (var item in Items.Where(x => x.X <= XAxis.ActualMaximum && x.X >= XAxis.ActualMinimum))
+            foreach (var item in items.Where(x => x.X <= XAxis.ActualMaximum && x.X >= XAxis.ActualMinimum))
             {
                 check(new DataPoint(item.X, item.High), item, i);
                 check(new DataPoint(item.X, item.Low), item, i);
@@ -1028,13 +1036,13 @@ namespace Panoptes.ViewModels.Charts
         {
             base.UpdateData();
 
-            if (Items == null || Items.Count == 0)
+            var items = Items.ToList();
+            if (items == null || items.Count == 0)
             {
                 return;
             }
 
             // determine minimum X gap between successive points
-            var items = Items;
             var nitems = items.Count;
             minDx = double.MaxValue;
 
