@@ -17,16 +17,12 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="0.10.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
     <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-20210915.2" />
+    <PackageReference Include="QuantConnect.Common" Version="2.5.13062" />
    </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" />
     <ProjectReference Include="..\Panoptes.Model.MongoDB\Panoptes.Model.MongoDB.csproj" />
     <ProjectReference Include="..\Panoptes.Model\Panoptes.Model.csproj" />
     <ProjectReference Include="..\Panoptes.ViewModels\Panoptes.ViewModels.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="QuantConnect.Common">
-      <HintPath>..\..\Lean\Common\bin\Release\QuantConnect.Common.dll</HintPath>
-    </Reference>
   </ItemGroup>
 </Project>
