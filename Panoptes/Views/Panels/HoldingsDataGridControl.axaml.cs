@@ -10,6 +10,7 @@ namespace Panoptes.Views.Panels
     public partial class HoldingsDataGridControl : UserControl
     {
         private readonly DataGrid _dataGrid;
+
         public HoldingsDataGridControl()
         {
             InitializeComponent();
@@ -24,7 +25,7 @@ namespace Panoptes.Views.Panels
         /// <summary>
         /// Identifies the ItemsSource dependency property.
         /// </summary>
-        public static readonly DirectProperty<TradesDataGridControl, IEnumerable> ItemsProperty = AvaloniaProperty.RegisterDirect<TradesDataGridControl, IEnumerable>(nameof(Items), o => o.Items, (o, v) => o.Items = v);
+        public static readonly DirectProperty<HoldingsDataGridControl, IEnumerable> ItemsProperty = AvaloniaProperty.RegisterDirect<HoldingsDataGridControl, IEnumerable>(nameof(Items), o => o.Items, (o, v) => o.Items = v);
 
         /// <summary>
         /// Gets or sets a collection that is used to generate the content of the control.

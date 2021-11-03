@@ -1,4 +1,5 @@
-﻿using QuantConnect.Orders;
+﻿using QuantConnect;
+using QuantConnect.Orders;
 using QuantConnect.Statistics;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace Panoptes.Model
         public Dictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
         public Dictionary<string, string> ServerStatistics = new Dictionary<string, string>();
         public Dictionary<string, AlgorithmPerformance> RollingWindow = new Dictionary<string, AlgorithmPerformance>();
-
+        public Dictionary<string, Holding> Holdings = new Dictionary<string, Holding>();
         public List<OrderEvent> OrderEvents = new List<OrderEvent>();
 
         public ResultType ResultType { get; set; }

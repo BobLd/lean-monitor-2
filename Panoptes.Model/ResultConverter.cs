@@ -1,4 +1,5 @@
 ﻿using Panoptes.Model.Serialization.Packets;
+using QuantConnect;
 using QuantConnect.Orders;
 using QuantConnect.Statistics;
 using System;
@@ -43,7 +44,8 @@ namespace Panoptes.Model
                 Statistics = new Dictionary<string, string>(liveResult.Statistics ?? new Dictionary<string, string>()),
                 RuntimeStatistics = new Dictionary<string, string>(liveResult.RuntimeStatistics ?? new Dictionary<string, string>()),
                 ServerStatistics = new Dictionary<string, string>(liveResult.ServerStatistics ?? new Dictionary<string, string>()),
-                OrderEvents = liveResult.OrderEvents
+                OrderEvents = liveResult.OrderEvents,
+                Holdings = new Dictionary<string, Holding>(liveResult.Holdings ?? new Dictionary<string, Holding>()),
             };
         }
 
@@ -63,9 +65,7 @@ namespace Panoptes.Model
             if (result == null) throw new ArgumentNullException(nameof(result));
             if (result.ResultType != ResultType.Live) throw new ArgumentException("Result is not of type Live", nameof(result));
 
-            // Holdings is not supported in the current result.
-
-            var liveResultParameters = new LiveResultParameters(result.Charts.MapToChartDictionary(), result.Orders, result.ProfitLoss, null, null, result.Statistics, result.RuntimeStatistics, null, result.ServerStatistics);
+            var liveResultParameters = new LiveResultParameters(result.Charts.MapToChartDictionary(), result.Orders, result.ProfitLoss, result.Holdings, null, result.Statistics, result.RuntimeStatistics, null, result.ServerStatistics);
             return new LiveResult(liveResultParameters);
         }
     }

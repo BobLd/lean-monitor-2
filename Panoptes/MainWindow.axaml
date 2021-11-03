@@ -91,9 +91,11 @@
 			<panels:RuntimeStatisticsPanelControl DataContext="{Binding RuntimeStatisticsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 			<TabControl Padding="0" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" TabStripPlacement="Bottom">
 				<TabItem Header="Orders">
-					<panels:TradesPanelControl DataContext="{Binding TradesPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>		
+					<panels:TradesPanelControl DataContext="{Binding TradesPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
-				<TabItem Header="Holdings"></TabItem>
+				<TabItem Header="Holdings">
+					<panels:HoldingsPanelControl DataContext="{Binding HoldingsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+				</TabItem>
 				<TabItem Header="Cash"></TabItem>
 			</TabControl>
 			

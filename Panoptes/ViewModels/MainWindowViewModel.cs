@@ -33,6 +33,7 @@ namespace Panoptes.ViewModels
         public StatisticsPanelViewModel StatisticsPane { get; }
         public RuntimeStatisticsPanelViewModel RuntimeStatisticsPane { get; }
         public TradesPanelViewModel TradesPane { get; }
+        public HoldingsPanelViewModel HoldingsPane { get; }
         public ProfitLossPanelViewModel ProfitLossPane { get; }
         public OxyPlotSelectionViewModel OxyPlotSelectionPane { get; }
 
@@ -65,7 +66,8 @@ namespace Panoptes.ViewModels
         public MainWindowViewModel(ISessionService resultService, IMessenger messenger, StatusViewModel statusViewModel,
             LogPanelViewModel logPanelViewModel, StatisticsPanelViewModel statisticsPanelViewModel,
             RuntimeStatisticsPanelViewModel runtimeStatisticsPanelViewModel, ProfitLossPanelViewModel profitLossPanelViewModel,
-            TradesPanelViewModel tradesPanelViewModel, OxyPlotSelectionViewModel oxyPlotSelectionViewModel)
+            TradesPanelViewModel tradesPanelViewModel, HoldingsPanelViewModel holdingsPane,
+            OxyPlotSelectionViewModel oxyPlotSelectionViewModel)
         {
             StatusViewModel = statusViewModel;
             _sessionService = resultService;
@@ -78,6 +80,7 @@ namespace Panoptes.ViewModels
             RuntimeStatisticsPane = runtimeStatisticsPanelViewModel;
             ProfitLossPane = profitLossPanelViewModel;
             TradesPane = tradesPanelViewModel;
+            HoldingsPane = holdingsPane;
             OxyPlotSelectionPane = oxyPlotSelectionViewModel;
 
             Title = $"Panoptes - LEAN Algorithm Monitor - {GetVersion()}";
