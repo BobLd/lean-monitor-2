@@ -16,7 +16,8 @@
 		Closed="OnClosed"
 		Closing="OnClosing"
 		WindowStartupLocation="CenterOwner"
-		Title="Panoptes - LEAN Algorithm Monitor"
+		Title="{Binding Title}"
+		MinHeight="200"
 		mc:Ignorable="d"
 		d:DesignWidth="800" d:DesignHeight="450">
 	
@@ -88,11 +89,19 @@
 			</Grid.ColumnDefinitions>
 
 			<panels:RuntimeStatisticsPanelControl DataContext="{Binding RuntimeStatisticsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-			<panels:TradesPanelControl DataContext="{Binding TradesPane}" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+			<TabControl Padding="0" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" TabStripPlacement="Bottom">
+				<TabItem Header="Orders">
+					<panels:TradesPanelControl DataContext="{Binding TradesPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>		
+				</TabItem>
+				<TabItem Header="Holdings"></TabItem>
+				<TabItem Header="Cash"></TabItem>
+			</TabControl>
+			
 
 			<!--
 			<panels:StatisticsPanelControl DataContext="{Binding StatisticsPane}" Grid.Row="1" HorizontalAlignment="Stretch" Height="Auto" VerticalAlignment="Stretch" Width="Auto"/>
 			-->
+			
 			<panels:ProfitLossPanelControl DataContext="{Binding ProfitLossPane}" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
 			<panels:LogPanelControl DataContext="{Binding LogPane}" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
@@ -107,6 +116,7 @@
 					<TextBlock Text="{Binding ProjectName}" VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding SessionName}" VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding AlgorithmStatus}" VerticalAlignment="Center" Width="100"/>
+					<TextBlock Text="{Binding ServerStatistics}" VerticalAlignment="Center"/>
 				</StackPanel>
 				<ProgressBar DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Stretch" Opacity="0.5" BorderThickness="0" MinWidth="50" Width="120"
 							 Margin="0" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}"/>

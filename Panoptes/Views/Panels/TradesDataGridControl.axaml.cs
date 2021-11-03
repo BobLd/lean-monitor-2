@@ -24,6 +24,11 @@ namespace Panoptes.Views.Panels
             _dataGrid.SelectionChanged += _dataGrid_SelectionChanged;
         }
 
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+
         private void _dataGrid_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems == null || e.AddedItems.Count == 0) return;
@@ -31,11 +36,6 @@ namespace Panoptes.Views.Panels
             {
                 _dataGrid.ScrollIntoView(ovm, null);
             }
-        }
-
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
         }
 
         /// <summary>

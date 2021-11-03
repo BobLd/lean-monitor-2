@@ -4,6 +4,8 @@ using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Sessions;
 using QuantConnect;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Panoptes.ViewModels
 {
@@ -37,22 +39,50 @@ namespace Panoptes.ViewModels
             _messenger.Register<StatusViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 r.Progress = m.ResultContext.Progress;
-                r.SessionName = m.ResultContext.Name; // this updates the status bar...
+                r.SessionName = m.ResultContext.Name;
                 r.ProjectName = m.ResultContext.Project;
 
                 switch (m.ResultContext.Result.ResultType)
                 {
                     case ResultType.Backtest:
+                        r.IsLive = false;
                         r.IsProgressIndeterminate = false;
-                        return;
+                        break;
 
                     case ResultType.Live:
+                        r.IsLive = true;
                         r.IsProgressIndeterminate = true;
-                        return;
+                        break;
                 }
+
+                ProcessServerStatistics(m.ResultContext.Result.ServerStatistics);
             });
 
             _messenger.Register<StatusViewModel, AlgorithmStatusMessage>(this, (r, m) => r.AlgorithmStatus = m.Value.Status);
+        }
+
+        private string _serverStatistics;
+        public string ServerStatistics
+        {
+            get { return _serverStatistics; }
+            set
+            {
+                if (_serverStatistics == value) return;
+                _serverStatistics = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool? _isLive;
+        public bool? IsLive
+        {
+            get { return _isLive; }
+            set
+            {
+                if (_isLive == value) return;
+                _isLive = value;
+                OnPropertyChanged();
+            }
         }
 
         private decimal _progress;
@@ -61,6 +91,7 @@ namespace Panoptes.ViewModels
             get { return _progress; }
             set
             {
+                if (_progress == value) return;
                 _progress = value;
                 OnPropertyChanged();
             }
@@ -108,6 +139,7 @@ namespace Panoptes.ViewModels
             get { return _sessionState; }
             set
             {
+                if (_sessionState == value) return;
                 _sessionState = value;
                 OnPropertyChanged();
             }
@@ -126,5 +158,11 @@ namespace Panoptes.ViewModels
         }
 
         public bool IsSessionActive => _sessionService.IsSessionActive;
+
+        private void ProcessServerStatistics(IDictionary<string, string> serverStatistics)
+        {
+            if (serverStatistics == null || serverStatistics.Count == 0) return;
+            ServerStatistics = $"Server: [{string.Join(", ", serverStatistics.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}: {kvp.Value}"))}]";
+        }
     }
 }

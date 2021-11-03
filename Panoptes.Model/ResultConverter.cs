@@ -26,8 +26,9 @@ namespace Panoptes.Model
                 ProfitLoss = new Dictionary<DateTime, decimal>(backtestResult.ProfitLoss ?? new Dictionary<DateTime, decimal>()),
                 Statistics = new Dictionary<string, string>(backtestResult.Statistics ?? new Dictionary<string, string>()),
                 RuntimeStatistics = new Dictionary<string, string>(backtestResult.RuntimeStatistics ?? new Dictionary<string, string>()),
+                //ServerStatistics = new Dictionary<string, string>(backtestResult.ServerStatistics ?? new Dictionary<string, string>()), // No server stats in backtest?
                 RollingWindow = new Dictionary<string, AlgorithmPerformance>(backtestResult.RollingWindow ?? new Dictionary<string, AlgorithmPerformance>()),
-                OrderEvents = backtestResult.OrderEvents
+                OrderEvents = backtestResult.OrderEvents,
             };
         }
 
@@ -41,6 +42,7 @@ namespace Panoptes.Model
                 ProfitLoss = new Dictionary<DateTime, decimal>(liveResult.ProfitLoss ?? new Dictionary<DateTime, decimal>()),
                 Statistics = new Dictionary<string, string>(liveResult.Statistics ?? new Dictionary<string, string>()),
                 RuntimeStatistics = new Dictionary<string, string>(liveResult.RuntimeStatistics ?? new Dictionary<string, string>()),
+                ServerStatistics = new Dictionary<string, string>(liveResult.ServerStatistics ?? new Dictionary<string, string>()),
                 OrderEvents = liveResult.OrderEvents
             };
         }
@@ -62,9 +64,8 @@ namespace Panoptes.Model
             if (result.ResultType != ResultType.Live) throw new ArgumentException("Result is not of type Live", nameof(result));
 
             // Holdings is not supported in the current result.
-            // ServerStatistics is not supported in the current result.
 
-            var liveResultParameters = new LiveResultParameters(result.Charts.MapToChartDictionary(), result.Orders, result.ProfitLoss, null, null, result.Statistics, result.RuntimeStatistics, null, null);
+            var liveResultParameters = new LiveResultParameters(result.Charts.MapToChartDictionary(), result.Orders, result.ProfitLoss, null, null, result.Statistics, result.RuntimeStatistics, null, result.ServerStatistics);
             return new LiveResult(liveResultParameters);
         }
     }

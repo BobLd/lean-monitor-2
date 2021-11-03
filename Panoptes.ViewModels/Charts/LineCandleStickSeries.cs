@@ -187,7 +187,14 @@ namespace Panoptes.ViewModels.Charts
             {
                 case PlotSerieTypes.Candles:
                     MinX = MinY = MaxX = MaxY = double.NaN;
-                    InternalUpdateMaxMin(Items.ToList(),
+                    List<HighLowItem> items;
+
+                    lock (Items)
+                    {
+                        items = Items.ToList();
+                    }
+
+                    InternalUpdateMaxMin(items,
                         i => i.X - (Period.TotalDays / 2.0),
                         i => i.X + (Period.TotalDays * 5), // / 2.0),
                         i => Min(i.Low, i.Open, i.Close, i.High),
@@ -533,7 +540,13 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         private void RenderCandlesSerie(IRenderContext rc)
         {
-            var items = Items.ToList();
+            List<HighLowItem> items;
+
+            lock (Items)
+            {
+                items = Items.ToList();
+            }
+
             var nitems = items.Count;
 
             if (nitems == 0 || StrokeThickness <= 0 || LineStyle == LineStyle.None)
@@ -710,52 +723,55 @@ namespace Panoptes.ViewModels.Charts
         {
             try
             {
+                List<HighLowItem> items;
+
                 lock (Items)
                 {
-                    var item = Items.ToList();
-                    if (item == null || item.Count == 0)
-                    {
-                        return;
-                    }
-
-                    double xmid = (legendBox.Left + legendBox.Right) / 2;
-                    double yopen = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.7);
-                    double yclose = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.3);
-                    double[] dashArray = LineStyle.GetDashArray();
-
-                    var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
-
-                    if (XAxis == null)
-                    {
-                        Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - XAxis is null.");
-                        return;
-                    }
-
-                    if (YAxis == null)
-                    {
-                        Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - YAxis is null.");
-                        return;
-                    }
-
-                    var first = item[0];
-                    var candlewidth = Math.Min(
-                        legendBox.Width,
-                        XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X));
-
-                    rc.DrawLine(
-                        new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
-                        GetSelectableColor(ActualColor),
-                        StrokeThickness,
-                        dashArray,
-                        LineJoin.Miter,
-                        true);
-
-                    rc.DrawRectangleAsPolygon(
-                        new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
-                        GetSelectableFillColor(IncreasingColor),
-                        GetSelectableColor(ActualColor),
-                        StrokeThickness);
+                    items = Items?.ToList();
                 }
+
+                if (items == null || items.Count == 0)
+                {
+                    return;
+                }
+
+                double xmid = (legendBox.Left + legendBox.Right) / 2;
+                double yopen = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.7);
+                double yclose = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.3);
+                double[] dashArray = LineStyle.GetDashArray();
+
+                var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
+
+                if (XAxis == null)
+                {
+                    Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - XAxis is null.");
+                    return;
+                }
+
+                if (YAxis == null)
+                {
+                    Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - YAxis is null.");
+                    return;
+                }
+
+                var first = items[0];
+                var candlewidth = Math.Min(
+                    legendBox.Width,
+                    XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X));
+
+                rc.DrawLine(
+                    new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
+                    GetSelectableColor(ActualColor),
+                    StrokeThickness,
+                    dashArray,
+                    LineJoin.Miter,
+                    true);
+
+                rc.DrawRectangleAsPolygon(
+                    new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
+                    GetSelectableFillColor(IncreasingColor),
+                    GetSelectableColor(ActualColor),
+                    StrokeThickness);
             }
             catch (Exception ex)
             {
@@ -1046,31 +1062,34 @@ namespace Panoptes.ViewModels.Charts
         {
             base.UpdateData();
 
-            var items = Items.ToList();
-            if (items == null || items.Count == 0)
+            lock (Items)
             {
-                return;
-            }
-
-            // determine minimum X gap between successive points
-            var nitems = items.Count;
-            minDx = double.MaxValue;
-
-            var previous = items[0];
-            for (int i = 1; i < nitems; i++)
-            {
-                var current = items[i];
-                minDx = Math.Min(minDx, current.X - previous.X);
-                if (minDx < 0)
+                var items = Items.ToList();
+                if (items == null || items.Count == 0)
                 {
-                    throw new ArgumentException("bars are out of order, must be sequential in x");
+                    return;
                 }
-                previous = current;
-            }
 
-            if (nitems <= 1)
-            {
-                minDx = 1;
+                // determine minimum X gap between successive points
+                var nitems = items.Count;
+                minDx = double.MaxValue;
+
+                var previous = items[0];
+                for (int i = 1; i < nitems; i++)
+                {
+                    var current = items[i];
+                    minDx = Math.Min(minDx, current.X - previous.X);
+                    if (minDx < 0)
+                    {
+                        throw new ArgumentException("bars are out of order, must be sequential in x");
+                    }
+                    previous = current;
+                }
+
+                if (nitems <= 1)
+                {
+                    minDx = 1;
+                }
             }
         }
     }

@@ -185,7 +185,7 @@ namespace Panoptes.ViewModels.Panels
         public decimal Fees
         {
             get { return _fees; }
-            set
+            private set
             {
                 if (_fees == value) return;
                 _fees = value;
@@ -197,7 +197,7 @@ namespace Panoptes.ViewModels.Panels
         public string FeesCurrency
         {
             get { return _feesCurrency; }
-            set
+            private set
             {
                 if (_feesCurrency == value) return;
                 _feesCurrency = value;
@@ -209,7 +209,7 @@ namespace Panoptes.ViewModels.Panels
         public decimal FilledQuantity
         {
             get { return _filledQuantity; }
-            set
+            private set
             {
                 if (_filledQuantity == value) return;
                 _filledQuantity = value;
@@ -272,7 +272,7 @@ namespace Panoptes.ViewModels.Panels
         public decimal Price
         {
             get { return _price; }
-            internal set
+            private set
             {
                 if (_price == value) return;
                 _price = value;
@@ -304,7 +304,7 @@ namespace Panoptes.ViewModels.Panels
         public DateTime? LastFillTime
         {
             get { return _lastFillTime; }
-            internal set
+            private set
             {
                 if (_lastFillTime == value) return;
                 _lastFillTime = value;
@@ -319,7 +319,7 @@ namespace Panoptes.ViewModels.Panels
         public DateTime? LastUpdateTime
         {
             get { return _lastUpdateTime; }
-            internal set
+            private set
             {
                 if (_lastUpdateTime == value) return;
                 _lastUpdateTime = value;
@@ -334,7 +334,7 @@ namespace Panoptes.ViewModels.Panels
         public DateTime? CanceledTime
         {
             get { return _canceledTime; }
-            internal set
+            private set
             {
                 if (_canceledTime == value) return;
                 _canceledTime = value;
@@ -349,7 +349,7 @@ namespace Panoptes.ViewModels.Panels
         public decimal Quantity
         {
             get { return _quantity; }
-            internal set
+            private set
             {
                 if (_quantity == value) return;
                 _quantity = value;
@@ -370,7 +370,7 @@ namespace Panoptes.ViewModels.Panels
         public OrderType Type
         {
             get { return _type; }
-            set
+            private set
             {
                 if (_type == value) return;
                 _type = value;
@@ -385,7 +385,7 @@ namespace Panoptes.ViewModels.Panels
         public OrderStatus Status
         {
             get { return _status; }
-            set
+            private set
             {
                 if (_status == value) return;
                 _status = value;
@@ -432,7 +432,7 @@ namespace Panoptes.ViewModels.Panels
         public DateTime? Expiry
         {
             get { return _expiry; }
-            set
+            private set
             {
                 if (_expiry == value) return;
                 _expiry = value;
@@ -447,7 +447,7 @@ namespace Panoptes.ViewModels.Panels
         public string Tag
         {
             get { return _tag; }
-            internal set
+            private set
             {
                 if (_tag == value) return;
                 _tag = value;
@@ -513,7 +513,7 @@ namespace Panoptes.ViewModels.Panels
         public OrderSubmissionData OrderSubmissionData
         {
             get { return _orderSubmissionData; }
-            internal set
+            private set
             {
                 if (_orderSubmissionData == value) return;
                 _orderSubmissionData = value;

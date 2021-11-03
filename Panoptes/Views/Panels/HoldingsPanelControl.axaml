@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Panoptes.Views.Panels.HoldingsPanelControl">
+
+	<UserControl.Styles>
+		<Style Selector="TextBox">
+			<Setter Property="Watermark" Value="Search..."/>
+			<Setter Property="MinWidth" Value="110"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Padding" Value="5,1,5,0"/>
+		</Style>
+	</UserControl.Styles>
+
+	<Grid Margin="0,2,0,0">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="25"/>
+		</Grid.RowDefinitions>
+		
+		<StackPanel Grid.Row="1" Orientation="Horizontal">
+			<TextBox />
+		</StackPanel>
+	</Grid>
+</UserControl>

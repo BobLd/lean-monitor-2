@@ -11,10 +11,22 @@ namespace Panoptes.ViewModels.Panels
 {
     public sealed class RuntimeStatisticsPanelViewModel : ToolPaneViewModel
     {
+        private readonly Dictionary<string, string> _definitions = new Dictionary<string, string>()
+        {
+            { "Probabilistic Sharpe Ratio", "Probability that the observed Sharpe ratio is greater than or equal to\nthe benchmark Sharpe ratio.\nPSR(SR*) = Prob[SR* ≤ SR^], with:\n- SR^ = observed Sharpe ratio\n- SR* = benchmark Sharpe ratio\nSee https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1821643" },
+            { "Unrealized", "Unrealized definition" },
+            { "Fees", "Fees definition" },
+            { "Net Profit", "Net Profit definition" },
+            { "Return", "Return definition" },
+            { "Equity", "Equity definition" },
+            { "Holdings", "Holdings definition" },
+            { "Volume", "Volume definition" }
+        };
+
         private readonly IMessenger _messenger;
         private readonly IStatisticsFormatter _statisticsFormatter;
 
-        private readonly BackgroundWorker _pnlBgWorker;
+        private readonly BackgroundWorker _statisticsBgWorker;
 
         private readonly BlockingCollection<Dictionary<string, string>> _statisticsQueue = new BlockingCollection<Dictionary<string, string>>();
 
@@ -36,9 +48,9 @@ namespace Panoptes.ViewModels.Panels
             });
             _messenger.Register<RuntimeStatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear()); // Do we want to do that in ui thread?
 
-            _pnlBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
-            _pnlBgWorker.DoWork += PnlQueueReader;
-            _pnlBgWorker.ProgressChanged += (s, e) =>
+            _statisticsBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _statisticsBgWorker.DoWork += StatisticsQueueReader;
+            _statisticsBgWorker.ProgressChanged += (s, e) =>
             {
                 switch (e.ProgressPercentage)
                 {
@@ -55,8 +67,8 @@ namespace Panoptes.ViewModels.Panels
                 }
             };
 
-            _pnlBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
-            _pnlBgWorker.RunWorkerAsync();
+            _statisticsBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
+            _statisticsBgWorker.RunWorkerAsync();
         }
 
         private ObservableCollection<StatisticViewModel> _statistics = new ObservableCollection<StatisticViewModel>();
@@ -76,23 +88,29 @@ namespace Panoptes.ViewModels.Panels
             Statistics.Clear();
         }
 
-        private void PnlQueueReader(object sender, DoWorkEventArgs e)
+        private void StatisticsQueueReader(object sender, DoWorkEventArgs e)
         {
-            while (!_pnlBgWorker.CancellationPending)
+            while (!_statisticsBgWorker.CancellationPending)
             {
                 var statistics = _statisticsQueue.Take(); // Need cancelation token
                 foreach (var stat in statistics)
                 {
                     if (!_statisticsDico.ContainsKey(stat.Key))
                     {
+                        if (!_definitions.TryGetValue(stat.Key, out var definition))
+                        {
+                            definition = "No known definition.";
+                        }
+
                         var vm = new StatisticViewModel
                         {
                             Name = stat.Key,
                             Value = stat.Value,
-                            State = _statisticsFormatter.Format(stat.Key, stat.Value)
+                            State = _statisticsFormatter.Format(stat.Key, stat.Value),
+                            Definition = definition
                         };
                         _statisticsDico.Add(stat.Key, vm);
-                        _pnlBgWorker.ReportProgress(0, vm);
+                        _statisticsBgWorker.ReportProgress(0, vm);
                     }
                     else
                     {

@@ -29,6 +29,18 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
+        private string _definition;
+        public string Definition
+        {
+            get { return _definition; }
+            set
+            {
+                if (_definition == value) return;
+                _definition = value;
+                OnPropertyChanged();
+            }
+        }
+
         private StatisticState _state = StatisticState.Inconclusive;
         public StatisticState State
         {

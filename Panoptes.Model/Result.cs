@@ -14,6 +14,7 @@ namespace Panoptes.Model
         public Dictionary<DateTime, decimal> ProfitLoss = new Dictionary<DateTime, decimal>();
         public Dictionary<string, string> Statistics = new Dictionary<string, string>();
         public Dictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
+        public Dictionary<string, string> ServerStatistics = new Dictionary<string, string>();
         public Dictionary<string, AlgorithmPerformance> RollingWindow = new Dictionary<string, AlgorithmPerformance>();
 
         public List<OrderEvent> OrderEvents = new List<OrderEvent>();

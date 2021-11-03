@@ -18,6 +18,7 @@ using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace Panoptes.Model.Mock.Sessions
@@ -44,7 +45,8 @@ namespace Panoptes.Model.Mock.Sessions
         public MockStreamingMessageHandler(StreamSessionParameters streamParameters)
         {
             _port = streamParameters.Port;
-            _currentTime = DateTime.Now;
+            _startTime = DateTime.Now;
+            _currentTime = _startTime;
             _orderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
         }
 
@@ -53,6 +55,11 @@ namespace Panoptes.Model.Mock.Sessions
         /// </summary>
         public void Initialize()
         {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = { new OrderJsonConverter() }
+            };
+
             CheckPort();
             _server = new PushSocket($"@tcp://*:{_port}");
 
@@ -109,11 +116,11 @@ namespace Panoptes.Model.Mock.Sessions
         /// <param name="packet">Packet to transmit</param>
         public void Transmit(Packet packet)
         {
-            var payload = JsonConvert.SerializeObject(packet, _orderEventJsonConverter);
+            var payload = JsonConvert.SerializeObject(packet, Formatting.None, _orderEventJsonConverter);
 
             var message = new NetMQMessage();
 
-            message.Append(payload);
+            message.Append(payload, Encoding.UTF8);
 
             _server.SendMultipartMessage(message);
         }
@@ -198,6 +205,7 @@ namespace Panoptes.Model.Mock.Sessions
             _packetQueue.Add(GetDebugPacket($"Launching analysis for {AlgorithmId} with LEAN Engine v2.5.0.0"));
             _packetQueue.Add(GetDebugPacket("Mock Brokerage account base currency: USD"));
 
+
             while (_cts?.IsCancellationRequested == false)
             {
                 NextPriceStep();
@@ -211,7 +219,7 @@ namespace Panoptes.Model.Mock.Sessions
                         break;
 
                     case PacketType.LiveNode:
-                        //_packetQueue.Add(GetLiveNodePacket());
+                        _packetQueue.Add(GetLiveNodePacket());
                         break;
 
                     //case PacketType.AlgorithmNode:
@@ -252,11 +260,12 @@ namespace Panoptes.Model.Mock.Sessions
 
         #region Mock data
         private static readonly Random _random = new Random();
+        private readonly DateTime _startTime;
         private DateTime _currentTime;
         private readonly int _sleep = 10; // ms
         private readonly int _stepSecond = 10;
 
-        private readonly string[] _symbols = new string[] { "BTCUSD", "ETHUSD", "LTCUSD" };
+        private readonly string[] _symbols = new string[] { "BTCUSD XJ", "ETHUSD XJ", "LTCUSD XJ" };
 
         private int _orderId;
 
@@ -266,6 +275,7 @@ namespace Panoptes.Model.Mock.Sessions
         private readonly Dictionary<string, decimal> _lastPrice = new Dictionary<string, decimal>();
         private const decimal maximumPercentDeviation = 0.1m;
 
+        public const string HostName = "MOCK-HOST-NAME";
         public const string AlgorithmId = "mock-algo-id";
         public const int ProjectId = 42;
         public const int UserId = 99;
@@ -279,7 +289,6 @@ namespace Panoptes.Model.Mock.Sessions
             { "MACD",            new (string, SeriesType, ScatterMarkerSymbol?)[] { ("Price", (SeriesType)2, null), ("MACD-10d", SeriesType.Line, null), ("MACD-100d", SeriesType.Line, null) } },
             { "Markers",         new (string, SeriesType, ScatterMarkerSymbol?)[] { ("Line-Diamond", (SeriesType)2, ScatterMarkerSymbol.Diamond), ("Scatter-Square", SeriesType.Scatter, ScatterMarkerSymbol.Square), ("Line-Null", SeriesType.Line, null) } }
         };
-
 
         private static readonly Array algoStatus = Enum.GetValues(typeof(AlgorithmStatus));
         private static readonly Array orderTypes = Enum.GetValues(typeof(OrderType));
@@ -314,7 +323,7 @@ namespace Panoptes.Model.Mock.Sessions
                 UserId = UserId,
                 ProjectId = ProjectId,
                 ProcessingTime = _random.NextDouble() * 100,
-                Results = new LiveResult(GetLiveResultParameters())
+                Results = new LiveResult(GetLiveResultParameters()),
             };
         }
 
@@ -323,11 +332,66 @@ namespace Panoptes.Model.Mock.Sessions
             return new LiveResultParameters(
                 Charts.Select(c => GetChart(c.Key, c.Value)).ToDictionary(k => k.Name, k => k),
                 null,
-                GetProfitLoss(), null, null, null,
+                GetProfitLoss(),
+                GetHoldings(),
+                GetCashBook(),
+                null,
                 GetRuntimeStatistics(),
-                null, null, null);
+                null,
+                GetServerStatistics(),
+                null);
 
             // What about orderevent in here??
+        }
+
+        public static CashBook GetCashBook()
+        {
+            return new CashBook
+            {
+                ["EUR"] = new Cash("EUR", _random.Next(5_000_000, 10_000_000), (decimal)(_random.NextDouble() * 10)),
+                ["USD"] = new Cash("USD", _random.Next(5_000, 1_000_000), (decimal)(_random.NextDouble() * 10)),
+                ["BTC"] = new Cash("BTC", _random.Next(10, 10_000), (decimal)(_random.NextDouble() * 10))
+            };
+        }
+
+        public Dictionary<string, Holding> GetHoldings()
+        {
+            var hlds = new Dictionary<string, Holding>();
+            foreach (var symbol in _symbols)
+            {
+                var sid = SecurityIdentifier.Parse(symbol);
+                decimal qty = (decimal)_random.Next(0, 1_000);
+                decimal price = _lastPrice[symbol];
+                hlds[symbol] = new Holding()
+                {
+                    Symbol = new Symbol(sid, sid.Symbol),
+                    AveragePrice = _lastPrice[symbol] * (decimal)(1 + _random.Next() - 0.5),
+                    MarketPrice = price,
+                    CurrencySymbol = symbol.Substring(0, 3),
+                    ConversionRate = (decimal)(1 + _random.Next() - 0.5),
+                    Quantity = qty,
+                    MarketValue = qty * price,
+                    UnrealizedPnL = _random.Next() * (decimal)_random.NextDouble()
+                };
+            }
+            return hlds;
+        }
+
+        /// <summary>
+        /// Gets the statistics of the machine, including CPU% and RAM
+        /// </summary>
+        public Dictionary<string, string> GetServerStatistics()
+        {
+            var upTime = _currentTime - _startTime;
+            return new Dictionary<string, string>
+            {
+                { "CPU Usage", $"{_random.NextDouble() * 100:0.0}%" },
+                { "Used RAM (MB)", $"{_random.Next(100, 2000)}" },
+                { "Total RAM (MB)", "2000" },
+                { "Hostname", HostName },
+                { "LEAN Version", $"v{Globals.Version}"},
+                { "Up Time", $"{upTime.Days}d {upTime:hh\\:mm\\:ss}" },
+            };
         }
 
         private Dictionary<DateTime, decimal> GetProfitLoss()
@@ -406,7 +470,7 @@ namespace Panoptes.Model.Mock.Sessions
             if (_orders.IsEmpty) return null;
             var order = _orders[_random.Next(1, _orderId)];
 
-            decimal lastPrice = _lastPrice[order.Symbol.Value];
+            decimal lastPrice = _lastPrice[order.Symbol.ToString()];
             decimal fillPrice = 0;
             decimal fillQty = 0;
             var fees = new OrderFee(new CashAmount());
@@ -483,7 +547,8 @@ namespace Panoptes.Model.Mock.Sessions
         private Order GetOrder(int id)
         {
             var symbolStr = _symbols[_random.Next(_symbols.Length)];
-            var symbol = Symbol.Create(symbolStr, SecurityType.Crypto, "gdax");
+            var sid = SecurityIdentifier.Parse(symbolStr);
+            var symbol = new Symbol(sid, sid.Symbol);
             var type = (OrderType)orderTypes.GetValue(_random.Next(orderTypes.Length));
             var tag = new string(Enumerable.Repeat(chars, _random.Next(15, 60)).Select(s => s[_random.Next(s.Length)]).ToArray());
             var qty = Math.Round((decimal)(_random.NextDouble() * 10) * _random.Next(-1, 2), 4);
@@ -628,7 +693,7 @@ namespace Panoptes.Model.Mock.Sessions
                 DeployId = DeployId,
                 DisableAcknowledgement = false,
                 HistoryProvider = "MockBrokerageHistoryProvider",
-                HostName = "MOCK-HOST-NAME",
+                HostName = HostName,
                 Language = Language.CSharp,
                 LiveDataTypes = null,
                 NotificationEvents = null,
@@ -650,7 +715,7 @@ namespace Panoptes.Model.Mock.Sessions
                 UserId = UserId,
                 UserPlan = UserPlan.Professional,
                 UserToken = "",
-                Version = "2.5.0.0"
+                Version = Globals.Version
             };
         }
 

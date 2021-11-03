@@ -9,6 +9,7 @@
 		DataContext="{Binding NewSessionWindow, Source={StaticResource Locator}}"
 		d:DesignHeight="300" d:DesignWidth="600"        
         Height="300" Width="600"
+		MinHeight="200"
 		Title="Open Session"
 		WindowStartupLocation="CenterOwner" CanResize="True"
 		ShowInTaskbar="False">

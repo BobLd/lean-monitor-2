@@ -4,7 +4,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:Panoptes.Views.Panels"
-			 xmlns:ctrls="clr-namespace:Panoptes.Views.Controls"
              xmlns:panels="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
              mc:Ignorable="d"
 			 d:DesignWidth="800" d:DesignHeight="450">
@@ -22,7 +21,7 @@
 		<TabItem Header="Today">
 			<local:TradesDataGridControl Items="{Binding OrdersToday, Mode=OneWay}" Margin="0,2,0,0"/>
 		</TabItem>
-		<TabItem Header="History" IsSelected="True">
+		<TabItem Header="History">
 			<Grid Margin="0,2,0,0">
 				<Grid.RowDefinitions>
 					<RowDefinition Height="*"/>

@@ -2,7 +2,6 @@
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
-using OxyPlot;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Sessions;
 using Panoptes.ViewModels.Charts;
@@ -15,8 +14,6 @@ namespace Panoptes.ViewModels
         private readonly ISessionService _sessionService;
         //private readonly ILayoutManager _layoutManager;
         private readonly IMessenger _messenger;
-
-        private SessionState _sessionState = SessionState.Unsubscribed;
 
         public RelayCommand ExitCommand { get; }
         public RelayCommand OpenSessionCommand { get; }
@@ -37,17 +34,28 @@ namespace Panoptes.ViewModels
         public RuntimeStatisticsPanelViewModel RuntimeStatisticsPane { get; }
         public TradesPanelViewModel TradesPane { get; }
         public ProfitLossPanelViewModel ProfitLossPane { get; }
-
         public OxyPlotSelectionViewModel OxyPlotSelectionPane { get; }
 
         public bool IsSessionActive => _sessionService.IsSessionActive;
 
+        private SessionState _sessionState = SessionState.Unsubscribed;
         public SessionState SessionState
         {
             get { return _sessionState; }
             set
             {
                 _sessionState = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _title;
+        public string Title
+        {
+            get { return _title; }
+            set
+            {
+                _title = value;
                 OnPropertyChanged();
             }
         }
@@ -71,6 +79,8 @@ namespace Panoptes.ViewModels
             ProfitLossPane = profitLossPanelViewModel;
             TradesPane = tradesPanelViewModel;
             OxyPlotSelectionPane = oxyPlotSelectionViewModel;
+
+            Title = $"Panoptes - LEAN Algorithm Monitor - {GetVersion()}";
 
             ExitCommand = new RelayCommand(() =>
             {
@@ -166,19 +176,6 @@ namespace Panoptes.ViewModels
             _sessionService.ShutdownSession();
         }
 
-        private PlotModel _plotModel;
-        public PlotModel PlotModel
-        {
-            get
-            {
-                return _plotModel;
-            }
-            set
-            {
-                _plotModel = value;
-                OnPropertyChanged();
-            }
-        }
 
         private void Export()
         {
@@ -209,6 +206,26 @@ namespace Panoptes.ViewModels
             //ExportCommand.NotifyCanExecuteChanged();
             //ConnectCommand.NotifyCanExecuteChanged();
             //DisconnectCommand.NotifyCanExecuteChanged();
+        }
+
+        private static string GetVersion()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+#pragma warning disable CS8603 // Possible null reference return.
+            if (fvi != null)
+            {
+                if (fvi.FileVersion == fvi.ProductVersion)
+                {
+                    return fvi.FileVersion;
+                }
+                else
+                {
+                    return $"{fvi.FileVersion} ({fvi.ProductVersion})";
+                }
+            }
+            return null;
+#pragma warning restore CS8603 // Possible null reference return.
         }
     }
 }

@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Panoptes.Views.Panels.HoldingsDataGridControl">
+
+	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
+		  DoubleTapped="OnDataGridDoubleTapped"
+		  CanUserResizeColumns="True" HeadersVisibility="Column"
+		  AlternatingRowBackground="Transparent" RowBackground="Transparent" SelectedItem="{Binding SelectedItem}">
+		<DataGrid.Columns>
+			<DataGridTextColumn Header="Symbol" Binding="{Binding Symbol, Converter={StaticResource SymbolConverter}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="CurrencySymbol" Binding="{Binding CurrencySymbol, Mode=OneWay}" />
+			<DataGridTextColumn Header="Type" Binding="{Binding SecurityType, Mode=OneWay}"/>			
+			<DataGridTextColumn Header="AveragePrice" Binding="{Binding AveragePrice, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, Mode=OneWay}"/>
+			<DataGridTextColumn Header="ConversionRate" Binding="{Binding ConversionRate, Mode=OneWay}"/>			
+			<DataGridTextColumn Header="MarketPrice" Binding="{Binding MarketPrice, Mode=OneWay}"/>
+			<DataGridTextColumn Header="MarketValue" Binding="{Binding MarketValue, Mode=OneWay}"/>
+			<DataGridTextColumn Header="UnrealizedPnL" Binding="{Binding UnrealizedPnL, Mode=OneWay}"/>			
+		</DataGrid.Columns>
+	</DataGrid>
+</UserControl>

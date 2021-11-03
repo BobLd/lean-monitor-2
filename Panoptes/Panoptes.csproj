@@ -4,6 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ApplicationIcon>Resources\icon\halloween53_109170.ico</ApplicationIcon>
+    <Version>0.0.0.1-alpha1</Version>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\icon\halloween53_109170.ico" />
