@@ -20,7 +20,6 @@ namespace Panoptes.Views.Panels
         {
             InitializeComponent();
             _dataGrid = this.Get<DataGrid>("_dataGrid");
-
             _dataGrid.SelectionChanged += _dataGrid_SelectionChanged;
         }
 

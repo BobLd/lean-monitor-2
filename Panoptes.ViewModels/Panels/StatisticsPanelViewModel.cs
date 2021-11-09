@@ -2,7 +2,9 @@
 using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Statistics;
+using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Panoptes.ViewModels.Panels
@@ -39,7 +41,15 @@ namespace Panoptes.ViewModels.Panels
 
         private void Clear()
         {
-            Statistics.Clear();
+            try
+            {
+                Statistics.Clear(); // Need to do that from UI thread
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"StatisticsPanelViewModel: ERROR\n{ex}");
+                throw;
+            }
         }
 
         private void ParseResult(Result result)

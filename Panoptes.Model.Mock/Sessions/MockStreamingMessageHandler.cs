@@ -262,7 +262,7 @@ namespace Panoptes.Model.Mock.Sessions
         private static readonly Random _random = new Random();
         private readonly DateTime _startTime;
         private DateTime _currentTime;
-        private readonly int _sleep = 10; // ms
+        private readonly int _sleep = 500; // ms
         private readonly int _stepSecond = 10;
 
         private readonly string[] _symbols = new string[] { "BTCUSD XJ", "ETHUSD XJ", "LTCUSD XJ" };

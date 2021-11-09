@@ -36,13 +36,13 @@
 
 		<Menu Grid.Row="0">
 			<MenuItem Header="_File">
-				<MenuItem Header="_Open..." Command="{Binding OpenSessionCommand}" HotKey="Ctrl+O"/>
+				<MenuItem Header="_Open..." Command="{Binding OpenSessionCommand}"/> <!--HotKey="Ctrl+O"-->
 				<Separator/>
 				<MenuItem Header="_Close" Command="{Binding CloseCommand}"/>
 				<Separator/>
 				<MenuItem Header="_Export..." Command="{Binding ExportCommand}"/>
 				<Separator/>
-				<MenuItem Header="E_xit" Command="{Binding ExitCommand}" HotKey="Alt+F4"/>
+				<MenuItem Header="E_xit" Command="{Binding ExitCommand}"/> <!--HotKey="Alt+F4"-->
 			</MenuItem>
 			<!--
 			<MenuItem Header="_View">

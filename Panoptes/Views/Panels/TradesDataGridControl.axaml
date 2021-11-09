@@ -18,9 +18,10 @@
 	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
 			  DoubleTapped="OnDataGridDoubleTapped"
 			  CanUserResizeColumns="True" HeadersVisibility="Column"
-			  AlternatingRowBackground="Transparent" RowBackground="Transparent" SelectedItem="{Binding SelectedItem}">
+			  AlternatingRowBackground="Transparent" RowBackground="Transparent"
+			  SelectedItem="{Binding SelectedItem}">
 		<DataGrid.Columns>
-			<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
+			<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Created" Binding="{Binding CreatedTime, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Status" Binding="{Binding StatusStr, Mode=OneWay}" CellStyleClasses="statusColored"/>
 			<DataGridTextColumn Header="Symbol" Binding="{Binding Symbol, Converter={StaticResource SymbolConverter}, Mode=OneWay}"/>

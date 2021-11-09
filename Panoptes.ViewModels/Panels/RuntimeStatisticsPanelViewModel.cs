@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Panoptes.ViewModels.Panels
 {
@@ -84,8 +85,15 @@ namespace Panoptes.ViewModels.Panels
 
         private void Clear()
         {
-            // Do we want to do that in ui thread?
-            Statistics.Clear();
+            try
+            {
+                Statistics.Clear(); // Need to do that in UI thread
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"RuntimeStatisticsPanelViewModel: ERROR\n{ex}");
+                throw;
+            }
         }
 
         private void StatisticsQueueReader(object sender, DoWorkEventArgs e)

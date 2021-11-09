@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Panoptes.ViewModels.Panels
@@ -45,7 +46,7 @@ namespace Panoptes.ViewModels.Panels
                 if (m.Value.Result.ProfitLoss == null || m.Value.Result.ProfitLoss.Count == 0) return;
                 r._pnlQueue.Add(m.Value.Result.ProfitLoss);
             });
-            _messenger.Register<ProfitLossPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear()); // Do we want to do that in ui thread?
+            _messenger.Register<ProfitLossPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
             _pnlBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _pnlBgWorker.DoWork += PnlQueueReader;
@@ -72,8 +73,15 @@ namespace Panoptes.ViewModels.Panels
 
         private void Clear()
         {
-            // Do we want to do that in ui thread?
-            ProfitLoss.Clear();
+            try
+            {
+                ProfitLoss.Clear(); // Need to do that in UI thread
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"ProfitLossPanelViewModel: ERROR\n{ex}");
+                throw;
+            }
         }
 
         private void PnlQueueReader(object sender, DoWorkEventArgs e)

@@ -36,6 +36,7 @@
 					<CalendarDatePicker x:Name="_calendarDatePickerTo" SelectedDate="{Binding ToDate, Mode=TwoWay}"
 										DisplayDateStart="{Binding FromDate, Mode=OneWay}"/>
 
+					<!--
 					<Label Content="|>"/>
 					<Label Content="{Binding FromDate}"/>
 					<Label Content=" to "/>
@@ -48,6 +49,7 @@
 							<DrawingPresenter Drawing="{StaticResource TablerIcons.Gauge}"/>
 						</Button.Content>
 					</Button>
+					-->
 				</StackPanel>
 			</Grid>
 		</TabItem>

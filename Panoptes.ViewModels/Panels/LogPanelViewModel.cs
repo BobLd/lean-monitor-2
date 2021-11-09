@@ -1,6 +1,8 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
+using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace Panoptes.ViewModels.Panels
 {
@@ -33,7 +35,15 @@ namespace Panoptes.ViewModels.Panels
 
         private void Clear()
         {
-            LogEntries.Clear();
+            try
+            {
+                LogEntries.Clear(); // Need to do that from UI thread
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LogPanelViewModel: ERROR\n{ex}");
+                throw;
+            }
         }
 
         private void ParseResult(LogEntryReceivedMessage message)

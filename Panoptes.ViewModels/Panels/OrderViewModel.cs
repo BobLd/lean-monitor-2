@@ -360,6 +360,7 @@ namespace Panoptes.ViewModels.Panels
                 OnPropertyChanged(nameof(OpenQuantity));
                 OnPropertyChanged(nameof(FilledPercent));
                 OnPropertyChanged(nameof(FilledProgress));
+                OnPropertyChanged(nameof(OrderSummary));
             }
         }
 
@@ -487,7 +488,7 @@ namespace Panoptes.ViewModels.Panels
                 {
                     return OrderDirection.Buy;
                 }
-                if (Quantity < 0)
+                else if (Quantity < 0)
                 {
                     return OrderDirection.Sell;
                 }
@@ -556,7 +557,6 @@ namespace Panoptes.ViewModels.Panels
                 return Type == OrderType.Market;
             }
         }
-        #endregion
 
         private decimal? _limitPrice;
         /// <summary>
@@ -632,5 +632,8 @@ namespace Panoptes.ViewModels.Panels
                 OnPropertyChanged();
             }
         }
+        #endregion
+
+        public string OrderSummary => $"#{Id} - {Direction} {Symbol}";
     }
 }

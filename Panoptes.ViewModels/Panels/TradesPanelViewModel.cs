@@ -93,6 +93,22 @@ namespace Panoptes.ViewModels.Panels
             OnPropertyChanged(nameof(SelectedItem));
         }
 
+        private bool _displayLoading;
+        public bool DisplayLoading
+        {
+            get
+            {
+                return _displayLoading;
+            }
+
+            set
+            {
+                if (_displayLoading == value) return;
+                _displayLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
         private DateTime? _fromDate;
         public DateTime? FromDate
         {
@@ -147,11 +163,11 @@ namespace Panoptes.ViewModels.Panels
             }
         };
 
-        private Task<(IReadOnlyList<OrderViewModel> Add, IReadOnlyList<OrderViewModel> Remove)> GetFilteredOrders()
+        private Task<(IReadOnlyList<OrderViewModel> Add, IReadOnlyList<OrderViewModel> Remove)> GetFilteredOrders(DateTime? fromDate, DateTime? toDate)
         {
             return Task.Run(() =>
             {
-                var fullList = _ordersDic.Values.AsParallel().Where(o => _filterDateRange(o.CreatedTime, FromDate, ToDate)).ToList();
+                var fullList = _ordersDic.Values.AsParallel().Where(o => _filterDateRange(o.CreatedTime, fromDate, toDate)).ToList();
 
                 // careful with concurrency
                 var currentHistoOrders = _ordersHistory.ToArray();
@@ -160,12 +176,14 @@ namespace Panoptes.ViewModels.Panels
             });
         }
 
-        private async Task ApplyFiltersHistoryOrders()
+        // We need to be able to cancel this
+        private async Task ApplyFiltersHistoryOrders(DateTime? fromDate, DateTime? toDate)
         {
             try
             {
-                Debug.WriteLine("TradesPanelViewModel: Start applying filters...");
-                var (Add, Remove) = await GetFilteredOrders().ConfigureAwait(false);
+                DisplayLoading = true;
+                Debug.WriteLine($"TradesPanelViewModel: Start applying filters from {fromDate} to {toDate}...");
+                var (Add, Remove) = await GetFilteredOrders(fromDate, toDate).ConfigureAwait(false);
 
                 foreach (var remove in Remove)
                 {
@@ -176,7 +194,8 @@ namespace Panoptes.ViewModels.Panels
                 {
                     _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderAddHistory, add);
                 }
-                Debug.WriteLine("TradesPanelViewModel: Done applying filters!");
+                Debug.WriteLine($"TradesPanelViewModel: Done applying filters from {fromDate} to {toDate}!");
+                DisplayLoading = false; // should be in 'finally'?
             }
             catch (Exception ex)
             {
@@ -224,7 +243,7 @@ namespace Panoptes.ViewModels.Panels
 
             _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m.Value));
 
-            _messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, _) => await r.ApplyFiltersHistoryOrders().ConfigureAwait(false));
+            _messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, m) => await r.ApplyFiltersHistoryOrders(m.FromDate, m.ToDate).ConfigureAwait(false));
 
             _messenger.Register<TradesPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
@@ -234,7 +253,7 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (e.UserState is not OrderViewModel ovm)
                 {
-                    throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                    throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
                 }
 
                 switch ((ActionsThreadUI)e.ProgressPercentage)
@@ -260,7 +279,7 @@ namespace Panoptes.ViewModels.Panels
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(e), "Unknown 'ProgressPercentage' passed.");
+                        throw new ArgumentOutOfRangeException(nameof(e), "TradesPanelViewModel: Unknown 'ProgressPercentage' passed.");
                 }
             };
 
@@ -298,10 +317,19 @@ namespace Panoptes.ViewModels.Panels
 
         private void Clear()
         {
-            _orderEventsDic.Clear();
-            _ordersDic.Clear();
-            OrdersToday.Clear();
-            OrdersHistory.Clear();
+            try
+            {
+                Debug.WriteLine($"TradesPanelViewModel: Clear");
+                _orderEventsDic.Clear();
+                _ordersDic.Clear();
+                OrdersToday.Clear();    // Need to do that from UI thread
+                OrdersHistory.Clear();  // Need to do that from UI thread
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"TradesPanelViewModel: ERROR\n{ex}");
+                throw;
+            }
         }
 
         private void ResultQueueReader(object sender, DoWorkEventArgs e)

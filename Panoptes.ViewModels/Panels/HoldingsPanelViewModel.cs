@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
@@ -51,6 +52,43 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
+        private CancellationTokenSource _searchCts;
+        private string _search;
+        public string Search
+        {
+            get { return _search; }
+            set
+            {
+                if (_search == value) return;
+                _search = value;
+                Debug.WriteLine($"Searching {_search}...");
+                OnPropertyChanged();
+                if (_searchCts?.Token.CanBeCanceled == true && !_searchCts.Token.IsCancellationRequested)
+                {
+                    _searchCts.Cancel();
+                }
+                _searchCts = new CancellationTokenSource();
+                // We cancel here
+                _messenger.Send(new HoldingFilterMessage(Name, _search, _searchCts.Token));
+            }
+        }
+
+        private bool _displayLoading;
+        public bool DisplayLoading
+        {
+            get
+            {
+                return _displayLoading;
+            }
+
+            set
+            {
+                if (_displayLoading == value) return;
+                _displayLoading = value;
+                OnPropertyChanged();
+            }
+        }
+
         private HoldingViewModel _selectedItem;
         public HoldingViewModel SelectedItem
         {
@@ -72,57 +110,72 @@ namespace Panoptes.ViewModels.Panels
             OnPropertyChanged(nameof(SelectedItem));
         }
 
-        private readonly Func<HoldingViewModel, bool> _filterDateRange = (hvm) =>
+        private readonly Func<HoldingViewModel, string, CancellationToken, bool> _filter = (hvm, search, ct) =>
         {
-            throw new NotImplementedException();
+            ct.ThrowIfCancellationRequested();
+
+            if (string.IsNullOrEmpty(search)) return true;
+            // We might want to search in other fields than symbol
+            return hvm.Symbol.ToString().Contains(search, StringComparison.OrdinalIgnoreCase);
         };
 
-        private Task<(IReadOnlyList<HoldingViewModel> Add, IReadOnlyList<HoldingViewModel> Remove)> GetFilteredOrders()
+        private Task<(IReadOnlyList<HoldingViewModel> Add, IReadOnlyList<HoldingViewModel> Remove)> GetFilteredHoldings(string search, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
-            //return Task.Run(() =>
-            //{
-            //    var fullList = _ordersDic.Values.AsParallel().Where(h => _filterDateRange(h)).ToList();
+            return Task.Run(() =>
+            {
+                var fullList = _holdingsDic.Values.AsParallel().Where(h => _filter(h, search, cancellationToken)).ToList();
 
-            //    // careful with concurrency
-            //    var currentHistoOrders = _holdings.ToArray();
-            //    return ((IReadOnlyList<HoldingViewModel>)fullList.Except(currentHistoOrders).ToList(),
-            //            (IReadOnlyList<HoldingViewModel>)currentHistoOrders.Except(fullList).ToList());
-            //});
+                // careful with concurrency
+                var currentHoldings = _currentHoldings.ToArray();
+                return ((IReadOnlyList<HoldingViewModel>)fullList.Except(currentHoldings).ToList(),
+                        (IReadOnlyList<HoldingViewModel>)currentHoldings.Except(fullList).ToList());
+            }, cancellationToken);
         }
 
-        private async Task ApplyFiltersHistoryOrders()
+        private async Task ApplyFiltersHoldings(string search, CancellationToken cancellationToken)
         {
             try
             {
-                Debug.WriteLine("TradesPanelViewModel: Start applying filters...");
-                //var (Add, Remove) = await GetFilteredOrders().ConfigureAwait(false);
+                DisplayLoading = true;
+                Debug.WriteLine($"HoldingsPanelViewModel: Start applying '{search}' filters...");
 
-                //foreach (var remove in Remove)
-                //{
-                //    _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingRemoveHistory, remove);
-                //}
+#if DEBUG
+                await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
+#endif
 
-                //foreach (var add in Add)
-                //{
-                //    _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderAddHistory, add);
-                //}
-                Debug.WriteLine("TradesPanelViewModel: Done applying filters!");
+                var (Add, Remove) = await GetFilteredHoldings(search, cancellationToken).ConfigureAwait(false);
+
+                foreach (var remove in Remove)
+                {
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingRemove, remove);
+                }
+
+                foreach (var add in Add)
+                {
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingFinishUpdateAdd, add);
+                }
+
+                Debug.WriteLine($"HoldingsPanelViewModel: Done applying '{search}' filters!");
+                DisplayLoading = false;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"HoldingsPanelViewModel: Cancelled applying '{search}' filters.");
             }
             catch (Exception ex)
             {
                 // Need to log
+                DisplayLoading = false;
                 Trace.WriteLine(ex);
             }
         }
 
         private void AddHolding(HoldingViewModel hvm)
         {
-            CurrentHoldings.Add(hvm);
-            //if (_filterDateRange(hvm.CreatedTime, FromDate, ToDate))
-            //{
-            //    Holdings.Add(hvm);
-            //}
+            if (_filter(hvm, Search, CancellationToken.None))
+            {
+                CurrentHoldings.Add(hvm);
+            }
         }
 
         public HoldingsPanelViewModel()
@@ -149,7 +202,7 @@ namespace Panoptes.ViewModels.Panels
 
             _messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m.Value));
 
-            _messenger.Register<HoldingsPanelViewModel, TradeFilterMessage>(this, async (r, _) => await r.ApplyFiltersHistoryOrders().ConfigureAwait(false));
+            _messenger.Register<HoldingsPanelViewModel, HoldingFilterMessage>(this, async (r, m) => await r.ApplyFiltersHoldings(m.Search, m.CancellationToken).ConfigureAwait(false));
 
             //_messenger.Register<HoldingsPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
@@ -207,19 +260,27 @@ namespace Panoptes.ViewModels.Panels
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
                     // - Clear 'Today' order (now yesterday's one)
-                    Debug.WriteLine($"TradesPanelViewModel: NewDay @ {DateTime.Now:O}");
+                    Debug.WriteLine($"HoldingsPanelViewModel: NewDay @ {DateTime.Now:O}");
                     break;
 
                 default:
-                    Debug.WriteLine($"TradesPanelViewModel: {timerEventType} @ {DateTime.Now:O}");
+                    Debug.WriteLine($"HoldingsPanelViewModel: {timerEventType} @ {DateTime.Now:O}");
                     break;
             }
         }
 
         private void Clear()
         {
-            _holdingsDic.Clear();
-            CurrentHoldings.Clear();
+            try
+            {
+                _holdingsDic.Clear();
+                CurrentHoldings.Clear(); // need to do that from ui thread
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"HoldingsPanelViewModel: ERROR\n{ex}");
+                throw;
+            }
         }
 
         private void ResultQueueReader(object sender, DoWorkEventArgs e)
@@ -248,13 +309,6 @@ namespace Panoptes.ViewModels.Panels
                         }
                     }
                 }
-                //else if (qe.Element is OrderEventMessage m) // Process OrderEvent
-                //{
-                //    if (ParseOrderEvent(m, out var ovm))
-                //    {
-                //        _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderFinishUpdate, ovm);
-                //    }
-                //}
             }
         }
 
@@ -263,5 +317,4 @@ namespace Panoptes.ViewModels.Panels
             public object Element { get; set; }
         }
     }
-
 }
