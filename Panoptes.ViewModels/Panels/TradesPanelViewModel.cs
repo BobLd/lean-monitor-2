@@ -6,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -240,12 +241,11 @@ namespace Panoptes.ViewModels.Panels
             });
 
             _messenger.Register<TradesPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
-
-            _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m.Value));
-
+            _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
             _messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, m) => await r.ApplyFiltersHistoryOrders(m.FromDate, m.ToDate).ConfigureAwait(false));
-
             _messenger.Register<TradesPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
+
+            _ordersToday.CollectionChanged += _ordersToday_CollectionChanged;
 
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
@@ -287,6 +287,18 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.RunWorkerAsync();
         }
 
+        readonly System.Media.SoundPlayer player = new System.Media.SoundPlayer(@"C:\Users\Bob\Downloads\tests_test-audio_wav_mono_16bit_44100.wav");
+        private void _ordersToday_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    //player.Play();
+                    System.Media.SystemSounds.Hand.Play();
+                    break;
+            }
+        }
+
         private void ProcessTradeSelected(TradeSelectedMessage m)
         {
             if (m.Sender == Name) return;
@@ -299,18 +311,18 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        private void ProcessNewDay(TimerMessage.TimerEventType timerEventType)
+        private void ProcessNewDay(TimerMessage timerMessage)
         {
-            switch (timerEventType)
+            switch (timerMessage.Value)
             {
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
                     // - Clear 'Today' order (now yesterday's one)
-                    Debug.WriteLine($"TradesPanelViewModel: NewDay @ {DateTime.Now:O}");
+                    Debug.WriteLine($"TradesPanelViewModel: NewDay @ {timerMessage.DateTimeUtc:O}");
                     break;
 
                 default:
-                    Debug.WriteLine($"TradesPanelViewModel: {timerEventType} @ {DateTime.Now:O}");
+                    Debug.WriteLine($"TradesPanelViewModel: {timerMessage} @ {timerMessage.DateTimeUtc:O}");
                     break;
             }
         }

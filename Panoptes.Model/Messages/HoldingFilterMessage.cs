@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Panoptes.Model.Messages
 {
-    public class HoldingFilterMessage : ValueChangedMessage<string>
+    public sealed class HoldingFilterMessage : ValueChangedMessage<string>
     {
         public HoldingFilterMessage(string source, string search, CancellationToken ct) : base(source)
         {

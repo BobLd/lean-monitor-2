@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Panoptes.Model
 {
-    public class BenchmarkResultMutator : IResultMutator
+    public sealed class BenchmarkResultMutator : IResultMutator
     {
         public void Mutate(Result result)
         {

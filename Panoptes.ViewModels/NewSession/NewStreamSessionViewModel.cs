@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.NewSession
 {
-    public class NewStreamSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
+    public sealed class NewStreamSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
         private readonly ISessionService _sessionService;
 

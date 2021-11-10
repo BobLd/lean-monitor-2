@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 namespace Panoptes.Model.Serialization
 {
     // https://github.com/QuantConnect/Lean/blob/master/Common/Orders/Serialization/OrderEventJsonConverter.cs
-    public class OrderEventJsonConverter : JsonConverter<OrderEvent>
+    public sealed class OrderEventJsonConverter : JsonConverter<OrderEvent>
     {
         public override OrderEvent Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

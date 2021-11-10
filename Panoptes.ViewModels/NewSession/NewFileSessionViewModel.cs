@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.NewSession
 {
-    public class NewFileSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
+    public sealed class NewFileSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
         private readonly ISessionService _sessionService;
         private readonly FileSessionParameters _fileSessionParameters = new FileSessionParameters

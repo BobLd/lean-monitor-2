@@ -26,4 +26,7 @@
     <ProjectReference Include="..\Panoptes.Model\Panoptes.Model.csproj" />
     <ProjectReference Include="..\Panoptes.ViewModels\Panoptes.ViewModels.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\sounds\alerts\" />
+  </ItemGroup>
 </Project>

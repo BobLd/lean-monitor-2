@@ -262,10 +262,10 @@ namespace Panoptes.Model.Mock.Sessions
         private static readonly Random _random = new Random();
         private readonly DateTime _startTime;
         private DateTime _currentTime;
-        private readonly int _sleep = 500; // ms
-        private readonly int _stepSecond = 10;
+        private readonly int _sleep = 1000; // ms
+        private readonly int _stepSecond = 1;
 
-        private readonly string[] _symbols = new string[] { "BTCUSD XJ", "ETHUSD XJ", "LTCUSD XJ" };
+        private readonly string[] _symbols = new string[] { "ALGOEUR XJ", "ALGOGBP XJ", "ALGOUSD XJ", "ATOMBTC XJ", "ATOMUSD XJ", "BALBTC XJ", "BALUSD XJ", "BANDBTC XJ", "BANDEUR XJ", "BANDGBP XJ", "BANDUSD XJ", "BATETH XJ", "BATUSDC XJ", "BCHBTC XJ", "BCHEUR XJ", "BCHGBP XJ", "BCHUSD XJ", "BTCEUR XJ", "BTCGBP XJ", "BTCUSD XJ", "BTCUSDC XJ", "CGLDBTC XJ", "CGLDEUR XJ", "CGLDGBP XJ", "CGLDUSD XJ", "COMPBTC XJ", "COMPUSD XJ", "CVCUSDC XJ", "DAIUSD XJ", "DAIUSDC XJ", "DASHBTC XJ", "DASHUSD XJ", "DNTUSDC XJ", "EOSBTC XJ", "EOSEUR XJ", "EOSUSD XJ", "ETCBTC XJ", "ETCEUR XJ", "ETCGBP XJ", "ETCUSD XJ", "ETHBTC XJ", "ETHDAI XJ", "ETHEUR XJ", "ETHGBP XJ", "ETHUSD XJ", "ETHUSDC XJ", "GNTUSDC XJ", "KNCBTC XJ", "KNCUSD XJ", "LINKETH XJ", "LINKEUR XJ", "LINKGBP XJ", "LINKUSD XJ", "LOOMUSDC XJ", "LRCUSD XJ", "LTCBTC XJ", "LTCEUR XJ", "LTCGBP XJ", "LTCUSD XJ", "MANAUSDC XJ", "MKRBTC XJ", "MKRUSD XJ", "NMRBTC XJ", "NMREUR XJ", "NMRGBP XJ", "NMRUSD XJ", "OMGBTC XJ", "OMGEUR XJ", "OMGGBP XJ", "OMGUSD XJ", "OXTUSD XJ", "RENBTC XJ", "RENUSD XJ", "REPBTC XJ", "REPUSD XJ", "UMABTC XJ", "UMAEUR XJ", "UMAGBP XJ", "UMAUSD XJ", "UNIUSD XJ", "USDCEUR XJ", "USDCGBP XJ", "WBTCBTC XJ", "WBTCUSD XJ", "XLMBTC XJ", "XLMEUR XJ", "XLMUSD XJ", "XRPBTC XJ", "XRPEUR XJ", "XRPGBP XJ", "XRPUSD XJ", "XTZBTC XJ", "XTZEUR XJ", "XTZGBP XJ", "XTZUSD XJ", "YFIUSD XJ", "ZECBTC XJ", "ZECUSDC XJ", "ZRXBTC XJ", "ZRXEUR XJ", "ZRXUSD XJ" };
 
         private int _orderId;
 
@@ -400,7 +400,7 @@ namespace Panoptes.Model.Mock.Sessions
 
             return new Dictionary<DateTime, decimal>()
             {
-                { _currentTime.AddSeconds(-_stepSecond / 2), (decimal)(_random.NextDouble() - 0.5) * 2m },
+                { _currentTime.AddSeconds(-_stepSecond / 2.0), (decimal)(_random.NextDouble() - 0.5) * 2m },
                 { _currentTime, (decimal)(_random.NextDouble() - 0.5) * 2m }
             };
         }

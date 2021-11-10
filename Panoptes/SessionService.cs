@@ -66,33 +66,33 @@ namespace Panoptes
                 // New year
                 if (utcNow.DayOfYear == 1)
                 {
-                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewYear));
+                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewYear, utcNow));
                 }
 
                 // New month
                 if (utcNow.Day == 1)
                 {
-                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewMonth));
+                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewMonth, utcNow));
                 }
 
                 // New week
                 if (utcNow.DayOfWeek == DayOfWeek.Monday)
                 {
-                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewWeek));
+                    _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewWeek, utcNow));
                 }
 
                 // New day
-                _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewDay));
+                _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewDay, utcNow));
             }
 
             // New hour
             if (utcNow.TimeOfDay.TotalHours % utcNow.TimeOfDay.Hours < Times.OneMinute.TotalHours)
             {
-                _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewHour));
+                _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewHour, utcNow));
             }
 
             // New minute
-            _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewMinute));
+            _messenger.Send(new TimerMessage(TimerMessage.TimerEventType.NewMinute, utcNow));
         }
 
         public void HandleResult(ResultContext resultContext)

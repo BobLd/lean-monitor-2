@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Panoptes.Model
 {
-    public class Result
+    public sealed class Result
     {
         public Dictionary<string, Charting.ChartDefinition> Charts = new Dictionary<string, Charting.ChartDefinition>();
 

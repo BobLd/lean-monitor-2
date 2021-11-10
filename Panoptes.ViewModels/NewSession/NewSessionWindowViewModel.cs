@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace Panoptes.ViewModels.NewSession
 {
-    public class NewSessionWindowViewModel : ObservableRecipient
+    public sealed class NewSessionWindowViewModel : ObservableRecipient
     {
         private ObservableCollection<INewSessionViewModel> _newSessionViewModels;
         private INewSessionViewModel _selectedViewModel;

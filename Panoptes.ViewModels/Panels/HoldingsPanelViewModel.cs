@@ -140,7 +140,7 @@ namespace Panoptes.ViewModels.Panels
                 Debug.WriteLine($"HoldingsPanelViewModel: Start applying '{search}' filters...");
 
 #if DEBUG
-                await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
+                //await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
 #endif
 
                 var (Add, Remove) = await GetFilteredHoldings(search, cancellationToken).ConfigureAwait(false);
@@ -200,7 +200,7 @@ namespace Panoptes.ViewModels.Panels
 
             _messenger.Register<HoldingsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
-            _messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m.Value));
+            _messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
 
             _messenger.Register<HoldingsPanelViewModel, HoldingFilterMessage>(this, async (r, m) => await r.ApplyFiltersHoldings(m.Search, m.CancellationToken).ConfigureAwait(false));
 
@@ -253,18 +253,18 @@ namespace Panoptes.ViewModels.Panels
         //    }
         //}
 
-        private void ProcessNewDay(TimerMessage.TimerEventType timerEventType)
+        private void ProcessNewDay(TimerMessage timerMessage)
         {
-            switch (timerEventType)
+            switch (timerMessage.Value)
             {
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
                     // - Clear 'Today' order (now yesterday's one)
-                    Debug.WriteLine($"HoldingsPanelViewModel: NewDay @ {DateTime.Now:O}");
+                    Debug.WriteLine($"HoldingsPanelViewModel: NewDay @ {timerMessage.DateTimeUtc:O}");
                     break;
 
                 default:
-                    Debug.WriteLine($"HoldingsPanelViewModel: {timerEventType} @ {DateTime.Now:O}");
+                    Debug.WriteLine($"HoldingsPanelViewModel: {timerMessage} @ {timerMessage.DateTimeUtc:O}");
                     break;
             }
         }

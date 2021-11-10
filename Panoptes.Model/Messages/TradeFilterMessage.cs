@@ -3,7 +3,7 @@ using System;
 
 namespace Panoptes.Model.Messages
 {
-    public class TradeFilterMessage : ValueChangedMessage<string>
+    public sealed class TradeFilterMessage : ValueChangedMessage<string>
     {
         public TradeFilterMessage(string source, DateTime? fromDate, DateTime? toDate) : base(source)
         {

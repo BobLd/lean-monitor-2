@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Panoptes.Model
 {
-    public class AdvancedResultSerializer : IResultSerializer
+    public sealed class AdvancedResultSerializer : IResultSerializer
     {
         private readonly IResultConverter _resultConverter;
 

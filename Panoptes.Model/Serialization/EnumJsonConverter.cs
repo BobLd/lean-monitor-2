@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Panoptes.Model.Serialization
 {
-    public class ScatterMarkerSymbolJsonConverter : JsonConverter<ScatterMarkerSymbol>
+    public sealed class ScatterMarkerSymbolJsonConverter : JsonConverter<ScatterMarkerSymbol>
     {
         public override ScatterMarkerSymbol Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

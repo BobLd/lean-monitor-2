@@ -1,4 +1,5 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging.Messages;
+using System;
 using static Panoptes.Model.Messages.TimerMessage;
 
 namespace Panoptes.Model.Messages
@@ -6,7 +7,7 @@ namespace Panoptes.Model.Messages
     /// <summary>
     /// In UTC time.
     /// </summary>
-    public class TimerMessage : ValueChangedMessage<TimerEventType>
+    public sealed class TimerMessage : ValueChangedMessage<TimerEventType>
     {
         public enum TimerEventType
         {
@@ -22,8 +23,11 @@ namespace Panoptes.Model.Messages
         /// In UTC time.
         /// </summary>
         /// <param name="value"></param>
-        public TimerMessage(TimerEventType value) : base(value)
+        public TimerMessage(TimerEventType value, DateTime dateTimeUtc) : base(value)
         {
+            DateTimeUtc = dateTimeUtc;
         }
+
+        public DateTime DateTimeUtc { get; }
     }
 }

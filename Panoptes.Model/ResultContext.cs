@@ -1,6 +1,6 @@
 ﻿namespace Panoptes.Model
 {
-    public class ResultContext
+    public sealed class ResultContext
     {
         public string Project { get; set; }
         public string Name { get; set; }

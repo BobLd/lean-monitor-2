@@ -9,7 +9,7 @@ using LiveResultParameters = QuantConnect.Packets.LiveResultParameters;
 
 namespace Panoptes.Model
 {
-    public class ResultConverter : IResultConverter
+    public sealed class ResultConverter : IResultConverter
     {
         /* QuantConnect results are either BacktestResult or LiveResult. 
          * They have common properties as well as specific properties.

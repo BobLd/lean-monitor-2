@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.NewSession
 {
-    public class NewMongoSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
+    public sealed class NewMongoSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
         private readonly ISessionService _sessionService;
 

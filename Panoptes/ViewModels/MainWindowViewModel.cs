@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
@@ -6,6 +7,7 @@ using Panoptes.Model.Messages;
 using Panoptes.Model.Sessions;
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.Panels;
+using System;
 
 namespace Panoptes.ViewModels
 {
@@ -14,6 +16,8 @@ namespace Panoptes.ViewModels
         private readonly ISessionService _sessionService;
         //private readonly ILayoutManager _layoutManager;
         private readonly IMessenger _messenger;
+
+        private DispatcherTimer _timer = new DispatcherTimer();
 
         public RelayCommand ExitCommand { get; }
         public RelayCommand OpenSessionCommand { get; }
@@ -156,11 +160,40 @@ namespace Panoptes.ViewModels
                 chartTableViewModel.ParseChart(chart);
                 */
             });
+
+            _timer.Interval = TimeSpan.FromMilliseconds(100);
+            _timer.Tick += (s, e) => CurrentDateTimeUtc = DateTime.UtcNow;
+            _timer.Start();
         }
 
         public void Initialize()
         {
             _sessionService.Initialize();
+        }
+
+        private DateTime _currentDateTimeUtc;
+        public DateTime CurrentDateTimeUtc
+        {
+            get
+            {
+                return _currentDateTimeUtc;
+            }
+
+            private set
+            {
+                if (_currentDateTimeUtc == value) return;
+                _currentDateTimeUtc = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CurrentDateTimeLocal));
+            }
+        }
+
+        public DateTime CurrentDateTimeLocal
+        {
+            get
+            {
+                return _currentDateTimeUtc.ToLocalTime();
+            }
         }
 
         public void HandleDroppedFileName(string fileName)

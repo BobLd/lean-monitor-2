@@ -34,47 +34,54 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<Menu Grid.Row="0">
-			<MenuItem Header="_File">
-				<MenuItem Header="_Open..." Command="{Binding OpenSessionCommand}"/> <!--HotKey="Ctrl+O"-->
-				<Separator/>
-				<MenuItem Header="_Close" Command="{Binding CloseCommand}"/>
-				<Separator/>
-				<MenuItem Header="_Export..." Command="{Binding ExportCommand}"/>
-				<Separator/>
-				<MenuItem Header="E_xit" Command="{Binding ExitCommand}"/> <!--HotKey="Alt+F4"-->
-			</MenuItem>
-			<!--
-			<MenuItem Header="_View">
-				<MenuItem Header="_Statistics" IsChecked="{Binding StatisticsPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
-				<MenuItem Header="_Runtime Statistics" IsChecked="{Binding RuntimeStatisticsPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
-				<Separator/>
-				<MenuItem Header="_Profit &amp; Loss" IsChecked="{Binding ProfitLossPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
-				<MenuItem Header="_Trades" IsChecked="{Binding TradesPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
-				<Separator/>
-				<MenuItem Header="_Log" IsChecked="{Binding LogPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
-			</MenuItem>
-			-->
-			<MenuItem Header="_Session" IsEnabled="{Binding IsSessionActive}">
-				<MenuItem Header="_Connect" Command="{Binding ConnectCommand}"/>
-				<MenuItem Header="_Disconnect" Command="{Binding DisconnectCommand}"/>
-			</MenuItem>
-			<!--
-            <MenuItem Header="_Window">
-                <MenuItem Header="_Save Window Layout" Command="{Binding SaveLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
-                <MenuItem Header="Revert Window Layout" Command="{Binding RestoreLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
-                <MenuItem Header="_Reset Window Layout" Command="{Binding ResetLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
-            </MenuItem>
-            -->
-			<MenuItem Header="_Help">
-				<MenuItem Header="_Charting documentation..." Click="BrowseChartingDocumentationMenuItem_OnClick"/>
-				<Separator/>
-				<MenuItem Header="_Monitor GitHub project..." Click="BrowseMonitorGithubMenuItem_OnClick"/>
-				<MenuItem Header="_LEAN Engine GitHub project..." Click="BrowseLeanGithubMenuItem_OnClick"/>
-				<Separator/>
-				<MenuItem Header="_About..." Click="ShowAboutButton_OnClick"/>
-			</MenuItem>
-		</Menu>
+		<StackPanel Grid.Row="0" Orientation="Horizontal">
+			<Menu>
+				<MenuItem Header="_File">
+					<MenuItem Header="_Open..." Command="{Binding OpenSessionCommand}"/> <!--HotKey="Ctrl+O"-->
+					<Separator/>
+					<MenuItem Header="_Close" Command="{Binding CloseCommand}"/>
+					<Separator/>
+					<MenuItem Header="_Export..." Command="{Binding ExportCommand}"/>
+					<Separator/>
+					<MenuItem Header="E_xit" Command="{Binding ExitCommand}"/> <!--HotKey="Alt+F4"-->
+				</MenuItem>
+				<!--
+				<MenuItem Header="_View">
+					<MenuItem Header="_Statistics" IsChecked="{Binding StatisticsPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+					<MenuItem Header="_Runtime Statistics" IsChecked="{Binding RuntimeStatisticsPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+					<Separator/>
+					<MenuItem Header="_Profit &amp; Loss" IsChecked="{Binding ProfitLossPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+					<MenuItem Header="_Trades" IsChecked="{Binding TradesPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+					<Separator/>
+					<MenuItem Header="_Log" IsChecked="{Binding LogPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+				</MenuItem>
+				-->
+				<MenuItem Header="_Session" IsEnabled="{Binding IsSessionActive}">
+					<MenuItem Header="_Connect" Command="{Binding ConnectCommand}"/>
+					<MenuItem Header="_Disconnect" Command="{Binding DisconnectCommand}"/>
+				</MenuItem>
+				<!--
+				<MenuItem Header="_Window">
+					<MenuItem Header="_Save Window Layout" Command="{Binding SaveLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+					<MenuItem Header="Revert Window Layout" Command="{Binding RestoreLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+					<MenuItem Header="_Reset Window Layout" Command="{Binding ResetLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+				</MenuItem>
+				-->
+				<MenuItem Header="_Help">
+					<MenuItem Header="_Charting documentation..." Click="BrowseChartingDocumentationMenuItem_OnClick"/>
+					<Separator/>
+					<MenuItem Header="_Monitor GitHub project..." Click="BrowseMonitorGithubMenuItem_OnClick"/>
+					<MenuItem Header="_LEAN Engine GitHub project..." Click="BrowseLeanGithubMenuItem_OnClick"/>
+					<Separator/>
+					<MenuItem Header="_About..." Click="ShowAboutButton_OnClick"/>
+				</MenuItem>
+			</Menu>
+			
+			<Label Content="UTC:"/>
+			<Label Content="{Binding CurrentDateTimeUtc}" HorizontalAlignment="Right"/>
+			<Label Content=" Local:"/>
+			<Label Content="{Binding CurrentDateTimeLocal}" HorizontalAlignment="Right"/>
+		</StackPanel>
 
 		<Grid Grid.Row="1">
 			<Grid.RowDefinitions>

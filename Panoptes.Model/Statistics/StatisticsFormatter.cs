@@ -1,6 +1,6 @@
 ﻿namespace Panoptes.Model.Statistics
 {
-    public class StatisticsFormatter : IStatisticsFormatter
+    public sealed class StatisticsFormatter : IStatisticsFormatter
     {
         public StatisticState Format(string key, string value)
         {

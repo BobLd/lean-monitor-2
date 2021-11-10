@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Panoptes.Model.Serialization
 {
     // https://github.com/QuantConnect/Lean/blob/master/Common/Util/ColorJsonConverter.cs
-    public class ColorJsonConverter : JsonConverter<Color>
+    public sealed class ColorJsonConverter : JsonConverter<Color>
     {
         public override Color Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
