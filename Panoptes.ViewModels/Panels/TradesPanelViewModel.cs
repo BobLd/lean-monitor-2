@@ -245,8 +245,6 @@ namespace Panoptes.ViewModels.Panels
             _messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, m) => await r.ApplyFiltersHistoryOrders(m.FromDate, m.ToDate).ConfigureAwait(false));
             _messenger.Register<TradesPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
-            _ordersToday.CollectionChanged += _ordersToday_CollectionChanged;
-
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
@@ -285,18 +283,6 @@ namespace Panoptes.ViewModels.Panels
 
             _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _resultBgWorker.RunWorkerAsync();
-        }
-
-        readonly System.Media.SoundPlayer player = new System.Media.SoundPlayer(@"C:\Users\Bob\Downloads\tests_test-audio_wav_mono_16bit_44100.wav");
-        private void _ordersToday_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    //player.Play();
-                    System.Media.SystemSounds.Hand.Play();
-                    break;
-            }
         }
 
         private void ProcessTradeSelected(TradeSelectedMessage m)
@@ -367,6 +353,9 @@ namespace Panoptes.ViewModels.Panels
                     for (int i = 0; i < result.Orders.Count; i++)
                     {
                         var ovm = new OrderViewModel(result.Orders.ElementAt(i).Value);
+
+                        PanoptesSounds.PlayNewOrder(); // Sound alert 
+
                         if (_orderEventsDic.TryGetValue(ovm.Id, out var events))
                         {
                             // Update new order with pre-existing order events

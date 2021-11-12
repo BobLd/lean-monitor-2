@@ -81,6 +81,7 @@ namespace Panoptes.ViewModels
             {
                 if (_isLive == value) return;
                 _isLive = value;
+                if (_isLive.HasValue) PanoptesSounds.CanPlaySounds = _isLive.Value;
                 OnPropertyChanged();
             }
         }

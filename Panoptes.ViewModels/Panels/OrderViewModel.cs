@@ -49,7 +49,7 @@ namespace Panoptes.ViewModels.Panels
             _orderSubmissionData = order.OrderSubmissionData;
 
             _status = order.Status;
-            _statusStr = _status.ToShortString();
+            StatusStr = _status.ToShortString();
 
             if (order is LimitOrder limitOrder)
             {
@@ -144,21 +144,35 @@ namespace Panoptes.ViewModels.Panels
             }
 
             // We add the event in the UI thread -> BackgroundWorker.ProgressChanged
-            // Might be better to create a queue and a FinishUpdate() function called from UI thread
+            // Add to queue and a FinishUpdate() function called from UI thread
             _pendingEvents.Enqueue(orderEvent);
 
             _lastEventId = orderEvent.Id;
 
             Status = orderEvent.Status;
-            FilledQuantity += orderEvent.FillQuantity; // TO CHECK
-            Fees = orderEvent.OrderFee.Value.Amount;
-            FeesCurrency = orderEvent.OrderFee.Value.Currency;
+            FilledQuantity += orderEvent.FillQuantity;           // TO CHECK
+            Debug.Assert(Math.Abs(FilledQuantity) <= Math.Abs(Quantity));
+
+            Fees = orderEvent.OrderFee.Value.Amount;             // TO CHECK
+            FeesCurrency = orderEvent.OrderFee.Value.Currency;   // TO CHECK
 
             //orderEvent.FillPrice
             //orderEvent.FillPriceCurrency
-            LimitPrice = orderEvent.LimitPrice;
-            StopPrice = orderEvent.StopPrice;
-            TriggerPrice = orderEvent.TriggerPrice;
+
+            if (orderEvent.LimitPrice.HasValue && orderEvent.LimitPrice.Value != default)
+            {
+                LimitPrice = orderEvent.LimitPrice.Value;
+            }
+
+            if (orderEvent.StopPrice.HasValue && orderEvent.StopPrice.Value != default)
+            {
+                StopPrice = orderEvent.StopPrice.Value;
+            }
+
+            if (orderEvent.TriggerPrice.HasValue && orderEvent.TriggerPrice.Value != default)
+            {
+                TriggerPrice = orderEvent.TriggerPrice.Value;
+            }
             return true;
         }
 
@@ -278,7 +292,7 @@ namespace Panoptes.ViewModels.Panels
                 _price = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(Value));
-                OnPropertyChanged(nameof(PriceChangePcg));
+                OnPropertyChanged(nameof(PriceChangePct));
             }
         }
 
@@ -361,6 +375,7 @@ namespace Panoptes.ViewModels.Panels
                 OnPropertyChanged(nameof(FilledPercent));
                 OnPropertyChanged(nameof(FilledProgress));
                 OnPropertyChanged(nameof(OrderSummary));
+                OnPropertyChanged(nameof(IsMarketable));
             }
         }
 
@@ -376,6 +391,8 @@ namespace Panoptes.ViewModels.Panels
                 if (_type == value) return;
                 _type = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(OrderSummary));
+                OnPropertyChanged(nameof(IsMarketable));
             }
         }
 
@@ -390,17 +407,13 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (_status == value) return;
                 _status = value;
-                _statusStr = _status.ToShortString();
+                StatusStr = _status.ToShortString();
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(StatusStr));
             }
         }
 
-        public string _statusStr;
-        public string StatusStr
-        {
-            get { return _statusStr; }
-        }
+        public string StatusStr { get; private set; }
 
         /// <summary>
         /// Order Time In Force
@@ -522,7 +535,8 @@ namespace Panoptes.ViewModels.Panels
                 OnPropertyChanged(nameof(AskPrice));
                 OnPropertyChanged(nameof(BidPrice));
                 OnPropertyChanged(nameof(LastPrice));
-                OnPropertyChanged(nameof(PriceChangePcg));
+                OnPropertyChanged(nameof(PriceChangePct));
+                OnPropertyChanged(nameof(IsMarketable));
             }
         }
 
@@ -530,7 +544,7 @@ namespace Panoptes.ViewModels.Panels
         public decimal? BidPrice => OrderSubmissionData?.BidPrice;
         public decimal? LastPrice => OrderSubmissionData?.LastPrice;
 
-        public decimal? PriceChangePcg
+        public decimal? PriceChangePct
         {
             get
             {
@@ -570,6 +584,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_limitPrice == value) return;
                 _limitPrice = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsMarketable));
             }
         }
 
@@ -590,7 +605,7 @@ namespace Panoptes.ViewModels.Panels
 
         private bool? _stopTriggered;
         /// <summary>
-        /// Signal showing the "StopLimitOrder" has been converted into a Limit Order
+        /// Signal showing the "StopLimitOrder" has been converted into a Limit Order.
         /// </summary>
         public bool? StopTriggered
         {
@@ -634,6 +649,6 @@ namespace Panoptes.ViewModels.Panels
         }
         #endregion
 
-        public string OrderSummary => $"#{Id} - {Direction} {Symbol}";
+        public string OrderSummary => $"#{Id} - {Direction} {Symbol} [{Type}]";
     }
 }

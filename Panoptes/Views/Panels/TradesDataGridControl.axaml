@@ -27,7 +27,6 @@
 			<DataGridTextColumn Header="Symbol" Binding="{Binding Symbol, Converter={StaticResource SymbolConverter}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Type" Binding="{Binding Type, Mode=OneWay}"/>
 			<DataGridTextColumn Header="TIF" Binding="{Binding TimeInForce, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Expiry" Binding="{Binding Expiry, Mode=OneWay}"/>
 
 			<DataGridTextColumn Header="Type" Binding="{Binding SecurityType, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Side" Binding="{Binding Direction, Mode=OneWay}" CellStyleClasses="directionColored"/>

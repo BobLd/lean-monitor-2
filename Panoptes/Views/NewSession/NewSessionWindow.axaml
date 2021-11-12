@@ -12,7 +12,8 @@
 		MinHeight="200"
 		Title="Open Session"
 		WindowStartupLocation="CenterOwner" CanResize="True"
-		ShowInTaskbar="False">
+		ShowInTaskbar="False"
+		SizeToContent="Height">
 
 	<Window.DataTemplates>
 		<!--        
