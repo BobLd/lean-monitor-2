@@ -2,8 +2,8 @@
 using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
+using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,13 +21,13 @@ namespace Panoptes.ViewModels.NewSession
 #else
             FileName = "",
 #endif
-            Watch = true
+            Watch = false
         };
 
         public NewFileSessionViewModel(ISessionService sessionService)
         {
             _sessionService = sessionService;
-            OpenCommandAsync = new AsyncRelayCommand(OpenAsync, () => CanOpen());
+            OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
             OpenCommandAsync.PropertyChanged += OpenCommandAsync_PropertyChanged;
 
             CancelCommand = new RelayCommand(() =>
@@ -41,13 +41,20 @@ namespace Panoptes.ViewModels.NewSession
 
         private void OpenCommandAsync_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            Debug.WriteLine($"NewFileSessionViewModel: OpenCommandAsync_PropertyChanged({e.PropertyName})");
             OpenCommandAsync.NotifyCanExecuteChanged();
         }
 
-        private Task OpenAsync(CancellationToken cancellationToken)
+        private async Task OpenAsync(CancellationToken cancellationToken)
         {
-            return _sessionService.Open(_fileSessionParameters, cancellationToken);
+            try
+            {
+                Error = null;
+                await _sessionService.Open(_fileSessionParameters, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Error = ex.ToString();
+            }
         }
 
         private bool CanOpen()
@@ -71,6 +78,7 @@ namespace Panoptes.ViewModels.NewSession
             set
             {
                 _fileSessionParameters.FileName = value;
+                Error = null;
                 OnPropertyChanged();
                 OpenCommandAsync.NotifyCanExecuteChanged();
             }
@@ -92,7 +100,18 @@ namespace Panoptes.ViewModels.NewSession
 
         public string Header { get; } = "File";
 
-        public string Error { get; }
+        private string _error;
+        public string Error
+        {
+            get { return _error; }
+
+            set
+            {
+                if (_error == value) return;
+                _error = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string this[string columnName]
         {

@@ -70,7 +70,8 @@
 				<MenuItem Header="_Help">
 					<MenuItem Header="_Charting documentation..." Click="BrowseChartingDocumentationMenuItem_OnClick"/>
 					<Separator/>
-					<MenuItem Header="_Monitor GitHub project..." Click="BrowseMonitorGithubMenuItem_OnClick"/>
+					<MenuItem Header="_Monitor v2 GitHub project..." Click="BrowseMonitorGithubMenuItem_OnClick"/>
+					<MenuItem Header="_Monitor GitHub project..." Click="BrowseMonitorGithubOriginalMenuItem_OnClick"/>
 					<MenuItem Header="_LEAN Engine GitHub project..." Click="BrowseLeanGithubMenuItem_OnClick"/>
 					<Separator/>
 					<MenuItem Header="_About..." Click="ShowAboutButton_OnClick"/>

@@ -112,9 +112,14 @@ namespace Panoptes
             OpenLink("https://github.com/QuantConnect/Lean");
         }
 
-        private void BrowseMonitorGithubMenuItem_OnClick(object sender, RoutedEventArgs e)
+        private void BrowseMonitorGithubOriginalMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             OpenLink("https://github.com/mirthestam/lean-monitor");
+        }
+
+        private void BrowseMonitorGithubMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            OpenLink("https://github.com/BobLd/lean-monitor-2");
         }
 
         private void BrowseChartingDocumentationMenuItem_OnClick(object sender, RoutedEventArgs e)

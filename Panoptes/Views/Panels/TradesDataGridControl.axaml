@@ -15,11 +15,12 @@
 		</Style>
 	</UserControl.Styles>
 
-	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
-			  DoubleTapped="OnDataGridDoubleTapped"
-			  CanUserResizeColumns="True" HeadersVisibility="Column"
+	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None"
+			  HeadersVisibility="Column" AutoGenerateColumns="False"
+			  DoubleTapped="OnDataGridDoubleTapped" SelectedItem="{Binding SelectedItem}"
+			  CanUserResizeColumns="True" CanUserReorderColumns="True"
 			  AlternatingRowBackground="Transparent" RowBackground="Transparent"
-			  SelectedItem="{Binding SelectedItem}">
+			  ToolTip.ShowDelay="2000" ToolTip.Tip="List of orders.&#x0a;Double-click of an order for full details.">
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Created" Binding="{Binding CreatedTime, Mode=OneWay}"/>

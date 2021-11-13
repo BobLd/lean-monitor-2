@@ -8,6 +8,10 @@ using Panoptes.Views.Windows;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Panoptes.Views.Panels
 {
@@ -21,6 +25,20 @@ namespace Panoptes.Views.Panels
             InitializeComponent();
             _dataGrid = this.Get<DataGrid>("_dataGrid");
             _dataGrid.SelectionChanged += _dataGrid_SelectionChanged;
+            _dataGrid.ColumnReordered += async (o, e) => await _dataGrid_ColumnReordered(o, e).ConfigureAwait(false);
+        }
+
+        private async Task _dataGrid_ColumnReordered(object? sender, DataGridColumnEventArgs e)
+        {
+            // Need to that async
+            var indexes = _dataGrid.Columns.Select(c => $"[{c.DisplayIndex},{c.Header}]").ToArray();
+
+            await File.WriteAllTextAsync("to_remove_TradesDataGridControl.txt", string.Join(",", indexes)).ConfigureAwait(false);
+
+            //Use System.Configuration.ConfigurationManager?
+
+            // Save new order
+            Debug.WriteLine($"TradesDataGridControl.ColumnReordered: {e.Column.Header}");
         }
 
         private void InitializeComponent()

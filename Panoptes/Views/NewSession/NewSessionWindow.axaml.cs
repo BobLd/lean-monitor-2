@@ -21,10 +21,17 @@ namespace Panoptes.Views.NewSession
 #endif
             // TODO: Implement dependency injection for the messenger
             _messenger = (WeakReferenceMessenger)App.Current.Services.GetService(typeof(IMessenger)) ?? throw new NullReferenceException($"NewSessionWindow: '{nameof(_messenger)}' is null");
-            _messenger.Register<NewSessionWindow, SessionOpenedMessage>(this, (r, _) =>
+            _messenger.Register<NewSessionWindow, SessionOpenedMessage>(this, (r, m) =>
             {
-                // Handle 'Call from invalid thread' exception
-                Dispatcher.UIThread.InvokeAsync(() => r.Close());
+                if (m.IsSuccess)
+                {
+                    // Handle 'Call from invalid thread' exception
+                    Dispatcher.UIThread.InvokeAsync(() => r.Close());
+                }
+                else
+                {
+                    // Error
+                }
             });
         }
 
@@ -33,7 +40,7 @@ namespace Panoptes.Views.NewSession
             AvaloniaXamlLoader.Load(this);
         }
 
-        private void CloseButton_OnClick(object sender, RoutedEventArgs e)
+        private void CancelButton_OnClick(object sender, RoutedEventArgs e)
         {
             Close();
         }

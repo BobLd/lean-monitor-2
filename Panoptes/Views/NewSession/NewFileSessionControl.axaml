@@ -8,6 +8,7 @@
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="60"/>
 			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="40"/>
 		</Grid.ColumnDefinitions>
 
 		<Grid.RowDefinitions>
@@ -15,13 +16,17 @@
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="5"/>
 			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
 		<Label Grid.Row="0">File</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding FileName}"/>
-
+		<TextBox Name="_textBoxFileName" Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding FileName}"/>
+		<Button Grid.Row="0" Grid.Column="3" Content="Find" Margin="2,0,0,4" Name="_buttonOpenFile"/>
+		
 		<CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding FileWatch}" Content="Monitor for changes"/>
 		<ProgressBar Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
 					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>
+
+		<TextBlock Grid.Row="4" Grid.ColumnSpan="3" Text="{Binding Error}"/>
 	</Grid>
 </UserControl>

@@ -8,6 +8,7 @@ using Panoptes.Model.Sessions;
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.Panels;
 using System;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels
 {
@@ -89,6 +90,10 @@ namespace Panoptes.ViewModels
 
             Title = $"Panoptes - LEAN Algorithm Monitor - {GetVersion()}";
 
+#if DEBUG
+            Title = "[DEBUG] " + Title;
+#endif
+
             ExitCommand = new RelayCommand(() =>
             {
                 if (App.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -99,7 +104,7 @@ namespace Panoptes.ViewModels
 
             CloseCommand = new RelayCommand(() => _sessionService.ShutdownSession(), () => IsSessionActive);
             OpenSessionCommand = new RelayCommand(() => _messenger.Send(new ShowNewSessionWindowMessage()));
-            ExportCommand = new RelayCommand(Export, () => IsSessionActive);
+            ExportCommand = new RelayCommand(Export, () => IsSessionActive && false); // deactivate for the moment
             ConnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = true, () => _sessionState != SessionState.Subscribed && _sessionService.CanSubscribe);
             DisconnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = false, () => _sessionState != SessionState.Unsubscribed);
 
@@ -109,19 +114,22 @@ namespace Panoptes.ViewModels
             ResetLayoutCommand = new RelayCommand<DockingManager>(manager => _layoutManager.ResetLayout(manager));
             */
 
-            _messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, (r, _) => r.InvalidateCommands());
+            _messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, async (r, m) =>
+            {
+                await r.InvalidateCommands().ConfigureAwait(false);
+            });
 
-            _messenger.Register<MainWindowViewModel, SessionClosedMessage>(this, (r, _) =>
+            _messenger.Register<MainWindowViewModel, SessionClosedMessage>(this, async (r, _) =>
             {
                 r.SessionState = SessionState.Unsubscribed;
                 //r.Documents.Clear();
-                r.InvalidateCommands();
+                await r.InvalidateCommands().ConfigureAwait(false);
             });
 
-            _messenger.Register<MainWindowViewModel, SessionStateChangedMessage>(this, (r, m) =>
+            _messenger.Register<MainWindowViewModel, SessionStateChangedMessage>(this, async (r, m) =>
             {
                 r.SessionState = m.State;
-                r.InvalidateCommands();
+                await r.InvalidateCommands().ConfigureAwait(false);
             });
 
             _messenger.Register<MainWindowViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -212,7 +220,6 @@ namespace Panoptes.ViewModels
             _sessionService.ShutdownSession();
         }
 
-
         private void Export()
         {
             /*
@@ -232,16 +239,19 @@ namespace Panoptes.ViewModels
             */
         }
 
-        private void InvalidateCommands()
+        private Task InvalidateCommands()
         {
             OnPropertyChanged(nameof(IsSessionActive));
 
-            // this need to be called from the UI thread.
-            // This is not the case anymore since Seesion open async
-            //CloseCommand.NotifyCanExecuteChanged();
-            //ExportCommand.NotifyCanExecuteChanged();
-            //ConnectCommand.NotifyCanExecuteChanged();
-            //DisconnectCommand.NotifyCanExecuteChanged();
+            // This need to be called from the UI thread,
+            // this is not the case anymore since Session open async.
+            return Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                CloseCommand.NotifyCanExecuteChanged();
+                ExportCommand.NotifyCanExecuteChanged();
+                ConnectCommand.NotifyCanExecuteChanged();
+                DisconnectCommand.NotifyCanExecuteChanged();
+            });
         }
 
         private static string GetVersion()

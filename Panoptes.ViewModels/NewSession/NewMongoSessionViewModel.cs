@@ -88,7 +88,13 @@ namespace Panoptes.ViewModels.NewSession
             }
         }
 
+#if DEBUG
         private string _username = "admin-bob";
+#else
+        private string _username = "";
+#endif
+
+
         public string UserName
         {
             get { return _username; }

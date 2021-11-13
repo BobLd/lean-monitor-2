@@ -195,7 +195,7 @@ namespace Panoptes
         {
             if (_session == null)
             {
-                Debug.WriteLine("Cannot shutdown session. No session exists");
+                Debug.WriteLine("SessionService.ShutdownSession: Cannot shutdown session. No session exists");
                 return;
             }
 
@@ -205,7 +205,7 @@ namespace Panoptes
             }
             catch (Exception e)
             {
-                throw new Exception("Could not close the session", e);
+                throw new Exception("SessionService.ShutdownSession: Could not close the session", e);
             }
             finally
             {
@@ -236,7 +236,7 @@ namespace Panoptes
             {
                 if (string.IsNullOrWhiteSpace(mongoParameters.Host))
                 {
-                    throw new ArgumentException("Host is required", nameof(parameters));
+                    throw new ArgumentException("SessionService.Open: Host is required", nameof(parameters));
                 }
 
                 // Open a new session and open it
@@ -246,7 +246,7 @@ namespace Panoptes
             {
                 if (string.IsNullOrWhiteSpace(streamParameters.Host))
                 {
-                    throw new ArgumentException("Host is required", nameof(parameters));
+                    throw new ArgumentException("SessionService.Open: Host is required", nameof(parameters));
                 }
 
                 // Open a new session and open it
@@ -262,7 +262,7 @@ namespace Panoptes
             }
             else
             {
-                throw new ArgumentException($"Unknown ISessionParameters of type '{parameters.GetType()}'.", nameof(parameters));
+                throw new ArgumentException($"SessionService.Open: Unknown ISessionParameters of type '{parameters.GetType()}'.", nameof(parameters));
             }
 
             if (session == null)
@@ -294,15 +294,19 @@ namespace Panoptes
             {
                 _session = session;
                 await _session.InitializeAsync(cancellationToken).ConfigureAwait(false);
+                // Notify the app of the new session
+                _messenger.Send(new SessionOpenedMessage());
+            }
+            catch (OperationCanceledException ocEx)
+            {
+                Debug.WriteLine("SessionService.OpenSession: Operation canceled.");
             }
             catch (Exception e)
             {
-                throw new Exception("Exception occured while opening the session", e);
-            }
-            finally
-            {
-                // Notify the app of the new session
-                _messenger.Send(new SessionOpenedMessage()); // should be in the 'try'
+                // Need log
+                Debug.WriteLine(e);
+                _messenger.Send(new SessionOpenedMessage(e.ToString()));
+                throw new Exception("SessionService.OpenSession: Exception occured while opening the session", e);
             }
         }
 

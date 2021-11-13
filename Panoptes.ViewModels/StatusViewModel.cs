@@ -19,11 +19,18 @@ namespace Panoptes.ViewModels
             _messenger = messenger;
             _sessionService = sessionService;
 
-            _messenger.Register<StatusViewModel, SessionOpenedMessage>(this, (r, _) =>
+            _messenger.Register<StatusViewModel, SessionOpenedMessage>(this, (r, m) =>
             {
-                r.Progress = 0;
-                r.IsProgressIndeterminate = false;
-                r.OnPropertyChanged(nameof(IsSessionActive));
+                if (m.IsSuccess)
+                {
+                    r.Progress = 0;
+                    r.IsProgressIndeterminate = false;
+                    r.OnPropertyChanged(nameof(IsSessionActive));
+                }
+                else
+                {
+                    // Error
+                }
             });
 
             _messenger.Register<StatusViewModel, SessionClosedMessage>(this, (r, _) =>
