@@ -6,7 +6,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -41,8 +40,6 @@ namespace Panoptes.ViewModels.Panels
             /// </summary>
             OrderAddHistory = 3,
         }
-
-        private readonly IMessenger _messenger;
 
         private readonly ConcurrentDictionary<int, List<OrderEvent>> _orderEventsDic = new ConcurrentDictionary<int, List<OrderEvent>>();
         private readonly ConcurrentDictionary<int, OrderViewModel> _ordersDic = new ConcurrentDictionary<int, OrderViewModel>();
@@ -83,7 +80,7 @@ namespace Panoptes.ViewModels.Panels
 
                 if (_selectedItem == null) return; // We might want to be able to send null id
                 Debug.WriteLine($"Selected item #{_selectedItem.Id} and sending message.");
-                _messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
+                Messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
             }
         }
 
@@ -123,7 +120,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_fromDate == value) return;
                 _fromDate = value;
                 OnPropertyChanged();
-                _messenger.Send(new TradeFilterMessage(Name, _fromDate, _toDate));
+                Messenger.Send(new TradeFilterMessage(Name, _fromDate, _toDate));
             }
         }
 
@@ -140,7 +137,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_toDate == value) return;
                 _toDate = value;
                 OnPropertyChanged();
-                _messenger.Send(new TradeFilterMessage(Name, _fromDate, _toDate));
+                Messenger.Send(new TradeFilterMessage(Name, _fromDate, _toDate));
             }
         }
 
@@ -220,30 +217,25 @@ namespace Panoptes.ViewModels.Panels
                 OrdersHistory.Add(ovm);
             }
         }
-        public TradesPanelViewModel()
+
+        public TradesPanelViewModel(IMessenger messenger)
+            : base(messenger)
         {
             Name = "Trades";
-        }
-
-        public TradesPanelViewModel(IMessenger messenger) : this()
-        {
-            _messenger = messenger;
-            _messenger.Register<TradesPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Messenger.Register<TradesPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 if (m.ResultContext.Result.Orders.Count == 0) return;
                 r._resultsQueue.Add(new QueueElement() { Element = m.ResultContext.Result });
             });
-
-            _messenger.Register<TradesPanelViewModel, OrderEventMessage>(this, (r, m) =>
+            Messenger.Register<TradesPanelViewModel, OrderEventMessage>(this, (r, m) =>
             {
                 if (m.Value.Event == null) return;
                 r._resultsQueue.Add(new QueueElement() { Element = m });
             });
-
-            _messenger.Register<TradesPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
-            _messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
-            _messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, m) => await r.ApplyFiltersHistoryOrders(m.FromDate, m.ToDate).ConfigureAwait(false));
-            _messenger.Register<TradesPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
+            Messenger.Register<TradesPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            Messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
+            Messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, m) => await r.ApplyFiltersHistoryOrders(m.FromDate, m.ToDate).ConfigureAwait(false));
+            Messenger.Register<TradesPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;

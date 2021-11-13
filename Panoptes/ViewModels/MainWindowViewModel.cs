@@ -16,7 +16,6 @@ namespace Panoptes.ViewModels
     {
         private readonly ISessionService _sessionService;
         //private readonly ILayoutManager _layoutManager;
-        private readonly IMessenger _messenger;
 
         private DispatcherTimer _timer = new DispatcherTimer();
 
@@ -73,12 +72,12 @@ namespace Panoptes.ViewModels
             RuntimeStatisticsPanelViewModel runtimeStatisticsPanelViewModel, ProfitLossPanelViewModel profitLossPanelViewModel,
             TradesPanelViewModel tradesPanelViewModel, HoldingsPanelViewModel holdingsPane,
             OxyPlotSelectionViewModel oxyPlotSelectionViewModel)
+            : base(messenger)
         {
             StatusViewModel = statusViewModel;
             _sessionService = resultService;
 
             //_layoutManager = layoutManager;
-            _messenger = messenger;
 
             LogPane = logPanelViewModel;
             StatisticsPane = statisticsPanelViewModel;
@@ -103,7 +102,7 @@ namespace Panoptes.ViewModels
             });
 
             CloseCommand = new RelayCommand(() => _sessionService.ShutdownSession(), () => IsSessionActive);
-            OpenSessionCommand = new RelayCommand(() => _messenger.Send(new ShowNewSessionWindowMessage()));
+            OpenSessionCommand = new RelayCommand(() => Messenger.Send(new ShowNewSessionWindowMessage()));
             ExportCommand = new RelayCommand(Export, () => IsSessionActive && false); // deactivate for the moment
             ConnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = true, () => _sessionState != SessionState.Subscribed && _sessionService.CanSubscribe);
             DisconnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = false, () => _sessionState != SessionState.Unsubscribed);
@@ -114,25 +113,21 @@ namespace Panoptes.ViewModels
             ResetLayoutCommand = new RelayCommand<DockingManager>(manager => _layoutManager.ResetLayout(manager));
             */
 
-            _messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, async (r, m) =>
-            {
-                await r.InvalidateCommands().ConfigureAwait(false);
-            });
-
-            _messenger.Register<MainWindowViewModel, SessionClosedMessage>(this, async (r, _) =>
+            Messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, async (r, _) => await r.InvalidateCommands().ConfigureAwait(false));
+            Messenger.Register<MainWindowViewModel, SessionClosedMessage>(this, async (r, _) =>
             {
                 r.SessionState = SessionState.Unsubscribed;
                 //r.Documents.Clear();
                 await r.InvalidateCommands().ConfigureAwait(false);
             });
 
-            _messenger.Register<MainWindowViewModel, SessionStateChangedMessage>(this, async (r, m) =>
+            Messenger.Register<MainWindowViewModel, SessionStateChangedMessage>(this, async (r, m) =>
             {
                 r.SessionState = m.State;
                 await r.InvalidateCommands().ConfigureAwait(false);
             });
 
-            _messenger.Register<MainWindowViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Messenger.Register<MainWindowViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 /*
                 try
@@ -149,7 +144,7 @@ namespace Panoptes.ViewModels
                 */
             });
 
-            _messenger.Register<MainWindowViewModel, GridRequestMessage>(this, (r, m) =>
+            Messenger.Register<MainWindowViewModel, GridRequestMessage>(this, (r, m) =>
             {
                 /*
                 var chartTableViewModel = new GridPanelViewModel

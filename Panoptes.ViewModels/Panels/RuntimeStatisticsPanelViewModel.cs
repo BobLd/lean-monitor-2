@@ -24,7 +24,6 @@ namespace Panoptes.ViewModels.Panels
             { "Volume", "Volume definition" }
         };
 
-        private readonly IMessenger _messenger;
         private readonly IStatisticsFormatter _statisticsFormatter;
 
         private readonly BackgroundWorker _statisticsBgWorker;
@@ -33,21 +32,17 @@ namespace Panoptes.ViewModels.Panels
 
         private readonly Dictionary<string, StatisticViewModel> _statisticsDico = new Dictionary<string, StatisticViewModel>();
 
-        public RuntimeStatisticsPanelViewModel()
+        public RuntimeStatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter)
+            : base(messenger)
         {
             Name = "Runtime Statistics";
-        }
-
-        public RuntimeStatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter) : this()
-        {
-            _messenger = messenger;
             _statisticsFormatter = statisticsFormatter;
-            _messenger.Register<RuntimeStatisticsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Messenger.Register<RuntimeStatisticsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 if (m.Value.Result.RuntimeStatistics == null || m.Value.Result.RuntimeStatistics.Count == 0) return;
                 r._statisticsQueue.Add(m.Value.Result.RuntimeStatistics);
             });
-            _messenger.Register<RuntimeStatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear()); // Do we want to do that in ui thread?
+            Messenger.Register<RuntimeStatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear()); // Do we want to do that in ui thread?
 
             _statisticsBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _statisticsBgWorker.DoWork += StatisticsQueueReader;

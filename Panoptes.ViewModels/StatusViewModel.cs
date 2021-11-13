@@ -11,15 +11,13 @@ namespace Panoptes.ViewModels
 {
     public sealed class StatusViewModel : ObservableRecipient
     {
-        private readonly IMessenger _messenger;
         private readonly ISessionService _sessionService;
 
         public StatusViewModel(IMessenger messenger, ISessionService sessionService) : base(messenger)
         {
-            _messenger = messenger;
             _sessionService = sessionService;
 
-            _messenger.Register<StatusViewModel, SessionOpenedMessage>(this, (r, m) =>
+            Messenger.Register<StatusViewModel, SessionOpenedMessage>(this, (r, m) =>
             {
                 if (m.IsSuccess)
                 {
@@ -32,18 +30,15 @@ namespace Panoptes.ViewModels
                     // Error
                 }
             });
-
-            _messenger.Register<StatusViewModel, SessionClosedMessage>(this, (r, _) =>
+            Messenger.Register<StatusViewModel, SessionClosedMessage>(this, (r, _) =>
             {
                 r.SessionName = string.Empty;
                 r.ProjectName = string.Empty;
                 r.SessionState = SessionState.Unsubscribed;
                 r.OnPropertyChanged(nameof(IsSessionActive));
             });
-
-            _messenger.Register<StatusViewModel, SessionStateChangedMessage>(this, (r, m) => r.SessionState = m.State);
-
-            _messenger.Register<StatusViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Messenger.Register<StatusViewModel, SessionStateChangedMessage>(this, (r, m) => r.SessionState = m.State);
+            Messenger.Register<StatusViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 r.Progress = m.ResultContext.Progress;
                 r.SessionName = m.ResultContext.Name;
@@ -64,8 +59,7 @@ namespace Panoptes.ViewModels
 
                 ProcessServerStatistics(m.ResultContext.Result.ServerStatistics);
             });
-
-            _messenger.Register<StatusViewModel, AlgorithmStatusMessage>(this, (r, m) => r.AlgorithmStatus = m.Value.Status);
+            Messenger.Register<StatusViewModel, AlgorithmStatusMessage>(this, (r, m) => r.AlgorithmStatus = m.Value.Status);
         }
 
         private string _serverStatistics;

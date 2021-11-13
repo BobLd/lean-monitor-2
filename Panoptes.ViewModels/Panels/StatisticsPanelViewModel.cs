@@ -11,7 +11,6 @@ namespace Panoptes.ViewModels.Panels
 {
     public sealed class StatisticsPanelViewModel : ToolPaneViewModel
     {
-        private readonly IMessenger _messenger;
         private readonly IStatisticsFormatter _statisticsFormatter;
 
         private ObservableCollection<StatisticViewModel> _statistics = new ObservableCollection<StatisticViewModel>();
@@ -26,17 +25,13 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public StatisticsPanelViewModel()
+        public StatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter)
+            : base(messenger)
         {
             Name = "Statistics";
-        }
-
-        public StatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter) : this()
-        {
-            _messenger = messenger;
             _statisticsFormatter = statisticsFormatter;
-            _messenger.Register<StatisticsPanelViewModel, SessionUpdateMessage>(this, (r, m) => r.ParseResult(m.ResultContext.Result));
-            _messenger.Register<StatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            Messenger.Register<StatisticsPanelViewModel, SessionUpdateMessage>(this, (r, m) => r.ParseResult(m.ResultContext.Result));
+            Messenger.Register<StatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
         }
 
         private void Clear()

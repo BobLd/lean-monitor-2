@@ -9,19 +9,10 @@ namespace Panoptes.ViewModels.Panels
     {
         protected readonly BackgroundWorker _backgroundWorker;
 
-        protected readonly IMessenger _messenger;
-
-        public BackgroundWorkerToolPaneViewModel(string name)
-        {
-            Name = name;
-        }
-
         public BackgroundWorkerToolPaneViewModel(IMessenger messenger, string name)
+            : base(messenger)
         {
             Name = name;
-
-            _messenger = messenger;
-
             _backgroundWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _backgroundWorker.DoWork += DoWork;
             _backgroundWorker.ProgressChanged += ProgressChanged;
