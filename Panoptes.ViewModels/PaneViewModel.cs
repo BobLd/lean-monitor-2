@@ -1,9 +1,14 @@
 ﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
+using Microsoft.Toolkit.Mvvm.Messaging;
 
 namespace Panoptes.ViewModels
 {
     public abstract class DocumentPaneViewModel : PaneViewModel
     {
+        public DocumentPaneViewModel(IMessenger messenger)
+            : base(messenger)
+        { }
+
         private bool _canClose;
         private string _key;
 
@@ -44,6 +49,10 @@ namespace Panoptes.ViewModels
 
     public abstract class ToolPaneViewModel : PaneViewModel
     {
+        public ToolPaneViewModel(IMessenger messenger)
+            : base(messenger)
+        { }
+
         private bool _isVisible = true;
 
         private string _name;
@@ -78,6 +87,10 @@ namespace Panoptes.ViewModels
     {
         private bool _isSelected;
         private bool _isActive;
+
+        public PaneViewModel(IMessenger messenger)
+            : base(messenger)
+        { }
 
         public bool IsSelected
         {

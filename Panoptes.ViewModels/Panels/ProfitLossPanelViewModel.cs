@@ -12,8 +12,6 @@ namespace Panoptes.ViewModels.Panels
 {
     public sealed class ProfitLossPanelViewModel : ToolPaneViewModel
     {
-        private readonly IMessenger _messenger;
-
         private readonly Dictionary<DateTime, ProfitLossItemViewModel> _profitLossDico = new Dictionary<DateTime, ProfitLossItemViewModel>();
 
         private readonly BackgroundWorker _pnlBgWorker;
@@ -32,21 +30,16 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public ProfitLossPanelViewModel()
+        public ProfitLossPanelViewModel(IMessenger messenger)
+            : base(messenger)
         {
             Name = "Profit & Loss";
-        }
-
-        public ProfitLossPanelViewModel(IMessenger messenger) : this()
-        {
-            _messenger = messenger;
-
-            _messenger.Register<ProfitLossPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Messenger.Register<ProfitLossPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 if (m.Value.Result.ProfitLoss == null || m.Value.Result.ProfitLoss.Count == 0) return;
                 r._pnlQueue.Add(m.Value.Result.ProfitLoss);
             });
-            _messenger.Register<ProfitLossPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            Messenger.Register<ProfitLossPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
             _pnlBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _pnlBgWorker.DoWork += PnlQueueReader;

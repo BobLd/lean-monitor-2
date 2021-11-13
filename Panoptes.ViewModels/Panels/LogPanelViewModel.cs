@@ -8,8 +8,6 @@ namespace Panoptes.ViewModels.Panels
 {
     public sealed class LogPanelViewModel : ToolPaneViewModel
     {
-        private readonly IMessenger _messenger;
-
         private ObservableCollection<LogPanelItemViewModel> _logEntries = new ObservableCollection<LogPanelItemViewModel>();
         public ObservableCollection<LogPanelItemViewModel> LogEntries
         {
@@ -21,16 +19,12 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public LogPanelViewModel()
+        public LogPanelViewModel(IMessenger messenger)
+            : base(messenger)
         {
             Name = "Log";
-        }
-
-        public LogPanelViewModel(IMessenger messenger) : this()
-        {
-            _messenger = messenger;
-            _messenger.Register<LogPanelViewModel, LogEntryReceivedMessage>(this, (r, m) => r.ParseResult(m));
-            _messenger.Register<LogPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            Messenger.Register<LogPanelViewModel, LogEntryReceivedMessage>(this, (r, m) => r.ParseResult(m));
+            Messenger.Register<LogPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
         }
 
         private void Clear()

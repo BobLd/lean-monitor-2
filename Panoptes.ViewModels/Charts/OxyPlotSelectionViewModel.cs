@@ -42,8 +42,6 @@ namespace Panoptes.ViewModels.Charts
         internal readonly static OxyColor SciChartLegendTextOxy = OxyColor.FromArgb(255, 198, 230, 235);
         #endregion
 
-        private readonly IMessenger _messenger;
-
         private readonly BackgroundWorker _resultBgWorker;
 
         private readonly BlockingCollection<Result> _resultsQueue = new BlockingCollection<Result>();
@@ -134,19 +132,6 @@ namespace Panoptes.ViewModels.Charts
         public bool IsAutoFitYAxis { get; set; }
 
         public bool IsPlotTrades { get; set; }
-
-        public OxyPlotSelectionViewModel()
-        {
-            Name = "Charts";
-            PlotAll = new AsyncRelayCommand(ProcessPlotAll, CanDoBarsAll);
-            Plot1m = new AsyncRelayCommand(ProcessPlot1min, CanDoBars1m);
-            Plot5m = new AsyncRelayCommand(ProcessPlot5min, CanDoBars5min);
-            Plot1h = new AsyncRelayCommand(ProcessPlot1hour, CanDoBars1h);
-            Plot1d = new AsyncRelayCommand(ProcessPlot1day, CanDoBars1d);
-            PlotLines = new AsyncRelayCommand(ProcessPlotLines, () => true);
-            PlotCandles = new AsyncRelayCommand(ProcessPlotCandles, () => true);
-            PlotTrades = new AsyncRelayCommand(ProcessPlotTrades, () => true);
-        }
 
         private void AddTradesToPlot(IDictionary<int, Order> orders, CancellationToken cancelationToken)
         {
@@ -285,7 +270,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 Debug.WriteLine($"OxyPlotSelectionViewModel.OrderAnnotation_MouseDown({string.Join(",", annotation.OrderIds)}) | IsAltDown: {e.IsAltDown}, IsControlDown: {e.IsControlDown}, IsShiftDown: {e.IsShiftDown}");
 
-                _messenger.Send(new TradeSelectedMessage(Name, annotation.OrderIds, e.IsControlDown));
+                Messenger.Send(new TradeSelectedMessage(Name, annotation.OrderIds, e.IsControlDown));
             }
             catch (Exception ex)
             {
@@ -446,17 +431,27 @@ namespace Panoptes.ViewModels.Charts
             */
         }
 
-        public OxyPlotSelectionViewModel(IMessenger messenger) : this()
+        public OxyPlotSelectionViewModel(IMessenger messenger) : base(messenger)
         {
-            _messenger = messenger;
-            _messenger.Register<OxyPlotSelectionViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Name = "Charts";
+
+            PlotAll = new AsyncRelayCommand(ProcessPlotAll, CanDoBarsAll);
+            Plot1m = new AsyncRelayCommand(ProcessPlot1min, CanDoBars1m);
+            Plot5m = new AsyncRelayCommand(ProcessPlot5min, CanDoBars5min);
+            Plot1h = new AsyncRelayCommand(ProcessPlot1hour, CanDoBars1h);
+            Plot1d = new AsyncRelayCommand(ProcessPlot1day, CanDoBars1d);
+            PlotLines = new AsyncRelayCommand(ProcessPlotLines, () => true);
+            PlotCandles = new AsyncRelayCommand(ProcessPlotCandles, () => true);
+            PlotTrades = new AsyncRelayCommand(ProcessPlotTrades, () => true);
+
+            Messenger.Register<OxyPlotSelectionViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 if (m.ResultContext.Result.Charts.Count == 0 && m.ResultContext.Result.Orders.Count == 0) return;
                 r._resultsQueue.Add(m.ResultContext.Result);
             });
-            _messenger.Register<OxyPlotSelectionViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            Messenger.Register<OxyPlotSelectionViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
-            _messenger.Register<OxyPlotSelectionViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
+            Messenger.Register<OxyPlotSelectionViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;

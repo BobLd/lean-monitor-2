@@ -1,5 +1,7 @@
 ﻿using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using Dock.Model.Avalonia.Controls;
+using Dock.Model.Core;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
@@ -8,6 +10,7 @@ using Panoptes.Model.Sessions;
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.Panels;
 using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels
@@ -15,8 +18,7 @@ namespace Panoptes.ViewModels
     public sealed class MainWindowViewModel : ObservableRecipient
     {
         private readonly ISessionService _sessionService;
-        //private readonly ILayoutManager _layoutManager;
-        private readonly IMessenger _messenger;
+        private readonly ILayoutManager _layoutManager;
 
         private DispatcherTimer _timer = new DispatcherTimer();
 
@@ -50,7 +52,21 @@ namespace Panoptes.ViewModels
             get { return _sessionState; }
             set
             {
+                if (_sessionState == value) return;
                 _sessionState = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private IDock _layout;
+        public IDock Layout
+        {
+            get { return _layout; }
+
+            set
+            {
+                if (_layout == value) return;
+                _layout = value;
                 OnPropertyChanged();
             }
         }
@@ -61,6 +77,7 @@ namespace Panoptes.ViewModels
             get { return _title; }
             set
             {
+                if (_title == value) return;
                 _title = value;
                 OnPropertyChanged();
             }
@@ -72,13 +89,12 @@ namespace Panoptes.ViewModels
             LogPanelViewModel logPanelViewModel, StatisticsPanelViewModel statisticsPanelViewModel,
             RuntimeStatisticsPanelViewModel runtimeStatisticsPanelViewModel, ProfitLossPanelViewModel profitLossPanelViewModel,
             TradesPanelViewModel tradesPanelViewModel, HoldingsPanelViewModel holdingsPane,
-            OxyPlotSelectionViewModel oxyPlotSelectionViewModel)
+            OxyPlotSelectionViewModel oxyPlotSelectionViewModel) : base(messenger)
         {
             StatusViewModel = statusViewModel;
             _sessionService = resultService;
 
             //_layoutManager = layoutManager;
-            _messenger = messenger;
 
             LogPane = logPanelViewModel;
             StatisticsPane = statisticsPanelViewModel;
@@ -103,7 +119,7 @@ namespace Panoptes.ViewModels
             });
 
             CloseCommand = new RelayCommand(() => _sessionService.ShutdownSession(), () => IsSessionActive);
-            OpenSessionCommand = new RelayCommand(() => _messenger.Send(new ShowNewSessionWindowMessage()));
+            OpenSessionCommand = new RelayCommand(() => Messenger.Send(new ShowNewSessionWindowMessage()));
             ExportCommand = new RelayCommand(Export, () => IsSessionActive && false); // deactivate for the moment
             ConnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = true, () => _sessionState != SessionState.Subscribed && _sessionService.CanSubscribe);
             DisconnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = false, () => _sessionState != SessionState.Unsubscribed);
@@ -114,25 +130,25 @@ namespace Panoptes.ViewModels
             ResetLayoutCommand = new RelayCommand<DockingManager>(manager => _layoutManager.ResetLayout(manager));
             */
 
-            _messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, async (r, m) =>
+            Messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, async (r, m) =>
             {
                 await r.InvalidateCommands().ConfigureAwait(false);
             });
 
-            _messenger.Register<MainWindowViewModel, SessionClosedMessage>(this, async (r, _) =>
+            Messenger.Register<MainWindowViewModel, SessionClosedMessage>(this, async (r, _) =>
             {
                 r.SessionState = SessionState.Unsubscribed;
                 //r.Documents.Clear();
                 await r.InvalidateCommands().ConfigureAwait(false);
             });
 
-            _messenger.Register<MainWindowViewModel, SessionStateChangedMessage>(this, async (r, m) =>
+            Messenger.Register<MainWindowViewModel, SessionStateChangedMessage>(this, async (r, m) =>
             {
                 r.SessionState = m.State;
                 await r.InvalidateCommands().ConfigureAwait(false);
             });
 
-            _messenger.Register<MainWindowViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Messenger.Register<MainWindowViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 /*
                 try
@@ -149,7 +165,7 @@ namespace Panoptes.ViewModels
                 */
             });
 
-            _messenger.Register<MainWindowViewModel, GridRequestMessage>(this, (r, m) =>
+            Messenger.Register<MainWindowViewModel, GridRequestMessage>(this, (r, m) =>
             {
                 /*
                 var chartTableViewModel = new GridPanelViewModel
@@ -172,6 +188,43 @@ namespace Panoptes.ViewModels
             _timer.Interval = TimeSpan.FromMilliseconds(100);
             _timer.Tick += (s, e) => CurrentDateTimeUtc = DateTime.UtcNow;
             _timer.Start();
+
+            var documentDock = new DocumentDock
+            {
+                Id = "DocumentsPane",
+                Title = "DocumentsPane",
+                Proportion = double.NaN,
+                //ActiveDockable = document1,
+                VisibleDockables = new ObservableCollection<IDockable>(new Document[]
+                {
+                    new Document() { Title = "Doc Test" }
+                    //document1,
+                    //document2
+                }),
+                CanCreateDocument = true
+            };
+
+            var mainLayout = new ProportionalDock
+            {
+                Id = "MainLayout",
+                Title = "MainLayout",
+                Proportion = double.NaN,
+                Orientation = Orientation.Horizontal,
+                ActiveDockable = null,
+                VisibleDockables = new ObservableCollection<IDockable>(new IDockable[]
+                {
+                    documentDock
+                })
+            };
+
+            Layout = new RootDock
+            {
+                Id = "Root",
+                Title = "Root",
+                ActiveDockable = mainLayout,
+                DefaultDockable = mainLayout,
+                VisibleDockables = new ObservableCollection<IDockable>(new[] { mainLayout })
+            };
         }
 
         public void Initialize()

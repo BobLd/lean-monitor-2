@@ -33,8 +33,6 @@ namespace Panoptes.ViewModels.Panels
             HoldingRemove = 2,
         }
 
-        private readonly IMessenger _messenger;
-
         private readonly ConcurrentDictionary<string, HoldingViewModel> _holdingsDic = new ConcurrentDictionary<string, HoldingViewModel>();
 
         private readonly BackgroundWorker _resultBgWorker;
@@ -69,7 +67,7 @@ namespace Panoptes.ViewModels.Panels
                 }
                 _searchCts = new CancellationTokenSource();
                 // We cancel here
-                _messenger.Send(new HoldingFilterMessage(Name, _search, _searchCts.Token));
+                Messenger.Send(new HoldingFilterMessage(Name, _search, _searchCts.Token));
             }
         }
 
@@ -178,31 +176,25 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public HoldingsPanelViewModel()
+        public HoldingsPanelViewModel(IMessenger messenger)
+            : base(messenger)
         {
             Name = "Holdings";
-        }
-
-        public HoldingsPanelViewModel(IMessenger messenger) : this()
-        {
-            _messenger = messenger;
-            _messenger.Register<HoldingsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Messenger.Register<HoldingsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 if (m.ResultContext.Result.Holdings.Count == 0) return;
                 r._resultsQueue.Add(new QueueElement() { Element = m.ResultContext.Result });
             });
 
-            _messenger.Register<HoldingsPanelViewModel, OrderEventMessage>(this, (r, m) =>
+            Messenger.Register<HoldingsPanelViewModel, OrderEventMessage>(this, (r, m) =>
             {
                 if (m.Value.Event == null) return;
                 r._resultsQueue.Add(new QueueElement() { Element = m });
             });
 
-            _messenger.Register<HoldingsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
-
-            _messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
-
-            _messenger.Register<HoldingsPanelViewModel, HoldingFilterMessage>(this, async (r, m) => await r.ApplyFiltersHoldings(m.Search, m.CancellationToken).ConfigureAwait(false));
+            Messenger.Register<HoldingsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            Messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
+            Messenger.Register<HoldingsPanelViewModel, HoldingFilterMessage>(this, async (r, m) => await r.ApplyFiltersHoldings(m.Search, m.CancellationToken).ConfigureAwait(false));
 
             //_messenger.Register<HoldingsPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
