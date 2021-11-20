@@ -13,13 +13,13 @@
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="Symbol" Binding="{Binding Symbol, Converter={StaticResource SymbolConverter}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Type" Binding="{Binding SecurityType, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Average Price" Binding="{Binding AveragePrice, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Market Price" Binding="{Binding MarketPrice, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Market Value" Binding="{Binding MarketValue, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Unrealized PnL" Binding="{Binding UnrealizedPnL, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Average Price" Binding="{Binding AveragePrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Market Price" Binding="{Binding MarketPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Market Value" Binding="{Binding MarketValue, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Unrealized PnL" Binding="{Binding UnrealizedPnL, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Currency" Binding="{Binding CurrencySymbol, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Conversion Rate" Binding="{Binding ConversionRate, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Conversion Rate" Binding="{Binding ConversionRate, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 		</DataGrid.Columns>
 	</DataGrid>
 </UserControl>

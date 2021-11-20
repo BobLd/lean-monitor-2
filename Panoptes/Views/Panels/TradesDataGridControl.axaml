@@ -30,9 +30,9 @@
 
 			<DataGridTextColumn Header="Type" Binding="{Binding SecurityType, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Side" Binding="{Binding Direction, Mode=OneWay}" CellStyleClasses="directionColored"/>
-			<DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 
-			<DataGridTextColumn Header="Filled" Binding="{Binding FilledQuantity, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Filled" Binding="{Binding FilledQuantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 			<DataGridTemplateColumn Header="Filled %" MinWidth="50" Width="80" SortMemberPath="FilledPercent">
 				<DataGridTemplateColumn.CellTemplate>
 					<DataTemplate>
@@ -47,13 +47,13 @@
 					</DataTemplate>
 				</DataGridTemplateColumn.CellTemplate>
 			</DataGridTemplateColumn>
-			<DataGridTextColumn Header="Open" Binding="{Binding OpenQuantity, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Open" Binding="{Binding OpenQuantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Last Fill" Binding="{Binding LastFillTime, Mode=OneWay}"/>
 
-			<DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Value" Binding="{Binding Value, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Value" Binding="{Binding Value, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Ccy" Binding="{Binding PriceCurrency, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Fees" Binding="{Binding Fees, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Fees" Binding="{Binding Fees, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Fees Ccy" Binding="{Binding FeesCurrency, Mode=OneWay}"/>
 			<!--
 			<DataGridTextColumn Header="Limit Price" Binding="{Binding LimitPrice, StringFormat={}\{0:0.##########\}, Mode=OneWay}"/>

@@ -12,9 +12,9 @@
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="Symbol" Binding="{Binding SymbolAndCurrency, Mode=OneWay}"/>
 			<!--<DataGridTextColumn Header="Currency Symbol" Binding="{Binding CurrencySymbol, Mode=OneWay}"/>-->
-			<DataGridTextColumn Header="Amount" Binding="{Binding Amount, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Conversion Rate" Binding="{Binding ConversionRate, Mode=OneWay}"/>
-			<DataGridTextColumn Header="Value In Account Currency" Binding="{Binding ValueInAccountCurrency, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Conversion Rate" Binding="{Binding ConversionRate, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Value In Account Currency" Binding="{Binding ValueInAccountCurrency, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 		</DataGrid.Columns>
 	</DataGrid>
 </UserControl>
