@@ -714,7 +714,6 @@ namespace Panoptes.Model.Mock
                 ServerType = ServerType.Server1024,
                 SessionId = SessionId,
                 UserId = UserId,
-                UserPlan = UserPlan.Professional,
                 UserToken = "",
                 Version = Globals.Version
             };

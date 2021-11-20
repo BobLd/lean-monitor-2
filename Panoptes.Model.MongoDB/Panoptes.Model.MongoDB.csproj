@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="2.13.2" />
-    <PackageReference Include="QuantConnect.Common" Version="2.5.13062" />
+    <PackageReference Include="QuantConnect.Common" Version="2.5.13230" />
   </ItemGroup>
 
   <ItemGroup>

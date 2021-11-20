@@ -60,6 +60,11 @@ namespace Panoptes.Model.Serialization
         }
     }
 
+    /*
+     * UserPlan removed in:
+     * - https://github.com/QuantConnect/Lean/pull/6055
+     * - https://github.com/QuantConnect/Lean/commit/57f0d17c5d6bc0b754597619e3fd295684bfabc7
+     * 
     public class UserPlanJsonConverter : JsonConverter<UserPlan>
     {
         public override UserPlan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -77,6 +82,7 @@ namespace Panoptes.Model.Serialization
             throw new NotImplementedException();
         }
     }
+    */
 
     public class LanguageJsonConverter : JsonConverter<Language>
     {

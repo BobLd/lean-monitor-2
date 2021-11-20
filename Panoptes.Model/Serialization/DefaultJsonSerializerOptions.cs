@@ -17,7 +17,6 @@ namespace Panoptes.Model.Serialization
                 new ScatterMarkerSymbolJsonConverter(),
                 new PacketTypeJsonConverter(),
                 new AlgorithmStatusJsonConverter(),
-                new UserPlanJsonConverter(),
                 new LanguageJsonConverter(),
                 new ServerTypeJsonConverter()
             },

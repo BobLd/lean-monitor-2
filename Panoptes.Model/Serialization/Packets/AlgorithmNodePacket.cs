@@ -94,11 +94,16 @@ namespace Panoptes.Model.Serialization.Packets
         [JsonPropertyName("sSessionID")]
         public string SessionId = "";
 
+        /*
+         * UserPlan removed in:
+         * - https://github.com/QuantConnect/Lean/pull/6055
+         * - https://github.com/QuantConnect/Lean/commit/57f0d17c5d6bc0b754597619e3fd295684bfabc7
         /// <summary>
         /// User subscriptions state - free or paid.
         /// </summary>
         [JsonPropertyName("sUserPlan")]
         public UserPlan UserPlan = UserPlan.Free;
+        */
 
         /// <summary>
         /// Language flag: Currently represents IL code or Dynamic Scripted Types.
