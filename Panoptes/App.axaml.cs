@@ -18,6 +18,7 @@ namespace Panoptes
     {
         public App()
         {
+            System.Threading.Thread.CurrentThread.Name = "Avalonia UI Thread";
             Services = ConfigureServices();
         }
 
