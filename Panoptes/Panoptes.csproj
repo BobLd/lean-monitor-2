@@ -16,7 +16,7 @@
     <PackageReference Include="Avalonia" Version="0.10.10" />
     <PackageReference Include="Avalonia.Desktop" Version="0.10.10" />
     <PackageReference Include="Avalonia.Diagnostics" Version="0.10.10" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-20210915.2" />
     <PackageReference Include="QuantConnect.Common" Version="2.5.13062" />
    </ItemGroup>
