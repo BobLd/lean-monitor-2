@@ -1,4 +1,5 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
+using Panoptes.Model;
 using Panoptes.Model.Messages;
 using QuantConnect.Securities;
 using System;
@@ -37,7 +38,7 @@ namespace Panoptes.ViewModels.Panels
 
         private readonly BackgroundWorker _resultBgWorker;
 
-        private readonly BlockingCollection<Dictionary<string, Cash>> _resultsQueue = new BlockingCollection<Dictionary<string, Cash>>();
+        private readonly BlockingCollection<Result> _resultsQueue = new BlockingCollection<Result>();
 
         private ObservableCollection<CashViewModel> _currentCashes = new ObservableCollection<CashViewModel>();
         public ObservableCollection<CashViewModel> CurrentCashes
@@ -86,6 +87,40 @@ namespace Panoptes.ViewModels.Panels
                 OnPropertyChanged();
             }
         }
+
+        private string _accountCurrency;
+        public string AccountCurrency
+        {
+            get
+            {
+                return _accountCurrency;
+            }
+
+            set
+            {
+                // Do we want to throw an error if account currency is changed
+                if (_accountCurrency == value || string.IsNullOrEmpty(value)) return;
+                _accountCurrency = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _accountCurrencySymbol;
+        public string AccountCurrencySymbol
+        {
+            get
+            {
+                return _accountCurrencySymbol;
+            }
+
+            set
+            {
+                // Do we want to throw an error if account currency is changed
+                if (_accountCurrencySymbol == value || string.IsNullOrEmpty(value)) return;
+                _accountCurrencySymbol = value;
+                OnPropertyChanged();
+            }
+        }        
 
         private CashViewModel _selectedItem;
         public CashViewModel SelectedItem
@@ -185,9 +220,7 @@ namespace Panoptes.ViewModels.Panels
             Messenger.Register<CashBookPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
                 if (m.ResultContext.Result.Cash == null || m.ResultContext.Result.Cash.Count == 0) return;
-                // m.ResultContext.Result.AccountCurrency
-                // m.ResultContext.Result.AccountCurrencySymbol
-                r._resultsQueue.Add(m.ResultContext.Result.Cash);
+                r._resultsQueue.Add(m.ResultContext.Result);
             });
 
             Messenger.Register<CashBookPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
@@ -275,7 +308,12 @@ namespace Panoptes.ViewModels.Panels
         {
             while (!_resultBgWorker.CancellationPending)
             {
-                var cashes = _resultsQueue.Take(); // Need cancelation token
+                var result = _resultsQueue.Take(); // Need cancelation token
+
+                AccountCurrency = result.AccountCurrency;
+                AccountCurrencySymbol = result.AccountCurrencySymbol;
+
+                var cashes = result.Cash;
                 if (cashes.Count == 0) continue;
 
                 for (int i = 0; i < cashes.Count; i++)

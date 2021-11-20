@@ -6,10 +6,10 @@
 			 xmlns:local="clr-namespace:Panoptes.Views.Panels"
              mc:Ignorable="d"
 			 d:DesignWidth="800" d:DesignHeight="450">
-
 	<UserControl.Styles>
 		<Style Selector="TextBox">
 			<Setter Property="MinWidth" Value="110"/>
+			<Setter Property="MaxWidth" Value="200"/>
 			<Setter Property="FontSize" Value="12"/>
 			<Setter Property="Padding" Value="5,1,5,0"/>
 		</Style>
