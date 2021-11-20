@@ -1,0 +1,20 @@
+<UserControl x:Class="Panoptes.Views.Panels.CashBookDataGridControl"
+			 xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+			 d:DesignWidth="800" d:DesignHeight="450">
+	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
+		  DoubleTapped="OnDataGridDoubleTapped"
+		  CanUserResizeColumns="True" HeadersVisibility="Column"
+		  AlternatingRowBackground="Transparent" RowBackground="Transparent" SelectedItem="{Binding SelectedItem}">
+		<DataGrid.Columns>
+			<DataGridTextColumn Header="Symbol" Binding="{Binding SymbolAndCurrency, Mode=OneWay}"/>
+			<!--<DataGridTextColumn Header="Currency Symbol" Binding="{Binding CurrencySymbol, Mode=OneWay}"/>-->
+			<DataGridTextColumn Header="Amount" Binding="{Binding Amount, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Conversion Rate" Binding="{Binding ConversionRate, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Value In Account Currency" Binding="{Binding ValueInAccountCurrency, Mode=OneWay}"/>
+		</DataGrid.Columns>
+	</DataGrid>
+</UserControl>

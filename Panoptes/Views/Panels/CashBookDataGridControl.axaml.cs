@@ -7,11 +7,11 @@ using System.Collections;
 
 namespace Panoptes.Views.Panels
 {
-    public partial class HoldingsDataGridControl : UserControl
+    public partial class CashBookDataGridControl : UserControl
     {
         private readonly DataGrid _dataGrid;
 
-        public HoldingsDataGridControl()
+        public CashBookDataGridControl()
         {
             InitializeComponent();
             _dataGrid = this.Get<DataGrid>("_dataGrid");
@@ -25,7 +25,7 @@ namespace Panoptes.Views.Panels
         /// <summary>
         /// Identifies the ItemsSource dependency property.
         /// </summary>
-        public static readonly DirectProperty<HoldingsDataGridControl, IEnumerable> ItemsProperty = AvaloniaProperty.RegisterDirect<HoldingsDataGridControl, IEnumerable>(nameof(Items), o => o.Items, (o, v) => o.Items = v);
+        public static readonly DirectProperty<CashBookDataGridControl, IEnumerable> ItemsProperty = AvaloniaProperty.RegisterDirect<CashBookDataGridControl, IEnumerable>(nameof(Items), o => o.Items, (o, v) => o.Items = v);
 
         /// <summary>
         /// Gets or sets a collection that is used to generate the content of the control.
@@ -38,8 +38,8 @@ namespace Panoptes.Views.Panels
 
         private void OnDataGridDoubleTapped(object sender, RoutedEventArgs e)
         {
-            // Make sure the double-click happened on something that has HoldingViewModel
-            if (e.Source is Control control && control.DataContext is not HoldingViewModel)
+            // Make sure the double-click happened on something that has CashViewModel
+            if (e.Source is Control control && control.DataContext is not CashViewModel)
             {
                 // If not the case, check if any parent is a datagrid cell.
                 // This might happen when clicking within a cell content
@@ -57,7 +57,7 @@ namespace Panoptes.Views.Panels
                 }
             }
 
-            if (sender is DataGrid dataGrid && dataGrid.SelectedItem is HoldingViewModel holding)
+            if (sender is DataGrid dataGrid && dataGrid.SelectedItem is CashViewModel cash)
             {
                 // do something
 

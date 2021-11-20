@@ -249,11 +249,11 @@ namespace Panoptes.ViewModels.Panels
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
                     case ActionsThreadUI.OrderFinishUpdate:
-                        ovm.FinishUpdateInThreadUI();
+                        ovm.FinaliseUpdateInThreadUI();
                         break;
 
                     case ActionsThreadUI.OrderFinishUpdateAddAll:
-                        ovm.FinishUpdateInThreadUI();
+                        ovm.FinaliseUpdateInThreadUI();
 
                         // Could optimise the below, check don't need to be done in UI thread
                         AddOrderToToday(ovm);

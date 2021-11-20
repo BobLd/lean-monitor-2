@@ -104,7 +104,9 @@
 				<TabItem Header="Holdings">
 					<panels:HoldingsPanelControl DataContext="{Binding HoldingsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
-				<TabItem Header="Cash"></TabItem>
+				<TabItem Header="Cash">
+					<panels:CashBookPanelControl DataContext="{Binding CashBookPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+				</TabItem>
 			</TabControl>
 			
 

@@ -76,6 +76,7 @@ namespace Panoptes
             services.AddTransient<RuntimeStatisticsPanelViewModel>();
             services.AddTransient<TradesPanelViewModel>();
             services.AddTransient<HoldingsPanelViewModel>();
+            services.AddTransient<CashBookPanelViewModel>();
             services.AddTransient<ProfitLossPanelViewModel>();
             services.AddTransient<LogPanelViewModel>();
             services.AddTransient<StatusViewModel>();

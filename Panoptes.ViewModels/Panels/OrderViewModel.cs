@@ -179,7 +179,7 @@ namespace Panoptes.ViewModels.Panels
         /// <summary>
         /// Call this from UI thread (BackgroundWorker.ProgressChanged).
         /// </summary>
-        public void FinishUpdateInThreadUI()
+        public void FinaliseUpdateInThreadUI()
         {
             while (_pendingEvents.Count != 0)
             {

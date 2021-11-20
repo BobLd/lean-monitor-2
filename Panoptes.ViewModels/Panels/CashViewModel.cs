@@ -59,6 +59,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
+        public string SymbolAndCurrency => $"{Symbol} ({CurrencySymbol})";
+
         private string _symbol;
         public string Symbol
         {
@@ -68,6 +70,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_symbol == value) return;
                 _symbol = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(SymbolAndCurrency));
             }
         }
 
@@ -80,6 +83,7 @@ namespace Panoptes.ViewModels.Panels
                 if (_currencySymbol == value) return;
                 _currencySymbol = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(SymbolAndCurrency));
             }
         }
     }

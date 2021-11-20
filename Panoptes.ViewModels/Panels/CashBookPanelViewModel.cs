@@ -1,6 +1,6 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
-using QuantConnect;
+using QuantConnect.Securities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,39 +13,39 @@ using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
 {
-    public sealed class HoldingsPanelViewModel : ToolPaneViewModel
+    public sealed class CashBookPanelViewModel : ToolPaneViewModel
     {
         private enum ActionsThreadUI : byte
         {
             /// <summary>
-            /// Finish the holding update.
+            /// Finish the cash update.
             /// </summary>
-            HoldingFinishUpdate = 0,
+            CashFinishUpdate = 0,
 
             /// <summary>
-            /// Finish the holding update and add it.
+            /// Finish the cash update and add it.
             /// </summary>
-            HoldingFinishUpdateAdd = 1,
+            CashFinishUpdateAdd = 1,
 
             /// <summary>
-            /// Remove holding from history.
+            /// Remove cash from history.
             /// </summary>
-            HoldingRemove = 2,
+            CashRemove = 2,
         }
 
-        private readonly ConcurrentDictionary<string, HoldingViewModel> _holdingsDic = new ConcurrentDictionary<string, HoldingViewModel>();
+        private readonly ConcurrentDictionary<string, CashViewModel> _cashesDic = new ConcurrentDictionary<string, CashViewModel>();
 
         private readonly BackgroundWorker _resultBgWorker;
 
-        private readonly BlockingCollection<Dictionary<string, Holding>> _resultsQueue = new BlockingCollection<Dictionary<string, Holding>>();
+        private readonly BlockingCollection<Dictionary<string, Cash>> _resultsQueue = new BlockingCollection<Dictionary<string, Cash>>();
 
-        private ObservableCollection<HoldingViewModel> _currentHoldings = new ObservableCollection<HoldingViewModel>();
-        public ObservableCollection<HoldingViewModel> CurrentHoldings
+        private ObservableCollection<CashViewModel> _currentCashes = new ObservableCollection<CashViewModel>();
+        public ObservableCollection<CashViewModel> CurrentCashes
         {
-            get { return _currentHoldings; }
+            get { return _currentCashes; }
             set
             {
-                _currentHoldings = value;
+                _currentCashes = value;
                 OnPropertyChanged();
             }
         }
@@ -67,7 +67,7 @@ namespace Panoptes.ViewModels.Panels
                 }
                 _searchCts = new CancellationTokenSource();
                 // We cancel here
-                Messenger.Send(new HoldingFilterMessage(Name, _search, _searchCts.Token));
+                Messenger.Send(new CashFilterMessage(Name, _search, _searchCts.Token));
             }
         }
 
@@ -87,8 +87,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        private HoldingViewModel _selectedItem;
-        public HoldingViewModel SelectedItem
+        private CashViewModel _selectedItem;
+        public CashViewModel SelectedItem
         {
             get { return _selectedItem; }
             set
@@ -101,64 +101,66 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        private void SetSelectedItem(HoldingViewModel hvm)
+        private void SetSelectedItem(CashViewModel hvm)
         {
             if (_selectedItem == hvm) return;
             _selectedItem = hvm;
             OnPropertyChanged(nameof(SelectedItem));
         }
 
-        private readonly Func<HoldingViewModel, string, CancellationToken, bool> _filter = (hvm, search, ct) =>
+        private readonly Func<CashViewModel, string, CancellationToken, bool> _filter = (hvm, search, ct) =>
         {
             ct.ThrowIfCancellationRequested();
 
             if (string.IsNullOrEmpty(search)) return true;
+            search = search.Replace("£", "₤"); // QC uses two bars pound sterling symbol
+
             // We might want to search in other fields than symbol
-            return hvm.Symbol.ToString().Contains(search, StringComparison.OrdinalIgnoreCase);
+            return $"{hvm.Symbol} {hvm.CurrencySymbol}".Contains(search, StringComparison.OrdinalIgnoreCase);
         };
 
-        private Task<(IReadOnlyList<HoldingViewModel> Add, IReadOnlyList<HoldingViewModel> Remove)> GetFilteredHoldings(string search, CancellationToken cancellationToken)
+        private Task<(IReadOnlyList<CashViewModel> Add, IReadOnlyList<CashViewModel> Remove)> GetFilteredCashes(string search, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
-                var fullList = _holdingsDic.Values.AsParallel().Where(h => _filter(h, search, cancellationToken)).ToList();
+                var fullList = _cashesDic.Values.AsParallel().Where(h => _filter(h, search, cancellationToken)).ToList();
 
                 // careful with concurrency
-                var currentHoldings = _currentHoldings.ToArray();
-                return ((IReadOnlyList<HoldingViewModel>)fullList.Except(currentHoldings).ToList(),
-                        (IReadOnlyList<HoldingViewModel>)currentHoldings.Except(fullList).ToList());
+                var currentCashes = _currentCashes.ToArray();
+                return ((IReadOnlyList<CashViewModel>)fullList.Except(currentCashes).ToList(),
+                        (IReadOnlyList<CashViewModel>)currentCashes.Except(fullList).ToList());
             }, cancellationToken);
         }
 
-        private async Task ApplyFiltersHoldings(string search, CancellationToken cancellationToken)
+        private async Task ApplyFiltersCashes(string search, CancellationToken cancellationToken)
         {
             try
             {
                 DisplayLoading = true;
-                Debug.WriteLine($"HoldingsPanelViewModel: Start applying '{search}' filters...");
+                Debug.WriteLine($"CashBookPanelViewModel: Start applying '{search}' filters...");
 
 #if DEBUG
                 //await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
 #endif
 
-                var (Add, Remove) = await GetFilteredHoldings(search, cancellationToken).ConfigureAwait(false);
+                var (Add, Remove) = await GetFilteredCashes(search, cancellationToken).ConfigureAwait(false);
 
                 foreach (var remove in Remove)
                 {
-                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingRemove, remove);
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.CashRemove, remove);
                 }
 
                 foreach (var add in Add)
                 {
-                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingFinishUpdateAdd, add);
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.CashFinishUpdateAdd, add);
                 }
 
-                Debug.WriteLine($"HoldingsPanelViewModel: Done applying '{search}' filters!");
+                Debug.WriteLine($"CashBookPanelViewModel: Done applying '{search}' filters!");
                 DisplayLoading = false;
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"HoldingsPanelViewModel: Cancelled applying '{search}' filters.");
+                Debug.WriteLine($"CashBookPanelViewModel: Cancelled applying '{search}' filters.");
             }
             catch (Exception ex)
             {
@@ -168,52 +170,54 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        private void AddHolding(HoldingViewModel hvm)
+        private void AddCash(CashViewModel hvm)
         {
             if (_filter(hvm, Search, CancellationToken.None))
             {
-                CurrentHoldings.Add(hvm);
+                CurrentCashes.Add(hvm);
             }
         }
 
-        public HoldingsPanelViewModel(IMessenger messenger)
+        public CashBookPanelViewModel(IMessenger messenger)
             : base(messenger)
         {
-            Name = "Holdings";
-            Messenger.Register<HoldingsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
+            Name = "CashBook";
+            Messenger.Register<CashBookPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
-                if (m.ResultContext.Result.Holdings.Count == 0) return;
-                r._resultsQueue.Add(m.ResultContext.Result.Holdings);
+                if (m.ResultContext.Result.Cash == null || m.ResultContext.Result.Cash.Count == 0) return;
+                // m.ResultContext.Result.AccountCurrency
+                // m.ResultContext.Result.AccountCurrencySymbol
+                r._resultsQueue.Add(m.ResultContext.Result.Cash);
             });
 
-            Messenger.Register<HoldingsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
-            Messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
-            Messenger.Register<HoldingsPanelViewModel, HoldingFilterMessage>(this, async (r, m) => await r.ApplyFiltersHoldings(m.Search, m.CancellationToken).ConfigureAwait(false));
+            Messenger.Register<CashBookPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            Messenger.Register<CashBookPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
+            Messenger.Register<CashBookPanelViewModel, CashFilterMessage>(this, async (r, m) => await r.ApplyFiltersCashes(m.Search, m.CancellationToken).ConfigureAwait(false));
 
             _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {
-                if (e.UserState is not HoldingViewModel hvm)
+                if (e.UserState is not CashViewModel hvm)
                 {
-                    throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'HoldingViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                    throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'CashViewModel' but received '{e.UserState.GetType()}'", nameof(e));
                 }
 
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
-                    case ActionsThreadUI.HoldingFinishUpdate:
+                    case ActionsThreadUI.CashFinishUpdate:
                         //hvm.FinishUpdateInThreadUI();
                         break;
 
-                    case ActionsThreadUI.HoldingFinishUpdateAdd:
+                    case ActionsThreadUI.CashFinishUpdateAdd:
                         //hvm.FinishUpdateInThreadUI();
 
                         // Could optimise the below, check don't need to be done in UI thread
-                        AddHolding(hvm);
+                        AddCash(hvm);
                         break;
 
-                    case ActionsThreadUI.HoldingRemove:
-                        _currentHoldings.Remove(hvm);
+                    case ActionsThreadUI.CashRemove:
+                        _currentCashes.Remove(hvm);
                         break;
 
                     default:
@@ -244,11 +248,11 @@ namespace Panoptes.ViewModels.Panels
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
                     // - Clear 'Today' order (now yesterday's one)
-                    Debug.WriteLine($"HoldingsPanelViewModel: NewDay @ {timerMessage.DateTimeUtc:O}");
+                    Debug.WriteLine($"CashBookPanelViewModel: NewDay @ {timerMessage.DateTimeUtc:O}");
                     break;
 
                 default:
-                    Debug.WriteLine($"HoldingsPanelViewModel: {timerMessage} @ {timerMessage.DateTimeUtc:O}");
+                    Debug.WriteLine($"CashBookPanelViewModel: {timerMessage} @ {timerMessage.DateTimeUtc:O}");
                     break;
             }
         }
@@ -257,12 +261,12 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                _holdingsDic.Clear();
-                CurrentHoldings.Clear(); // need to do that from ui thread
+                _cashesDic.Clear();
+                CurrentCashes.Clear(); // need to do that from ui thread
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"HoldingsPanelViewModel: ERROR\n{ex}");
+                Debug.WriteLine($"CashBookPanelViewModel: ERROR\n{ex}");
                 throw;
             }
         }
@@ -271,23 +275,23 @@ namespace Panoptes.ViewModels.Panels
         {
             while (!_resultBgWorker.CancellationPending)
             {
-                var holdings = _resultsQueue.Take(); // Need cancelation token
-                if (holdings.Count == 0) continue;
+                var cashes = _resultsQueue.Take(); // Need cancelation token
+                if (cashes.Count == 0) continue;
 
-                for (int i = 0; i < holdings.Count; i++)
+                for (int i = 0; i < cashes.Count; i++)
                 {
-                    var kvp = holdings.ElementAt(i);
-                    if (_holdingsDic.TryGetValue(kvp.Key, out var hvm))
+                    var kvp = cashes.ElementAt(i);
+                    if (_cashesDic.TryGetValue(kvp.Key, out var hvm))
                     {
-                        // Update existing holding
+                        // Update existing cash
                         hvm.Update(kvp.Value);
                     }
                     else
                     {
-                        // Create new holding
-                        hvm = new HoldingViewModel(kvp.Value);
-                        _holdingsDic.TryAdd(kvp.Key, hvm);
-                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingFinishUpdateAdd, hvm);
+                        // Create new cash
+                        hvm = new CashViewModel(kvp.Value);
+                        _cashesDic.TryAdd(kvp.Key, hvm);
+                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.CashFinishUpdateAdd, hvm);
                     }
                 }
             }

@@ -21,7 +21,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
-namespace Panoptes.Model.Mock.Sessions
+namespace Panoptes.Model.Mock
 {
     public class MockStreamingMessageHandler
     {
@@ -349,7 +349,9 @@ namespace Panoptes.Model.Mock.Sessions
             {
                 ["EUR"] = new Cash("EUR", _random.Next(5_000_000, 10_000_000), (decimal)(_random.NextDouble() * 10)),
                 ["USD"] = new Cash("USD", _random.Next(5_000, 1_000_000), (decimal)(_random.NextDouble() * 10)),
-                ["BTC"] = new Cash("BTC", _random.Next(10, 10_000), (decimal)(_random.NextDouble() * 10))
+                ["BTC"] = new Cash("BTC", _random.Next(10, 10_000), (decimal)(_random.NextDouble() * 10)),
+                ["GBP"] = new Cash("GBP", _random.Next(5_000_000, 10_000_000), (decimal)(_random.NextDouble() * 10)),
+                ["ETH"] = new Cash("ETH", _random.Next(10, 10_000), (decimal)(_random.NextDouble() * 10)),
             };
         }
 

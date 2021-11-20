@@ -251,7 +251,7 @@ namespace Panoptes
 
                 // Open a new session and open it
 #if DEBUG
-                var mockMessageHandler = new Model.Mock.Sessions.MockStreamingMessageHandler(streamParameters);
+                var mockMessageHandler = new Model.Mock.MockStreamingMessageHandler(streamParameters);
                 Task.Run(() => mockMessageHandler.Initialize(), cancellationToken);
 #endif
                 await Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters)).ConfigureAwait(false);

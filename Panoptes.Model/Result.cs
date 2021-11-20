@@ -1,5 +1,6 @@
 ﻿using QuantConnect;
 using QuantConnect.Orders;
+using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,21 @@ namespace Panoptes.Model
         public Dictionary<string, string> RuntimeStatistics = new Dictionary<string, string>();
         public Dictionary<string, string> ServerStatistics = new Dictionary<string, string>();
         public Dictionary<string, AlgorithmPerformance> RollingWindow = new Dictionary<string, AlgorithmPerformance>();
-        public Dictionary<string, Holding> Holdings = new Dictionary<string, Holding>();
         public List<OrderEvent> OrderEvents = new List<OrderEvent>();
+
+        public Dictionary<string, Holding> Holdings = new Dictionary<string, Holding>();
+
+        public Dictionary<string, Cash> Cash = new Dictionary<string, Cash>();
+
+        /// <summary>
+        /// The algorithm's account currency
+        /// </summary>
+        public string AccountCurrency;
+
+        /// <summary>
+        /// The algorithm's account currency
+        /// </summary>
+        public string AccountCurrencySymbol;
 
         public ResultType ResultType { get; set; }
 

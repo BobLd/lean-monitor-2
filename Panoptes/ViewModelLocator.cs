@@ -16,6 +16,7 @@ namespace Panoptes
         public static RuntimeStatisticsPanelViewModel RuntimeStatisticsPanel => GetViewModel<RuntimeStatisticsPanelViewModel>();
         public static TradesPanelViewModel TradesPanel => GetViewModel<TradesPanelViewModel>();
         public static HoldingsPanelViewModel HoldingsPanel => GetViewModel<HoldingsPanelViewModel>();
+        public static CashBookPanelViewModel CashBookPanel => GetViewModel<CashBookPanelViewModel>();
         public static ProfitLossPanelViewModel ProfitLossPanel => GetViewModel<ProfitLossPanelViewModel>();
         public static LogPanelViewModel LogPanel => GetViewModel<LogPanelViewModel>();
 
