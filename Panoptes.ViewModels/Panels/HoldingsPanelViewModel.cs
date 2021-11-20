@@ -59,7 +59,7 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (_search == value) return;
                 _search = value;
-                Debug.WriteLine($"Searching {_search}...");
+                Debug.WriteLine($"HoldingsPanelViewModel: Searching {_search}...");
                 OnPropertyChanged();
                 if (_searchCts?.Token.CanBeCanceled == true && !_searchCts.Token.IsCancellationRequested)
                 {
@@ -96,7 +96,7 @@ namespace Panoptes.ViewModels.Panels
                 SetSelectedItem(value);
 
                 if (_selectedItem == null) return; // We might want to be able to send null id
-                Debug.WriteLine($"Selected item #{_selectedItem.Symbol} and sending message.");
+                Debug.WriteLine($"HoldingsPanelViewModel: Selected item #{_selectedItem.Symbol} and sending message.");
                 //_messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
             }
         }
@@ -196,7 +196,7 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (e.UserState is not HoldingViewModel hvm)
                 {
-                    throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'HoldingViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                    throw new ArgumentException($"HoldingsPanelViewModel: Expecting {nameof(e.UserState)} of type 'HoldingViewModel' but received '{e.UserState.GetType()}'", nameof(e));
                 }
 
                 switch ((ActionsThreadUI)e.ProgressPercentage)
@@ -217,7 +217,7 @@ namespace Panoptes.ViewModels.Panels
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(e), "Unknown 'ProgressPercentage' passed.");
+                        throw new ArgumentOutOfRangeException(nameof(e), "HoldingsPanelViewModel: Unknown 'ProgressPercentage' passed.");
                 }
             };
 

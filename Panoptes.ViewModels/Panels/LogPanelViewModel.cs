@@ -1,13 +1,19 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace Panoptes.ViewModels.Panels
 {
     public sealed class LogPanelViewModel : ToolPaneViewModel
     {
+        private readonly BackgroundWorker _resultBgWorker;
+
+        private readonly BlockingCollection<LogEntryReceivedMessage> _resultsQueue = new BlockingCollection<LogEntryReceivedMessage>();
+
         private ObservableCollection<LogPanelItemViewModel> _logEntries = new ObservableCollection<LogPanelItemViewModel>();
         public ObservableCollection<LogPanelItemViewModel> LogEntries
         {
@@ -23,8 +29,22 @@ namespace Panoptes.ViewModels.Panels
             : base(messenger)
         {
             Name = "Log";
-            Messenger.Register<LogPanelViewModel, LogEntryReceivedMessage>(this, (r, m) => r.ParseResult(m));
+            Messenger.Register<LogPanelViewModel, LogEntryReceivedMessage>(this, (r, m) => r._resultsQueue.Add(m));
             Messenger.Register<LogPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+
+            _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _resultBgWorker.DoWork += ResultQueueReader;
+            _resultBgWorker.ProgressChanged += (s, e) =>
+            {
+                if (e.UserState is not LogPanelItemViewModel lpivm)
+                {
+                    throw new ArgumentException($"LogPanelViewModel: Expecting {nameof(e.UserState)} of type 'LogPanelItemViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                }
+                LogEntries.Add(lpivm);
+            };
+
+            _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
+            _resultBgWorker.RunWorkerAsync();
         }
 
         private void Clear()
@@ -40,15 +60,18 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        private void ParseResult(LogEntryReceivedMessage message)
+        private void ResultQueueReader(object sender, DoWorkEventArgs e)
         {
-            // Need to use BackgroundWorker
-            LogEntries.Add(new LogPanelItemViewModel
+            while (!_resultBgWorker.CancellationPending)
             {
-                DateTime = message.DateTime,
-                Message = message.Message,
-                EntryType = message.EntryType
-            });
+                var logEntryMessage = _resultsQueue.Take(); // Need cancelation token
+                _resultBgWorker.ReportProgress(0, new LogPanelItemViewModel
+                {
+                    DateTime = logEntryMessage.DateTime,
+                    Message = logEntryMessage.Message,
+                    EntryType = logEntryMessage.EntryType
+                });
+            }
         }
     }
 }

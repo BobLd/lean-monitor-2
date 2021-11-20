@@ -60,7 +60,7 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (_search == value) return;
                 _search = value;
-                Debug.WriteLine($"Searching {_search}...");
+                Debug.WriteLine($"CashBookPanelViewModel: Searching {_search}...");
                 OnPropertyChanged();
                 if (_searchCts?.Token.CanBeCanceled == true && !_searchCts.Token.IsCancellationRequested)
                 {
@@ -98,9 +98,9 @@ namespace Panoptes.ViewModels.Panels
 
             set
             {
-                // Do we want to throw an error if account currency is changed
                 if (_accountCurrency == value || string.IsNullOrEmpty(value)) return;
                 _accountCurrency = value;
+                // Do we want to throw an error if account currency is changed
                 OnPropertyChanged();
             }
         }
@@ -115,12 +115,12 @@ namespace Panoptes.ViewModels.Panels
 
             set
             {
-                // Do we want to throw an error if account currency is changed
                 if (_accountCurrencySymbol == value || string.IsNullOrEmpty(value)) return;
                 _accountCurrencySymbol = value;
+                // Do we want to throw an error if account currency is changed
                 OnPropertyChanged();
             }
-        }        
+        }
 
         private CashViewModel _selectedItem;
         public CashViewModel SelectedItem
@@ -131,7 +131,7 @@ namespace Panoptes.ViewModels.Panels
                 SetSelectedItem(value);
 
                 if (_selectedItem == null) return; // We might want to be able to send null id
-                Debug.WriteLine($"Selected item #{_selectedItem.Symbol} and sending message.");
+                Debug.WriteLine($"CashBookPanelViewModel: Selected item #{_selectedItem.Symbol} and sending message.");
                 //_messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
             }
         }
@@ -233,7 +233,7 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (e.UserState is not CashViewModel hvm)
                 {
-                    throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'CashViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                    throw new ArgumentException($"CashBookPanelViewModel: Expecting {nameof(e.UserState)} of type 'CashViewModel' but received '{e.UserState.GetType()}'", nameof(e));
                 }
 
                 switch ((ActionsThreadUI)e.ProgressPercentage)
@@ -254,7 +254,7 @@ namespace Panoptes.ViewModels.Panels
                         break;
 
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(e), "Unknown 'ProgressPercentage' passed.");
+                        throw new ArgumentOutOfRangeException(nameof(e), "CashBookPanelViewModel: Unknown 'ProgressPercentage' passed.");
                 }
             };
 
