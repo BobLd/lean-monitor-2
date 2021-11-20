@@ -30,7 +30,7 @@
 			<Label Content="Symbol "/>
 			<TextBox Text="{Binding Search}" Watermark="Search..."/>
 
-			<Label Content="    Account Ccy: "/>
+			<Label Content="    Account Ccy: " ToolTip.Tip="{Binding AccountCurrencySymbol}"/>
 			<Label Content="{Binding AccountCurrency}" ToolTip.Tip="{Binding AccountCurrencySymbol}"/>			
 		</StackPanel>
 	</Grid>
