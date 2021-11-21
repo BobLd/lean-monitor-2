@@ -207,10 +207,12 @@ namespace Panoptes.Model.MongoDB.Sessions
         public override void Dispose()
         {
             base.Dispose();
+            // We need to dispose the cluster to make sure connections are closed
+            _client?.Cluster.Dispose();
+
+            _client = null;
             _collection = null;
             _database = null;
-            _client?.Cluster.Dispose();
-            _client = null;
         }
     }
 }
