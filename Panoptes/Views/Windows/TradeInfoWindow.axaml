@@ -273,8 +273,11 @@
 
 		<Border Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Margin="0">
 			<!--Header="Events"-->
-			<DataGrid Items="{Binding Events}" IsReadOnly="True" AutoGenerateColumns="False" CanUserResizeColumns="True"
-					  AlternatingRowBackground="Transparent" RowBackground="Transparent" ToolTip.Tip="Order events.">
+			<DataGrid Items="{Binding Events}" IsReadOnly="True" GridLinesVisibility="None"
+					  HeadersVisibility="Column" AutoGenerateColumns="False"
+					  CanUserResizeColumns="True" CanUserReorderColumns="True"
+					  AlternatingRowBackground="Transparent" RowBackground="Transparent"
+					  ToolTip.Tip="Order events.">
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}"/>
 					<DataGridTextColumn Header="Time (UTC)" Binding="{Binding UtcTime, Mode=OneWay}"/>
