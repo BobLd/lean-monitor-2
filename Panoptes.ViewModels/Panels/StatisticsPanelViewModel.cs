@@ -38,6 +38,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
+                Debug.WriteLine("StatisticsPanelViewModel: Clear");
                 // _resultsQueue ??
                 Statistics.Clear(); // Need to do that from UI thread
             }
@@ -50,6 +51,7 @@ namespace Panoptes.ViewModels.Panels
 
         private void ParseResult(Result result)
         {
+            if (result.Statistics == null || result.Statistics.Count == 0) return;
             Statistics = new ObservableCollection<StatisticViewModel>(result.Statistics.Select(s => new StatisticViewModel
             {
                 Name = s.Key,

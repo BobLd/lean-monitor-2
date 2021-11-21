@@ -99,6 +99,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
+                Debug.WriteLine("RuntimeStatisticsPanelViewModel: Clear");
                 // _resultsQueue ??
                 _statisticsBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }

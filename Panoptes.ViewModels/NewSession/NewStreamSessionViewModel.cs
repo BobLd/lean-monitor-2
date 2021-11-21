@@ -2,7 +2,9 @@
 using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.Stream;
+using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,17 +30,33 @@ namespace Panoptes.ViewModels.NewSession
             });
         }
 
-        private Task OpenAsync(CancellationToken cancellationToken)
+        private async Task OpenAsync(CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
+            try
             {
-                _sessionService.OpenAsync(new StreamSessionParameters
+                await _sessionService.OpenAsync(new StreamSessionParameters
                 {
                     CloseAfterCompleted = true,
                     Host = Host,
                     Port = int.Parse(Port)
-                }, cancellationToken);
-            }, cancellationToken);
+                }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ocEx)
+            {
+                Debug.WriteLine($"NewStreamSessionViewModel.OpenAsync: Operation was canceled.\n{ocEx}");
+                //Error = ocEx.ToString();
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    Error = ex.InnerException.ToString();
+                }
+                else
+                {
+                    Error = ex.ToString();
+                }
+            }
         }
 
         private bool CanOpen()
@@ -102,6 +120,17 @@ namespace Panoptes.ViewModels.NewSession
             }
         }
 
-        public string Error { get; }
+        private string _error;
+        public string Error
+        {
+            get { return _error; }
+
+            set
+            {
+                if (_error == value) return;
+                _error = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

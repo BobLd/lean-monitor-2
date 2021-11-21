@@ -170,7 +170,7 @@ namespace Panoptes.Model.Sessions.File
 
         public void Dispose()
         {
-            _watcher.Dispose();
+            _watcher?.Dispose();
         }
 
         public SessionState State

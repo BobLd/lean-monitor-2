@@ -85,6 +85,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
+                Debug.WriteLine("ProfitLossPanelViewModel: Clear");
                 _pnlBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)

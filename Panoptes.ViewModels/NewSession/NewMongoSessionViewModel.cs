@@ -4,6 +4,7 @@ using Panoptes.Model.MongoDB.Sessions;
 using Panoptes.Model.Sessions;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Threading;
@@ -66,7 +67,8 @@ namespace Panoptes.ViewModels.NewSession
                 }
                 catch (OperationCanceledException ocEx)
                 {
-                    Error = ocEx.ToString();
+                    Debug.WriteLine($"NewMongoSessionViewModel.OpenAsync: Operation was canceled.\n{ocEx}");
+                    //Error = ocEx.ToString();
                 }
                 catch (TimeoutException toEx)
                 {

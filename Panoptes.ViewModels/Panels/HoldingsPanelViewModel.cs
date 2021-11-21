@@ -269,6 +269,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
+                Debug.WriteLine("HoldingsPanelViewModel: Clear");
                 _holdingsDic.Clear();
                  // _resultsQueue ??
                 _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);

@@ -306,6 +306,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
+                Debug.WriteLine("CashBookPanelViewModel: Clear");
                 _cashesDic.Clear();
                 _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }

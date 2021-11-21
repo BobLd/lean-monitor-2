@@ -29,16 +29,20 @@
 		</Grid.RowDefinitions>
 
 		<Label Grid.Row="0">Host</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding Host}"/>
+		<TextBox Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding Host}"
+				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<Label Grid.Row="1" Grid.Column="0">Port</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="1" Grid.Column="1" Text="{Binding Port}"/>
+		<TextBox Margin="0,0,0,4" Grid.Row="1" Grid.Column="1" Text="{Binding Port}"
+				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<Label Grid.Row="2" Grid.Column="0">User Name</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="2" Grid.Column="1" Text="{Binding UserName}"/>
+		<TextBox Margin="0,0,0,4" Grid.Row="2" Grid.Column="1" Text="{Binding UserName}"
+				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<Label Grid.Row="3" Grid.Column="0">Password</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="3" Grid.Column="1" PasswordChar="*" Text="{Binding Password}"/>
+		<TextBox Margin="0,0,0,4" Grid.Row="3" Grid.Column="1" PasswordChar="*" Text="{Binding Password}"
+				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<ProgressBar Grid.Row="5" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
 					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>

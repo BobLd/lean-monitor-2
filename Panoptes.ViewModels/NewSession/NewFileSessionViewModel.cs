@@ -4,6 +4,7 @@ using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -50,6 +51,11 @@ namespace Panoptes.ViewModels.NewSession
             {
                 Error = null;
                 await _sessionService.OpenAsync(_fileSessionParameters, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ocEx)
+            {
+                Debug.WriteLine($"NewFileSessionViewModel.OpenAsync: Operation was canceled.\n{ocEx}");
+                //Error = ocEx.ToString();
             }
             catch (Exception ex)
             {

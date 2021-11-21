@@ -28,13 +28,16 @@
 		</Grid.RowDefinitions>
 
 		<Label Grid.Row="0">Host</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding Host}"/>
+		<TextBox Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding Host}"
+				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<Label Grid.Row="1" Grid.Column="0">Port</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="1" Grid.Column="1" Text="{Binding Port}"/>
+		<TextBox Margin="0,0,0,4" Grid.Row="1" Grid.Column="1" Text="{Binding Port}"
+				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">
-			<TextBlock TextWrapping="Wrap">NOT RECOMMENDED - Configure LEAN to use the 'StreamingMessageHandler' implementation. You can start this program to connect automatically to localhost by passing the port as a commandline parameter.</TextBlock>
+			<TextBlock TextWrapping="Wrap">NOT RECOMMENDED - Will block the Lean engine and this app will become the bottleneck.
+Configure LEAN to use the 'StreamingMessageHandler' implementation. You can start this program to connect automatically to localhost by passing the port as a commandline parameter.</TextBlock>
 		</Label>
 	</Grid>
 </UserControl>

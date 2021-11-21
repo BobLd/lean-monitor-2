@@ -41,7 +41,8 @@
 			<RowDefinition Height="36"></RowDefinition>
 		</Grid.RowDefinitions>
 
-		<TabControl Margin="5" Items="{Binding NewSessionViewModels}" SelectedItem="{Binding SelectedViewModel}">
+		<TabControl Margin="5" Items="{Binding NewSessionViewModels}" SelectedItem="{Binding SelectedViewModel}"
+					IsEnabled="{Binding IsAnyRunning, Converter={StaticResource InverseBooleanConverter}}">
 			<TabControl.ItemTemplate>
 				<DataTemplate>
 					<TextBlock Text="{Binding Header}"/>

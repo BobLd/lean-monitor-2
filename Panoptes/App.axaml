@@ -58,6 +58,7 @@
 			<converters:StatusBarColorConverter x:Key="StatusBarColorConverter"/>
 			<converters:LogPanelLogoTypeConverter x:Key="LogPanelLogoTypeConverter"/>
 			<converters:PositiveNegativeNumberConverter x:Key="PositiveNegativeNumberConverter"/>
+			<converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
 		</ResourceDictionary>
 	</Application.Resources>
 </Application>
