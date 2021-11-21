@@ -38,6 +38,9 @@ namespace Panoptes.Model.Sessions.Stream
         {
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
+            // Allow proper decoding of orders.
+            _options = DefaultJsonSerializerOptions.Default;
+
             _sessionHandler = sessionHandler;
             _resultConverter = resultConverter;
 
@@ -55,12 +58,10 @@ namespace Panoptes.Model.Sessions.Stream
 
         public virtual void Initialize()
         {
-            // Allow proper decoding of orders.
-            _options = DefaultJsonSerializerOptions.Default;
             Subscribe();
         }
 
-        public Task InitializeAsync(CancellationToken cancellationToken)
+        public virtual Task InitializeAsync(CancellationToken cancellationToken)
         {
             return Task.Run(() => Initialize(), cancellationToken);
         }

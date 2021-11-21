@@ -293,6 +293,11 @@ namespace Panoptes
             try
             {
                 _session = session;
+                if (session is ISessionHistory sessionHistory)
+                {
+                    await sessionHistory.LoadRecentData().ConfigureAwait(false);
+                }
+
                 await _session.InitializeAsync(cancellationToken).ConfigureAwait(false);
                 // Notify the app of the new session
                 _messenger.Send(new SessionOpenedMessage());
