@@ -97,6 +97,9 @@
 			</Grid.ColumnDefinitions>
 
 			<panels:RuntimeStatisticsPanelControl DataContext="{Binding RuntimeStatisticsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+			<panels:StatisticsPanelControl DataContext="{Binding StatisticsPane}" Grid.Row="1" Grid.RowSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
 			<TabControl Padding="0" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" TabStripPlacement="Bottom">
 				<TabItem Header="Orders">
 					<panels:TradesPanelControl DataContext="{Binding TradesPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
@@ -108,12 +111,7 @@
 					<panels:CashBookPanelControl DataContext="{Binding CashBookPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
 			</TabControl>
-			
 
-			<!--
-			<panels:StatisticsPanelControl DataContext="{Binding StatisticsPane}" Grid.Row="1" HorizontalAlignment="Stretch" Height="Auto" VerticalAlignment="Stretch" Width="Auto"/>
-			-->
-			
 			<panels:ProfitLossPanelControl DataContext="{Binding ProfitLossPane}" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
 			<panels:LogPanelControl DataContext="{Binding LogPane}" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
