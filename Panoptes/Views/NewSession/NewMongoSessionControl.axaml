@@ -23,6 +23,7 @@
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="5"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
@@ -38,10 +39,10 @@
 
 		<Label Grid.Row="3" Grid.Column="0">Password</Label>
 		<TextBox Margin="0,0,0,4" Grid.Row="3" Grid.Column="1" PasswordChar="*" Text="{Binding Password}"/>
-		<!--<PasswordBox Margin="0,0,0,4" Grid.Row="3" Grid.Column="1" PasswordChar="*" PasswordChanged="PasswordChanged"/>-->
 
-		<Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">
-			<TextBlock TextWrapping="Wrap"></TextBlock>
-		</Label>
+		<ProgressBar Grid.Row="5" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>
+
+		<TextBlock Grid.Row="6" Grid.ColumnSpan="3" Text="{Binding Error}"/>
 	</Grid>
 </UserControl>

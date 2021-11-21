@@ -12,6 +12,19 @@ namespace Panoptes.ViewModels.Panels
 {
     public sealed class ProfitLossPanelViewModel : ToolPaneViewModel
     {
+        private enum ActionsThreadUI : byte
+        {
+            /// <summary>
+            /// Add profit loss.
+            /// </summary>
+            ProfitLossAdd = 0,
+
+            /// <summary>
+            /// Clear observable collections.
+            /// </summary>
+            Clear = 1,
+        }
+
         private readonly Dictionary<DateTime, ProfitLossItemViewModel> _profitLossDico = new Dictionary<DateTime, ProfitLossItemViewModel>();
 
         private readonly BackgroundWorker _pnlBgWorker;
@@ -45,18 +58,22 @@ namespace Panoptes.ViewModels.Panels
             _pnlBgWorker.DoWork += PnlQueueReader;
             _pnlBgWorker.ProgressChanged += (s, e) =>
             {
-                switch (e.ProgressPercentage)
+                switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
-                    case 0:
+                    case ActionsThreadUI.ProfitLossAdd:
                         if (e.UserState is not ProfitLossItemViewModel item)
                         {
-                            throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'ProfitLossItemViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                            throw new ArgumentException($"ProfitLossPanelViewModel: Expecting {nameof(e.UserState)} of type 'ProfitLossItemViewModel' but received '{e.UserState.GetType()}'", nameof(e));
                         }
                         ProfitLoss.Add(item);
                         break;
 
+                    case ActionsThreadUI.Clear:
+                        ProfitLoss.Clear();
+                        break;
+
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(e), "Unknown 'ProgressPercentage' passed.");
+                        throw new ArgumentOutOfRangeException(nameof(e), "ProfitLossPanelViewModel: Unknown 'ProgressPercentage' passed.");
                 }
             };
 
@@ -68,7 +85,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                ProfitLoss.Clear(); // Need to do that in UI thread
+                _pnlBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
@@ -91,7 +108,7 @@ namespace Panoptes.ViewModels.Panels
                     else
                     {
                         _profitLossDico[item.DateTime] = item;
-                        _pnlBgWorker.ReportProgress(0, item);
+                        _pnlBgWorker.ReportProgress((int)ActionsThreadUI.ProfitLossAdd, item);
                     }
                 }
             }

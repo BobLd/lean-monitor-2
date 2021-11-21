@@ -26,12 +26,17 @@ namespace Panoptes.ViewModels.Panels
             /// <summary>
             /// Finish the cash update and add it.
             /// </summary>
-            CashFinishUpdateAdd = 1,
+            CashAdd = 1,
 
             /// <summary>
             /// Remove cash from history.
             /// </summary>
             CashRemove = 2,
+
+            /// <summary>
+            /// Clear observable collections.
+            /// </summary>
+            Clear = 3
         }
 
         private readonly ConcurrentDictionary<string, CashViewModel> _cashesDic = new ConcurrentDictionary<string, CashViewModel>();
@@ -187,7 +192,7 @@ namespace Panoptes.ViewModels.Panels
 
                 foreach (var add in Add)
                 {
-                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.CashFinishUpdateAdd, add);
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.CashAdd, add);
                 }
 
                 Debug.WriteLine($"CashBookPanelViewModel: Done applying '{search}' filters!");
@@ -231,26 +236,33 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {
-                if (e.UserState is not CashViewModel hvm)
-                {
-                    throw new ArgumentException($"CashBookPanelViewModel: Expecting {nameof(e.UserState)} of type 'CashViewModel' but received '{e.UserState.GetType()}'", nameof(e));
-                }
-
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
                     case ActionsThreadUI.CashFinishUpdate:
                         //hvm.FinishUpdateInThreadUI();
                         break;
 
-                    case ActionsThreadUI.CashFinishUpdateAdd:
+                    case ActionsThreadUI.CashAdd:
+                        if (e.UserState is not CashViewModel add)
+                        {
+                            throw new ArgumentException($"CashBookPanelViewModel: Expecting {nameof(e.UserState)} of type 'CashViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
                         //hvm.FinishUpdateInThreadUI();
 
                         // Could optimise the below, check don't need to be done in UI thread
-                        AddCash(hvm);
+                        AddCash(add);
                         break;
 
                     case ActionsThreadUI.CashRemove:
-                        _currentCashes.Remove(hvm);
+                        if (e.UserState is not CashViewModel remove)
+                        {
+                            throw new ArgumentException($"CashBookPanelViewModel: Expecting {nameof(e.UserState)} of type 'CashViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        CurrentCashes.Remove(remove);
+                        break;
+
+                    case ActionsThreadUI.Clear:
+                        CurrentCashes.Clear();
                         break;
 
                     default:
@@ -295,7 +307,7 @@ namespace Panoptes.ViewModels.Panels
             try
             {
                 _cashesDic.Clear();
-                CurrentCashes.Clear(); // need to do that from ui thread
+                _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
@@ -329,7 +341,7 @@ namespace Panoptes.ViewModels.Panels
                         // Create new cash
                         hvm = new CashViewModel(kvp.Value);
                         _cashesDic.TryAdd(kvp.Key, hvm);
-                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.CashFinishUpdateAdd, hvm);
+                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.CashAdd, hvm);
                     }
                 }
             }

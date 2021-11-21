@@ -23,27 +23,12 @@ namespace Panoptes.Model.MongoDB.Sessions
         public MongoSession(ISessionHandler sessionHandler, IResultConverter resultConverter, MongoSessionParameters parameters)
             : base(sessionHandler, resultConverter, parameters)
         {
+            // This happen in UI thread, do not put blocking code in here
             _client = new MongoClient(new MongoClientSettings
             {
                 Credential = MongoCredential.CreateCredential(null, parameters.UserName, parameters.Password),
                 Server = new MongoServerAddress(_host, _port)
             });
-
-            try
-            {
-                // Check if password is correct
-                var names = _client.ListDatabaseNames();
-            }
-            catch (TimeoutException toEx)
-            {
-                // timeout
-                throw;
-            }
-            catch (MongoAuthenticationException authEx)
-            {
-                // wrong user/password
-                throw;
-            }
         }
 
         public override void Initialize()
@@ -58,6 +43,8 @@ namespace Panoptes.Model.MongoDB.Sessions
 
         public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
+            await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
+
             _database = _client.GetDatabase(DatabaseName); // backtest or live
             _collection = _database.GetCollection<MongoDbPacket>(CollectionName); // algo name / id
 
@@ -164,14 +151,16 @@ namespace Panoptes.Model.MongoDB.Sessions
             catch (MongoAuthenticationException authEx)
             {
                 // wrong user/password
+                throw new ArgumentOutOfRangeException("MongoSession.LoadRecentData: Wrong user/password", authEx);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ocex)
             {
                 // Cancel token requested
+                throw new OperationCanceledException("MongoSession.LoadRecentData", ocex);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception("MongoSession.LoadRecentData", ex);
             }
         }
 
@@ -197,14 +186,16 @@ namespace Panoptes.Model.MongoDB.Sessions
             catch (MongoAuthenticationException authEx)
             {
                 // wrong user/password
+                throw new ArgumentOutOfRangeException("MongoSession.EventsListener: Wrong user/password.", authEx);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ocex)
             {
                 // Cancel token requested
+                throw new OperationCanceledException($"MongoSession.EventsListener: {ocex.Message}", ocex);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception($"MongoSession.EventsListener: {ex.Message}", ex);
             }
             finally
             {

@@ -2,6 +2,7 @@
 using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.MongoDB.Sessions;
 using Panoptes.Model.Sessions;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Security;
@@ -20,6 +21,7 @@ namespace Panoptes.ViewModels.NewSession
         {
             _sessionService = sessionService;
             OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
+            OpenCommandAsync.PropertyChanged += OpenCommandAsync_PropertyChanged;
 
             CancelCommand = new RelayCommand(() =>
             {
@@ -30,35 +32,69 @@ namespace Panoptes.ViewModels.NewSession
             });
         }
 
-        private Task OpenAsync(CancellationToken cancellationToken)
+        private void OpenCommandAsync_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            return Task.Run(() =>
-            {
-                var secureString = new SecureString();
-                foreach (var c in Password)
-                {
-                    secureString.AppendChar(c);
-                }
-                Password = string.Empty;
+            OpenCommandAsync.NotifyCanExecuteChanged();
+        }
 
-                // Need to open async
-                _sessionService.Open(new MongoSessionParameters
+        private async Task OpenAsync(CancellationToken cancellationToken)
+        {
+            await Task.Run(async () =>
+            {
+                try
                 {
-                    CloseAfterCompleted = true,
-                    Host = Host,
-                    Port = int.Parse(Port),
-                    UserName = UserName,
-                    Password = secureString
-                }, cancellationToken);
-            }, cancellationToken);
+                    Error = null;
+                    var secureString = new SecureString();
+                    foreach (var c in Password)
+                    {
+                        secureString.AppendChar(c);
+                    }
+                    Password = string.Empty;
+
+                    // Need to open async
+                    await _sessionService.OpenAsync(new MongoSessionParameters
+                    {
+                        CloseAfterCompleted = true,
+                        Host = Host,
+                        Port = int.Parse(Port),
+                        UserName = UserName,
+                        Password = secureString
+                    }, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException ocEx)
+                {
+                    Error = ocEx.ToString();
+                }
+                catch (TimeoutException toEx)
+                {
+                    Error = toEx.ToString();
+                }
+                catch (Exception ex)
+                {
+                    if (ex.InnerException != null)
+                    {
+                        Error = ex.InnerException.ToString();
+                    }
+                    else
+                    {
+                        Error = ex.ToString();
+                    }
+                }
+            }, cancellationToken).ConfigureAwait(false);
         }
 
         private bool CanOpen()
         {
+            if (OpenCommandAsync.IsRunning)
+            {
+                return false;
+            }
+
             var fieldsToValidate = new[]
             {
                 nameof(Host),
                 nameof(Port),
+                nameof(UserName),
             };
 
             return fieldsToValidate.All(field => string.IsNullOrEmpty(this[field]));
@@ -93,7 +129,6 @@ namespace Panoptes.ViewModels.NewSession
 #else
         private string _username = "";
 #endif
-
 
         public string UserName
         {
@@ -134,6 +169,17 @@ namespace Panoptes.ViewModels.NewSession
             }
         }
 
-        public string Error { get; }
+        private string _error;
+        public string Error
+        {
+            get { return _error; }
+
+            set
+            {
+                if (_error == value) return;
+                _error = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

@@ -39,6 +39,11 @@ namespace Panoptes.ViewModels.Panels
             /// Add order to history.
             /// </summary>
             OrderAddHistory = 3,
+
+            /// <summary>
+            /// Clear observable collections.
+            /// </summary>
+            Clear = 4
         }
 
         private readonly ConcurrentDictionary<int, List<OrderEvent>> _orderEventsDic = new ConcurrentDictionary<int, List<OrderEvent>>();
@@ -241,31 +246,47 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {
-                if (e.UserState is not OrderViewModel ovm)
-                {
-                    throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
-                }
-
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
                     case ActionsThreadUI.OrderFinishUpdate:
-                        ovm.FinaliseUpdateInThreadUI();
+                        if (e.UserState is not OrderViewModel update)
+                        {
+                            throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        update.FinaliseUpdateInThreadUI();
                         break;
 
                     case ActionsThreadUI.OrderFinishUpdateAddAll:
-                        ovm.FinaliseUpdateInThreadUI();
+                        if (e.UserState is not OrderViewModel updateAdd)
+                        {
+                            throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        updateAdd.FinaliseUpdateInThreadUI();
 
                         // Could optimise the below, check don't need to be done in UI thread
-                        AddOrderToToday(ovm);
-                        AddOrderToHistory(ovm);
+                        AddOrderToToday(updateAdd);
+                        AddOrderToHistory(updateAdd);
                         break;
 
                     case ActionsThreadUI.OrderRemoveHistory:
-                        _ordersHistory.Remove(ovm);
+                        if (e.UserState is not OrderViewModel remove)
+                        {
+                            throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        _ordersHistory.Remove(remove);
                         break;
 
                     case ActionsThreadUI.OrderAddHistory:
-                        _ordersHistory.Add(ovm);
+                        if (e.UserState is not OrderViewModel add)
+                        {
+                            throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        _ordersHistory.Add(add);
+                        break;
+
+                    case ActionsThreadUI.Clear:
+                        OrdersToday.Clear();
+                        OrdersHistory.Clear();
                         break;
 
                     default:
@@ -309,11 +330,11 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Debug.WriteLine($"TradesPanelViewModel: Clear");
+                Debug.WriteLine("TradesPanelViewModel: Clear");
+                // _resultsQueue ??
                 _orderEventsDic.Clear();
                 _ordersDic.Clear();
-                OrdersToday.Clear();    // Need to do that from UI thread
-                OrdersHistory.Clear();  // Need to do that from UI thread
+                _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {

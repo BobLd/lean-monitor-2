@@ -32,7 +32,7 @@ namespace Panoptes.ViewModels.NewSession
         {
             return Task.Run(() =>
             {
-                _sessionService.Open(new StreamSessionParameters
+                _sessionService.OpenAsync(new StreamSessionParameters
                 {
                     CloseAfterCompleted = true,
                     Host = Host,

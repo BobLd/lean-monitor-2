@@ -49,7 +49,7 @@ namespace Panoptes.ViewModels.NewSession
             try
             {
                 Error = null;
-                await _sessionService.Open(_fileSessionParameters, cancellationToken).ConfigureAwait(false);
+                await _sessionService.OpenAsync(_fileSessionParameters, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

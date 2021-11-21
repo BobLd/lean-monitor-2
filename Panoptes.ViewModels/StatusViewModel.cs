@@ -164,7 +164,7 @@ namespace Panoptes.ViewModels
         private void ProcessServerStatistics(IDictionary<string, string> serverStatistics)
         {
             if (serverStatistics == null || serverStatistics.Count == 0) return;
-            ServerStatistics = $"Server: [{string.Join(", ", serverStatistics.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}: {kvp.Value}"))}]";
+            ServerStatistics = $"Server: {string.Join(", ", serverStatistics.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}: {kvp.Value}"))}";
         }
     }
 }

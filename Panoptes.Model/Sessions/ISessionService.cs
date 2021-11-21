@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace Panoptes.Model.Sessions
@@ -19,9 +18,9 @@ namespace Panoptes.Model.Sessions
         bool CanSubscribe { get; }
 
         /// <summary>
-        /// Need to make Async
+        /// Open the session async.
         /// </summary>
         /// <param name="parameters"></param>
-        Task Open(ISessionParameters parameters, CancellationToken cancellationToken);
+        Task OpenAsync(ISessionParameters parameters, CancellationToken cancellationToken);
     }
 }

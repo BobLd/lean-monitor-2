@@ -215,7 +215,7 @@ namespace Panoptes
             }
         }
 
-        public async Task Open(ISessionParameters parameters, CancellationToken cancellationToken)
+        public async Task OpenAsync(ISessionParameters parameters, CancellationToken cancellationToken)
         {
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
@@ -305,6 +305,14 @@ namespace Panoptes
             catch (OperationCanceledException ocEx)
             {
                 Debug.WriteLine("SessionService.OpenSession: Operation canceled.");
+                _messenger.Send(new SessionOpenedMessage(ocEx.ToString()));
+                throw new OperationCanceledException("SessionService.OpenSession: Operation canceled.", ocEx);
+            }
+            catch (TimeoutException toEx)
+            {
+                Debug.WriteLine("SessionService.OpenSession: Operation timeout.");
+                _messenger.Send(new SessionOpenedMessage(toEx.ToString()));
+                throw new TimeoutException("SessionService.OpenSession: Operation timeout.", toEx);
             }
             catch (Exception e)
             {

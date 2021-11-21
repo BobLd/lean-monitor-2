@@ -38,6 +38,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
+                // _resultsQueue ??
                 Statistics.Clear(); // Need to do that from UI thread
             }
             catch (Exception ex)

@@ -12,6 +12,19 @@ namespace Panoptes.ViewModels.Panels
 {
     public sealed class RuntimeStatisticsPanelViewModel : ToolPaneViewModel
     {
+        private enum ActionsThreadUI : byte
+        {
+            /// <summary>
+            /// Add runtime statistics.
+            /// </summary>
+            RuntimeStatisticsAdd = 0,
+
+            /// <summary>
+            /// Clear observable collections.
+            /// </summary>
+            Clear = 1,
+        }
+
         private readonly Dictionary<string, string> _definitions = new Dictionary<string, string>()
         {
             { "Probabilistic Sharpe Ratio", "Probability that the observed Sharpe ratio is greater than or equal to\nthe benchmark Sharpe ratio.\nPSR(SR*) = Prob[SR* ≤ SR^], with:\n- SR^ = observed Sharpe ratio\n- SR* = benchmark Sharpe ratio\nSee https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1821643" },
@@ -42,24 +55,28 @@ namespace Panoptes.ViewModels.Panels
                 if (m.Value.Result.RuntimeStatistics == null || m.Value.Result.RuntimeStatistics.Count == 0) return;
                 r._statisticsQueue.Add(m.Value.Result.RuntimeStatistics);
             });
-            Messenger.Register<RuntimeStatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear()); // Do we want to do that in ui thread?
+            Messenger.Register<RuntimeStatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
             _statisticsBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
             _statisticsBgWorker.DoWork += StatisticsQueueReader;
             _statisticsBgWorker.ProgressChanged += (s, e) =>
             {
-                switch (e.ProgressPercentage)
+                switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
-                    case 0:
+                    case ActionsThreadUI.RuntimeStatisticsAdd:
                         if (e.UserState is not StatisticViewModel item)
                         {
-                            throw new ArgumentException($"Expecting {nameof(e.UserState)} of type 'StatisticViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                            throw new ArgumentException($"RuntimeStatisticsPanelViewModel: Expecting {nameof(e.UserState)} of type 'StatisticViewModel' but received '{e.UserState.GetType()}'", nameof(e));
                         }
                         Statistics.Add(item);
                         break;
 
+                    case ActionsThreadUI.Clear:
+                        Statistics.Clear();
+                        break;
+
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(e), "Unknown 'ProgressPercentage' passed.");
+                        throw new ArgumentOutOfRangeException(nameof(e), "RuntimeStatisticsPanelViewModel: Unknown 'ProgressPercentage' passed.");
                 }
             };
 
@@ -82,7 +99,8 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Statistics.Clear(); // Need to do that in UI thread
+                // _resultsQueue ??
+                _statisticsBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
@@ -102,7 +120,7 @@ namespace Panoptes.ViewModels.Panels
                     {
                         if (!_definitions.TryGetValue(stat.Key, out var definition))
                         {
-                            definition = "No known definition.";
+                            definition = $"No known definition for {stat.Key}.";
                         }
 
                         var vm = new StatisticViewModel
@@ -113,7 +131,7 @@ namespace Panoptes.ViewModels.Panels
                             Definition = definition
                         };
                         _statisticsDico.Add(stat.Key, vm);
-                        _statisticsBgWorker.ReportProgress(0, vm);
+                        _statisticsBgWorker.ReportProgress((int)ActionsThreadUI.RuntimeStatisticsAdd, vm);
                     }
                     else
                     {

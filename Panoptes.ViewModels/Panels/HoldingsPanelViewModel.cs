@@ -31,6 +31,11 @@ namespace Panoptes.ViewModels.Panels
             /// Remove holding from history.
             /// </summary>
             HoldingRemove = 2,
+
+            /// <summary>
+            /// Clear observable collections.
+            /// </summary>
+            Clear = 3
         }
 
         private readonly ConcurrentDictionary<string, HoldingViewModel> _holdingsDic = new ConcurrentDictionary<string, HoldingViewModel>();
@@ -194,11 +199,6 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {
-                if (e.UserState is not HoldingViewModel hvm)
-                {
-                    throw new ArgumentException($"HoldingsPanelViewModel: Expecting {nameof(e.UserState)} of type 'HoldingViewModel' but received '{e.UserState.GetType()}'", nameof(e));
-                }
-
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
                     case ActionsThreadUI.HoldingFinishUpdate:
@@ -206,14 +206,26 @@ namespace Panoptes.ViewModels.Panels
                         break;
 
                     case ActionsThreadUI.HoldingFinishUpdateAdd:
+                        if (e.UserState is not HoldingViewModel add)
+                        {
+                            throw new ArgumentException($"HoldingsPanelViewModel: Expecting {nameof(e.UserState)} of type 'HoldingViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
                         //hvm.FinishUpdateInThreadUI();
 
                         // Could optimise the below, check don't need to be done in UI thread
-                        AddHolding(hvm);
+                        AddHolding(add);
                         break;
 
                     case ActionsThreadUI.HoldingRemove:
-                        _currentHoldings.Remove(hvm);
+                        if (e.UserState is not HoldingViewModel remove)
+                        {
+                            throw new ArgumentException($"HoldingsPanelViewModel: Expecting {nameof(e.UserState)} of type 'HoldingViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        CurrentHoldings.Remove(remove);
+                        break;
+
+                    case ActionsThreadUI.Clear:
+                        CurrentHoldings.Clear();
                         break;
 
                     default:
@@ -258,7 +270,8 @@ namespace Panoptes.ViewModels.Panels
             try
             {
                 _holdingsDic.Clear();
-                CurrentHoldings.Clear(); // need to do that from ui thread
+                 // _resultsQueue ??
+                _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {

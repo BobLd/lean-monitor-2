@@ -10,6 +10,19 @@ namespace Panoptes.ViewModels.Panels
 {
     public sealed class LogPanelViewModel : ToolPaneViewModel
     {
+        private enum ActionsThreadUI : byte
+        {
+            /// <summary>
+            /// Add log entry.
+            /// </summary>
+            LogEntryAdd = 0,
+
+            /// <summary>
+            /// Clear observable collections.
+            /// </summary>
+            Clear = 1,
+        }
+
         private readonly BackgroundWorker _resultBgWorker;
 
         private readonly BlockingCollection<LogEntryReceivedMessage> _resultsQueue = new BlockingCollection<LogEntryReceivedMessage>();
@@ -36,11 +49,23 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {
-                if (e.UserState is not LogPanelItemViewModel lpivm)
+                switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
-                    throw new ArgumentException($"LogPanelViewModel: Expecting {nameof(e.UserState)} of type 'LogPanelItemViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                    case ActionsThreadUI.LogEntryAdd:
+                        if (e.UserState is not LogPanelItemViewModel lpivm)
+                        {
+                            throw new ArgumentException($"LogPanelViewModel: Expecting {nameof(e.UserState)} of type 'LogPanelItemViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                        }
+                        LogEntries.Add(lpivm);
+                        break;
+
+                    case ActionsThreadUI.Clear:
+                        LogEntries.Clear();
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(e), "LogPanelViewModel: Unknown 'ProgressPercentage' passed.");
                 }
-                LogEntries.Add(lpivm);
             };
 
             _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
@@ -51,7 +76,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                LogEntries.Clear(); // Need to do that from UI thread
+                _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
@@ -65,7 +90,7 @@ namespace Panoptes.ViewModels.Panels
             while (!_resultBgWorker.CancellationPending)
             {
                 var logEntryMessage = _resultsQueue.Take(); // Need cancelation token
-                _resultBgWorker.ReportProgress(0, new LogPanelItemViewModel
+                _resultBgWorker.ReportProgress((int)ActionsThreadUI.LogEntryAdd, new LogPanelItemViewModel
                 {
                     DateTime = logEntryMessage.DateTime,
                     Message = logEntryMessage.Message,
