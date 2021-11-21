@@ -45,11 +45,14 @@ namespace Panoptes.ViewModels.NewSession
                 {
                     Error = null;
                     var secureString = new SecureString();
-                    foreach (var c in Password)
+                    if (!string.IsNullOrEmpty(Password))
                     {
-                        secureString.AppendChar(c);
+                        foreach (var c in Password)
+                        {
+                            secureString.AppendChar(c);
+                        }
+                        Password = string.Empty;
                     }
-                    Password = string.Empty;
 
                     // Need to open async
                     await _sessionService.OpenAsync(new MongoSessionParameters

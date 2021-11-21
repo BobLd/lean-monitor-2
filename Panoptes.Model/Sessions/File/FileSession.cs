@@ -7,7 +7,7 @@ using PacketType = QuantConnect.Packets.PacketType;
 
 namespace Panoptes.Model.Sessions.File
 {
-    public sealed class FileSession : ISession, IDisposable
+    public sealed class FileSession : ISession
     {
         private readonly IResultSerializer _resultSerializer;
         private readonly ISessionHandler _sessionHandler;

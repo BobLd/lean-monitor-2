@@ -242,7 +242,7 @@ namespace Panoptes.ViewModels.Panels
             Messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, m) => await r.ApplyFiltersHistoryOrders(m.FromDate, m.ToDate).ConfigureAwait(false));
             Messenger.Register<TradesPanelViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
-            _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _resultBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {

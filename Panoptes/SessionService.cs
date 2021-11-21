@@ -202,6 +202,7 @@ namespace Panoptes
             try
             {
                 _session.Shutdown();
+                _session.Dispose();
             }
             catch (Exception e)
             {
@@ -295,7 +296,7 @@ namespace Panoptes
                 _session = session;
                 if (session is ISessionHistory sessionHistory)
                 {
-                    await sessionHistory.LoadRecentData().ConfigureAwait(false);
+                    await sessionHistory.LoadRecentData(cancellationToken).ConfigureAwait(false);
                 }
 
                 await _session.InitializeAsync(cancellationToken).ConfigureAwait(false);
@@ -306,12 +307,14 @@ namespace Panoptes
             {
                 Debug.WriteLine("SessionService.OpenSession: Operation canceled.");
                 _messenger.Send(new SessionOpenedMessage(ocEx.ToString()));
+                ShutdownSession();
                 throw new OperationCanceledException("SessionService.OpenSession: Operation canceled.", ocEx);
             }
             catch (TimeoutException toEx)
             {
                 Debug.WriteLine("SessionService.OpenSession: Operation timeout.");
                 _messenger.Send(new SessionOpenedMessage(toEx.ToString()));
+                ShutdownSession();
                 throw new TimeoutException("SessionService.OpenSession: Operation timeout.", toEx);
             }
             catch (Exception e)
@@ -319,6 +322,7 @@ namespace Panoptes
                 // Need log
                 Debug.WriteLine(e);
                 _messenger.Send(new SessionOpenedMessage(e.ToString()));
+                ShutdownSession();
                 throw new Exception("SessionService.OpenSession: Exception occured while opening the session", e);
             }
         }

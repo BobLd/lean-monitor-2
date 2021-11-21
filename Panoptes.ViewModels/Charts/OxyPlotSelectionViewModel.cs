@@ -452,7 +452,7 @@ namespace Panoptes.ViewModels.Charts
             Messenger.Register<OxyPlotSelectionViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
             Messenger.Register<OxyPlotSelectionViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
 
-            _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _resultBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {

@@ -45,7 +45,7 @@ namespace Panoptes.ViewModels.Panels
             Messenger.Register<LogPanelViewModel, LogEntryReceivedMessage>(this, (r, m) => r._resultsQueue.Add(m));
             Messenger.Register<LogPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
-            _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _resultBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {

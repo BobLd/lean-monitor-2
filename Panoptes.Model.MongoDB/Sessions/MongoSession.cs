@@ -13,7 +13,7 @@ namespace Panoptes.Model.MongoDB.Sessions
 {
     public sealed class MongoSession : BaseStreamSession, ISessionHistory
     {
-        private readonly MongoClient _client;
+        private MongoClient _client;
         private IMongoDatabase _database;
         private IMongoCollection<MongoDbPacket> _collection;
 
@@ -27,7 +27,7 @@ namespace Panoptes.Model.MongoDB.Sessions
             _client = new MongoClient(new MongoClientSettings
             {
                 Credential = MongoCredential.CreateCredential(null, parameters.UserName, parameters.Password),
-                Server = new MongoServerAddress(_host, _port)
+                Server = new MongoServerAddress(_host, _port),
             });
         }
 
@@ -43,8 +43,9 @@ namespace Panoptes.Model.MongoDB.Sessions
 
         public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
+#if DEBUG
             await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
-
+#endif
             _database = _client.GetDatabase(DatabaseName); // backtest or live
             _collection = _database.GetCollection<MongoDbPacket>(CollectionName); // algo name / id
 
@@ -58,7 +59,7 @@ namespace Panoptes.Model.MongoDB.Sessions
             return cashOk && holdingsOk;
         }
 
-        public async Task LoadRecentData()
+        public async Task LoadRecentData(CancellationToken cancellationToken)
         {
             try
             {
@@ -72,9 +73,9 @@ namespace Panoptes.Model.MongoDB.Sessions
 
                 // Status
                 var statusFilter = builder.Eq(x => x.Type, "AlgorithmStatus"); // builder.And(dateFilter, builder.Eq(x => x.Type, "AlgorithmStatus"));
-                using (IAsyncCursor<MongoDbPacket> cursor = await collection.FindAsync(statusFilter, new FindOptions<MongoDbPacket> { BatchSize = 1, NoCursorTimeout = false, Sort = sort, Limit = 1 }).ConfigureAwait(false))
+                using (IAsyncCursor<MongoDbPacket> cursor = await collection.FindAsync(statusFilter, new FindOptions<MongoDbPacket> { BatchSize = 1, NoCursorTimeout = false, Sort = sort, Limit = 1 }, cancellationToken).ConfigureAwait(false))
                 {
-                    while (await cursor.MoveNextAsync().ConfigureAwait(false))
+                    while (await cursor.MoveNextAsync(cancellationToken).ConfigureAwait(false))
                     {
                         foreach (var packet in cursor.Current)
                         {
@@ -90,9 +91,9 @@ namespace Panoptes.Model.MongoDB.Sessions
 
                 LiveResultPacket liveResultPacket = null;
                 bool liveResultContinue = true;
-                using (IAsyncCursor<MongoDbPacket> cursor = await collection.FindAsync(liveResultFilter, options).ConfigureAwait(false))
+                using (IAsyncCursor<MongoDbPacket> cursor = await collection.FindAsync(liveResultFilter, options, cancellationToken).ConfigureAwait(false))
                 {
-                    while (await cursor.MoveNextAsync().ConfigureAwait(false))
+                    while (await cursor.MoveNextAsync(cancellationToken).ConfigureAwait(false))
                     {
                         if (!liveResultContinue) break;
 
@@ -145,7 +146,7 @@ namespace Panoptes.Model.MongoDB.Sessions
 
                 if (liveResultFilter != null)
                 {
-                    _packetQueue.Add(liveResultPacket);
+                    _packetQueue.Add(liveResultPacket, cancellationToken);
                 }
             }
             catch (MongoAuthenticationException authEx)
@@ -201,6 +202,15 @@ namespace Panoptes.Model.MongoDB.Sessions
             {
                 _resetEvent.Set();
             }
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            _collection = null;
+            _database = null;
+            _client?.Cluster.Dispose();
+            _client = null;
         }
     }
 }

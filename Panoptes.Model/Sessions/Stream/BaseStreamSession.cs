@@ -11,13 +11,13 @@ using PacketType = QuantConnect.Packets.PacketType;
 
 namespace Panoptes.Model.Sessions.Stream
 {
-    public abstract class BaseStreamSession : ISession, IDisposable
+    public abstract class BaseStreamSession : ISession
     {
         protected readonly ISessionHandler _sessionHandler;
         protected readonly IResultConverter _resultConverter;
 
-        protected readonly BackgroundWorker _eternalQueueListener = new BackgroundWorker();
-        protected readonly BackgroundWorker _queueReader = new BackgroundWorker();
+        protected readonly BackgroundWorker _eternalQueueListener = new BackgroundWorker() { WorkerSupportsCancellation = true };
+        protected readonly BackgroundWorker _queueReader = new BackgroundWorker() { WorkerSupportsCancellation = true };
         protected CancellationTokenSource _cts;
 
         protected readonly BlockingCollection<Packet> _packetQueue = new BlockingCollection<Packet>();
@@ -80,11 +80,11 @@ namespace Panoptes.Model.Sessions.Stream
                     _cts = new CancellationTokenSource();
 
                     // Configure the worker threads
-                    _eternalQueueListener.WorkerSupportsCancellation = true;
+                    //_eternalQueueListener.WorkerSupportsCancellation = true;
                     _eternalQueueListener.DoWork += EventsListener;
                     _eternalQueueListener.RunWorkerAsync();
 
-                    _queueReader.WorkerSupportsCancellation = true;
+                    //_queueReader.WorkerSupportsCancellation = true;
                     _queueReader.DoWork += QueueReader;
                     _queueReader.RunWorkerAsync();
 
@@ -105,20 +105,19 @@ namespace Panoptes.Model.Sessions.Stream
         {
             try
             {
-                if (_eternalQueueListener != null) // check if working?
+                if (_eternalQueueListener != null) // should never be the case - check if working?
                 {
                     _eternalQueueListener.CancelAsync();
                     _eternalQueueListener.DoWork -= EventsListener;
                 }
 
-                if (_queueReader != null) // check if working?
+                if (_queueReader != null) // should never be the case - check if working?
                 {
                     _queueReader.CancelAsync();
                     _queueReader.DoWork -= QueueReader;
                 }
 
                 _cts?.Cancel();
-
                 State = SessionState.Unsubscribed;
             }
             catch (Exception e)
@@ -127,6 +126,7 @@ namespace Panoptes.Model.Sessions.Stream
             }
             finally
             {
+                _cts?.Dispose();
                 _cts = null;
             }
         }
@@ -305,11 +305,11 @@ namespace Panoptes.Model.Sessions.Stream
         }
         #endregion
 
-        public void Dispose()
+        public virtual void Dispose()
         {
+            _cts?.Dispose();
             _eternalQueueListener.Dispose();
             _queueReader.Dispose();
-            _cts.Dispose();
             _packetQueue.Dispose();
             GC.SuppressFinalize(this);
         }

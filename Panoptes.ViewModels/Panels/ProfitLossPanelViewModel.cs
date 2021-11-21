@@ -54,7 +54,7 @@ namespace Panoptes.ViewModels.Panels
             });
             Messenger.Register<ProfitLossPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
-            _pnlBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _pnlBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _pnlBgWorker.DoWork += PnlQueueReader;
             _pnlBgWorker.ProgressChanged += (s, e) =>
             {

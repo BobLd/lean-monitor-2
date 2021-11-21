@@ -195,7 +195,7 @@ namespace Panoptes.ViewModels.Panels
             Messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
             Messenger.Register<HoldingsPanelViewModel, HoldingFilterMessage>(this, async (r, m) => await r.ApplyFiltersHoldings(m.Search, m.CancellationToken).ConfigureAwait(false));
 
-            _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _resultBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {

@@ -30,8 +30,8 @@ namespace Panoptes.Model.Mock
         private AlgorithmNodePacket _job;
         private OrderEventJsonConverter _orderEventJsonConverter;
 
-        protected readonly BackgroundWorker _eternalQueueListener = new BackgroundWorker();
-        protected readonly BackgroundWorker _queueReader = new BackgroundWorker();
+        protected readonly BackgroundWorker _eternalQueueListener = new BackgroundWorker() { WorkerSupportsCancellation = true };
+        protected readonly BackgroundWorker _queueReader = new BackgroundWorker() { WorkerSupportsCancellation = true };
         protected CancellationTokenSource _cts;
 
         protected readonly BlockingCollection<Packet> _packetQueue = new BlockingCollection<Packet>();
@@ -66,11 +66,11 @@ namespace Panoptes.Model.Mock
             _cts = new CancellationTokenSource();
 
             // Configure the worker threads
-            _eternalQueueListener.WorkerSupportsCancellation = true;
+            //_eternalQueueListener.WorkerSupportsCancellation = true;
             _eternalQueueListener.DoWork += EventsListener;
             _eternalQueueListener.RunWorkerAsync();
 
-            _queueReader.WorkerSupportsCancellation = true;
+            //_queueReader.WorkerSupportsCancellation = true;
             _queueReader.DoWork += QueueReader;
             _queueReader.RunWorkerAsync();
         }

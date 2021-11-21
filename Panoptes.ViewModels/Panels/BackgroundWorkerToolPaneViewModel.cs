@@ -13,7 +13,7 @@ namespace Panoptes.ViewModels.Panels
             : base(messenger)
         {
             Name = name;
-            _backgroundWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _backgroundWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _backgroundWorker.DoWork += DoWork;
             _backgroundWorker.ProgressChanged += ProgressChanged;
 

@@ -232,7 +232,7 @@ namespace Panoptes.ViewModels.Panels
             Messenger.Register<CashBookPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
             Messenger.Register<CashBookPanelViewModel, CashFilterMessage>(this, async (r, m) => await r.ApplyFiltersCashes(m.Search, m.CancellationToken).ConfigureAwait(false));
 
-            _resultBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _resultBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {

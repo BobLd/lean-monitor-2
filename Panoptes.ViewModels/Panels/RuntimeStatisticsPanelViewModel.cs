@@ -57,7 +57,7 @@ namespace Panoptes.ViewModels.Panels
             });
             Messenger.Register<RuntimeStatisticsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
-            _statisticsBgWorker = new BackgroundWorker() { WorkerReportsProgress = true };
+            _statisticsBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
             _statisticsBgWorker.DoWork += StatisticsQueueReader;
             _statisticsBgWorker.ProgressChanged += (s, e) =>
             {
