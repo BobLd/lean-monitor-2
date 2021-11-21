@@ -34,8 +34,8 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<StackPanel Grid.Row="0" Orientation="Horizontal">
-			<Menu>
+		<DockPanel Grid.Row="0">
+			<Menu DockPanel.Dock="Left">
 				<MenuItem Header="_File">
 					<MenuItem Header="_Open..." Command="{Binding OpenSessionCommand}"/> <!--HotKey="Ctrl+O"-->
 					<Separator/>
@@ -77,12 +77,12 @@
 					<MenuItem Header="_About..." Click="ShowAboutButton_OnClick"/>
 				</MenuItem>
 			</Menu>
-			
-			<Label Content="UTC:"/>
-			<Label Content="{Binding CurrentDateTimeUtc}" HorizontalAlignment="Right"/>
-			<Label Content=" Local:"/>
-			<Label Content="{Binding CurrentDateTimeLocal}" HorizontalAlignment="Right"/>
-		</StackPanel>
+
+			<Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeLocal}" HorizontalAlignment="Right" ToolTip.Tip="Local time."/>
+			<Label DockPanel.Dock="Right" Content=" Local:" HorizontalAlignment="Right" ToolTip.Tip="Local time."/>
+			<Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeUtc}" HorizontalAlignment="Right" ToolTip.Tip="UTC time."/>
+			<Label DockPanel.Dock="Right" Content="UTC:" HorizontalAlignment="Right" ToolTip.Tip="UTC time."/>
+		</DockPanel>
 
 		<Grid Grid.Row="1">
 			<Grid.RowDefinitions>
@@ -127,11 +127,18 @@
 				<StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10" VerticalAlignment="Stretch">
 					<TextBlock Text="{Binding ProjectName}" VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding SessionName}" VerticalAlignment="Center"/>
-					<TextBlock Text="{Binding AlgorithmStatus}" VerticalAlignment="Center" Width="100"/>
+					<!--<TextBlock Text="{Binding AlgorithmStatus}" VerticalAlignment="Center" Width="100"/>-->
 					<TextBlock Text="{Binding ServerStatistics}" VerticalAlignment="Center"/>
 				</StackPanel>
+				<!--
 				<ProgressBar DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Stretch" Opacity="0.5" BorderThickness="0" MinWidth="50" Width="120"
 							 Margin="0" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}"/>
+				-->
+				<Grid DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Stretch" MinWidth="50" Width="120" Margin="0">
+					<ProgressBar HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Opacity="0.5" BorderThickness="0" MinWidth="50" Width="120"
+								 Margin="0" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}"/>
+					<Label HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding AlgorithmStatus}"/>
+				</Grid>
 			</DockPanel>
 		</Border>
 	</Grid>
