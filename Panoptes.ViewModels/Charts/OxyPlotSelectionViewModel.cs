@@ -697,13 +697,13 @@ namespace Panoptes.ViewModels.Charts
                         case SeriesType.Candle:
                         case SeriesType.Line:
                             ((LineCandleStickSeries)s).AddRange(serie.Value.Values.Select(p =>
-                                        DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y)));
+                                        DateTimeAxis.CreateDataPoint(p.X.UtcDateTime, (double)p.Y)));
                             break;
 
                         case SeriesType.Bar:
                             // Handle candle and line series the same way, choice is done in UI
                             var lineSeriesBar = (LineSeries)s;
-                            var newLinePointsBar = serie.Value.Values.Select(p => DateTimeAxis.CreateDataPoint(p.X.ToDateTimeUtc(), (double)p.Y));
+                            var newLinePointsBar = serie.Value.Values.Select(p => DateTimeAxis.CreateDataPoint(p.X.UtcDateTime, (double)p.Y));
                             var currentLineBar = lineSeriesBar.Points;
                             var filteredLineBar = newLinePointsBar.Except(currentLineBar).ToList();
                             if (filteredLineBar.Count == 0) break;
@@ -712,7 +712,7 @@ namespace Panoptes.ViewModels.Charts
 
                         case SeriesType.Scatter:
                             var scatterSeries = (ScatterSeries)s;
-                            var newScatterSeries = serie.Value.Values.Select(p => new ScatterPoint(DateTimeAxis.ToDouble(p.X.ToDateTimeUtc()), (double)p.Y));
+                            var newScatterSeries = serie.Value.Values.Select(p => new ScatterPoint(DateTimeAxis.ToDouble(p.X.UtcDateTime), (double)p.Y));
                             var currentScatter = scatterSeries.Points;
                             var filteredScatter = newScatterSeries.Except(currentScatter, ScatterPointComparer).ToList();
                             if (filteredScatter.Count == 0) break;

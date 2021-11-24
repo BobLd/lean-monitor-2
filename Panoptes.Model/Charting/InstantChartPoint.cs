@@ -1,14 +1,14 @@
-﻿using NodaTime;
+﻿using System;
 
 namespace Panoptes.Model.Charting
 {
     public struct InstantChartPoint : IInstantChartPoint
     {
-        public Instant X { get; set; }
+        public DateTimeOffset X { get; set; }
 
         public decimal Y { get; set; }
 
-        public InstantChartPoint(Instant x, decimal y)
+        public InstantChartPoint(DateTimeOffset x, decimal y)
         {
             X = x;
             Y = y;

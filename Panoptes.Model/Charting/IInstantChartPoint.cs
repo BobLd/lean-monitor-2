@@ -1,9 +1,9 @@
-﻿using NodaTime;
+﻿using System;
 
 namespace Panoptes.Model.Charting
 {
     public interface IInstantChartPoint
     {
-        Instant X { get; set; }
+        DateTimeOffset X { get; set; }
     }
 }

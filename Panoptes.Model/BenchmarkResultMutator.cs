@@ -1,6 +1,6 @@
-﻿using NodaTime;
-using Panoptes.Model.Charting;
+﻿using Panoptes.Model.Charting;
 using QuantConnect;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,7 +22,7 @@ namespace Panoptes.Model
             if (!equityChart.Series.ContainsKey("Equity")) return;
             var equitySeries = equityChart.Series["Equity"];
 
-            var benchmarkLastUpdated = Instant.MinValue;
+            var benchmarkLastUpdated = DateTimeOffset.MinValue;
             SeriesDefinition relativeBenchmarkSeries;
             if (!equityChart.Series.ContainsKey("Relative Benchmark"))
             {
@@ -42,7 +42,7 @@ namespace Panoptes.Model
             Update(relativeBenchmarkSeries, benchmarkSeries, equitySeries, benchmarkLastUpdated);
         }
 
-        private static void Update(SeriesDefinition relativeBenchmarkSeries, SeriesDefinition benchmarkSeries, SeriesDefinition equitySeries, Instant lastUpdate)
+        private static void Update(SeriesDefinition relativeBenchmarkSeries, SeriesDefinition benchmarkSeries, SeriesDefinition equitySeries, DateTimeOffset lastUpdate)
         {
             benchmarkSeries = benchmarkSeries.Since(lastUpdate);
 
@@ -59,7 +59,7 @@ namespace Panoptes.Model
             for (var i = 1; i < benchmarkValues.Count; i++)
             {
                 var originalX = benchmarkValues[i].X;
-                var x = Instant.FromUnixTimeTicks(originalX.ToUnixTimeTicks()); // TODO: Instant is struct. Clone it?
+                var x = DateTimeOffset.FromUnixTimeMilliseconds(originalX.ToUnixTimeMilliseconds()); //Instant.FromUnixTimeTicks(originalX.ToUnixTimeTicks()); // TODO: Instant is struct. Clone it?
 
                 decimal y;
 

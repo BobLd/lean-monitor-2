@@ -1,6 +1,6 @@
-﻿using NodaTime;
-using Panoptes.Model.Charting;
+﻿using Panoptes.Model.Charting;
 using QuantConnect;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,7 +25,7 @@ namespace Panoptes.Model
         {
             return new InstantChartPoint
             {
-                X = Instant.FromUnixTimeSeconds(point.x),
+                X = DateTimeOffset.FromUnixTimeSeconds(point.x), //Instant.FromUnixTimeSeconds(point.x),
                 Y = point.y
             };
         }

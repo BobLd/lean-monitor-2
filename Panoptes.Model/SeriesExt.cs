@@ -1,12 +1,12 @@
-﻿using NodaTime;
-using Panoptes.Model.Charting;
+﻿using Panoptes.Model.Charting;
+using System;
 using System.Linq;
 
 namespace Panoptes.Model
 {
     public static class SeriesExt
     {
-        public static SeriesDefinition Since(this SeriesDefinition series, Instant x)
+        public static SeriesDefinition Since(this SeriesDefinition series, DateTimeOffset x)
         {
             // Create a new empty series based upon the source settings
             var copy = new SeriesDefinition

@@ -2,7 +2,7 @@
 
 namespace Panoptes.Model.Charting
 {
-    public class ChartDefinition
+    public sealed class ChartDefinition
     {
         public string Name { get; set; }
 

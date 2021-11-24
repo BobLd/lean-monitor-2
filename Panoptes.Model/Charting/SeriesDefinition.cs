@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace Panoptes.Model.Charting
 {
-    public class SeriesDefinition
+    public sealed class SeriesDefinition
     {
         public string Name { get; set; }
 
