@@ -4,6 +4,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450">
+
+	<UserControl.Styles>
+		<Style Selector="TextBox">
+			<Setter Property="Margin" Value="0,0,0,4"/>
+		</Style>
+	</UserControl.Styles>
+
 	<Grid Margin="5">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="60"/>
@@ -20,16 +27,17 @@
 		</Grid.RowDefinitions>
 
 		<Label Grid.Row="0">File</Label>
-		<TextBox Name="_textBoxFileName" Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding FileName}"
+		<TextBox Name="_textBoxFileName" Grid.Row="0" Grid.Column="1" Text="{Binding FileName}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 		<Button Grid.Row="0" Grid.Column="3" Content="Find" Margin="2,0,0,4" Name="_buttonOpenFile"
 				IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 		
 		<CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding FileWatch}" Content="Monitor for changes"
 				  IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+		
 		<ProgressBar Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
 					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>
 
-		<TextBlock Grid.Row="4" Grid.ColumnSpan="3" Text="{Binding Error}"/>
+		<TextBlock Grid.Row="4" Grid.ColumnSpan="3" Text="{Binding Error}" Foreground="{StaticResource ErrorBrush}"/>
 	</Grid>
 </UserControl>

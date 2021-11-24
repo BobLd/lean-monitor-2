@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
+using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Sessions;
 using Panoptes.ViewModels.Charts;
@@ -50,6 +51,7 @@ namespace Panoptes.ViewModels
             get { return _sessionState; }
             set
             {
+                if (_sessionState == value) return;
                 _sessionState = value;
                 OnPropertyChanged();
             }
@@ -89,7 +91,7 @@ namespace Panoptes.ViewModels
             CashBookPane = cashBookPane;
             OxyPlotSelectionPane = oxyPlotSelectionViewModel;
 
-            Title = $"Panoptes - LEAN Algorithm Monitor - {GetVersion()}";
+            Title = $"{Global.AppName} - LEAN Algorithm Monitor - {Global.AppVersion}";
 
 #if DEBUG
             Title = "[DEBUG] " + Title;
@@ -249,26 +251,6 @@ namespace Panoptes.ViewModels
                 ConnectCommand.NotifyCanExecuteChanged();
                 DisconnectCommand.NotifyCanExecuteChanged();
             });
-        }
-
-        private static string GetVersion()
-        {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
-#pragma warning disable CS8603 // Possible null reference return.
-            if (fvi != null)
-            {
-                if (fvi.FileVersion == fvi.ProductVersion)
-                {
-                    return fvi.FileVersion;
-                }
-                else
-                {
-                    return $"{fvi.FileVersion} ({fvi.ProductVersion})";
-                }
-            }
-            return null;
-#pragma warning restore CS8603 // Possible null reference return.
         }
     }
 }

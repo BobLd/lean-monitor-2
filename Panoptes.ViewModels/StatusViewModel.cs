@@ -4,6 +4,7 @@ using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Sessions;
 using QuantConnect;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -143,6 +144,15 @@ namespace Panoptes.ViewModels
             {
                 if (_sessionState == value) return;
                 _sessionState = value;
+
+                // Handle disconnection in Live mode
+                if (IsLive == true && _sessionState == SessionState.Unsubscribed)
+                {
+                    IsProgressIndeterminate = false;
+                    AlgorithmStatus = null;
+                    ServerStatistics = $"⚠ Live session timed out at UTC {DateTime.UtcNow}.";
+                }
+
                 OnPropertyChanged();
             }
         }

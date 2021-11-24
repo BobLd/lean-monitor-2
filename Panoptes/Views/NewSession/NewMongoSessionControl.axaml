@@ -4,14 +4,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450">
+	
+	<UserControl.Styles>
+		<Style Selector="TextBox">
+			<Setter Property="Margin" Value="0,0,0,4"/>
+		</Style>
+	</UserControl.Styles>
+	
 	<Grid Margin="5">
-		<!--
-		<Grid.Resources>
-			<Style TargetType="{Type Control}">
-				<Setter Property="Margin" Value="0,0,0,4"/>
-			</Style>
-		</Grid.Resources>
-		-->
 
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="Auto"/>
@@ -29,24 +29,24 @@
 		</Grid.RowDefinitions>
 
 		<Label Grid.Row="0">Host</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="0" Grid.Column="1" Text="{Binding Host}"
+		<TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Host}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<Label Grid.Row="1" Grid.Column="0">Port</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="1" Grid.Column="1" Text="{Binding Port}"
+		<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Port}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<Label Grid.Row="2" Grid.Column="0">User Name</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="2" Grid.Column="1" Text="{Binding UserName}"
+		<TextBox Grid.Row="2" Grid.Column="1" Text="{Binding UserName}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<Label Grid.Row="3" Grid.Column="0">Password</Label>
-		<TextBox Margin="0,0,0,4" Grid.Row="3" Grid.Column="1" PasswordChar="*" Text="{Binding Password}"
+		<TextBox Grid.Row="3" Grid.Column="1" PasswordChar="*" Text="{Binding Password}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
 		<ProgressBar Grid.Row="5" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
 					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>
 
-		<TextBlock Grid.Row="6" Grid.ColumnSpan="3" Text="{Binding Error}"/>
+		<TextBlock Grid.Row="6" Grid.ColumnSpan="3" Text="{Binding Error}" Foreground="{StaticResource ErrorBrush}"/>
 	</Grid>
 </UserControl>

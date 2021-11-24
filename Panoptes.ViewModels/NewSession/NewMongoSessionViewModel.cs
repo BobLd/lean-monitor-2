@@ -72,7 +72,7 @@ namespace Panoptes.ViewModels.NewSession
                 }
                 catch (TimeoutException toEx)
                 {
-                    Error = toEx.ToString();
+                    Error = toEx.Message.ToString();
                 }
                 catch (Exception ex)
                 {

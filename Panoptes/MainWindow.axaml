@@ -126,6 +126,7 @@
 					<TextBlock Text="{Binding ProjectName}" VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding SessionName}" VerticalAlignment="Center"/>
 					<!--<TextBlock Text="{Binding AlgorithmStatus}" VerticalAlignment="Center" Width="100"/>-->
+					<TextBlock Text="{Binding SessionState}" VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding ServerStatistics}" VerticalAlignment="Center"/>
 				</StackPanel>
 				<!--

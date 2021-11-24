@@ -4,6 +4,7 @@ using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.Stream;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,6 +29,9 @@ namespace Panoptes.Model.MongoDB.Sessions
             {
                 Credential = MongoCredential.CreateCredential(null, parameters.UserName, parameters.Password),
                 Server = new MongoServerAddress(_host, _port),
+                ApplicationName = $"{Global.AppName} {Global.AppVersion}",
+                HeartbeatInterval = TimeSpan.FromSeconds(5),
+                HeartbeatTimeout = TimeSpan.FromSeconds(40)
             });
         }
 
@@ -43,9 +47,6 @@ namespace Panoptes.Model.MongoDB.Sessions
 
         public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
-#if DEBUG
-            await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
-#endif
             _database = _client.GetDatabase(DatabaseName); // backtest or live
             _collection = _database.GetCollection<MongoDbPacket>(CollectionName); // algo name / id
 
@@ -64,7 +65,6 @@ namespace Panoptes.Model.MongoDB.Sessions
             try
             {
                 var collection = _client.GetDatabase(DatabaseName).GetCollection<MongoDbPacket>(CollectionName); // backtest or live + algo name / id
-
                 var builder = Builders<MongoDbPacket>.Filter;
 
                 //https://stackoverflow.com/questions/8749971/can-i-query-mongodb-objectid-by-date
@@ -149,6 +149,10 @@ namespace Panoptes.Model.MongoDB.Sessions
                     _packetQueue.Add(liveResultPacket, cancellationToken);
                 }
             }
+            catch (TimeoutException toEx)
+            {
+                throw new TimeoutException("MongoSession.LoadRecentData: Session timed out.", toEx);
+            }
             catch (MongoAuthenticationException authEx)
             {
                 // wrong user/password
@@ -183,6 +187,12 @@ namespace Panoptes.Model.MongoDB.Sessions
                         HandlePacketEventsListener(doc.FullDocument.Message, Enum.Parse<PacketType>(doc.FullDocument.Type));
                     }
                 }
+            }
+            catch (TimeoutException toEx)
+            {
+                Unsubscribe();
+                Debug.WriteLine($"MongoSession.EventsListener: Session timed out and proceeded with unsubscribing. {toEx}");
+                //throw;
             }
             catch (MongoAuthenticationException authEx)
             {

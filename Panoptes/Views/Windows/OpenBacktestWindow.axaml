@@ -1,0 +1,29 @@
+<Window x:Class="Panoptes.Views.Windows.OpenBacktestWindow"
+		xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+		d:DesignWidth="400" d:DesignHeight="100"
+		Width="400" MinWidth="400" MaxWidth="800"
+		Height="100" MaxHeight="1000"
+        Title="Opening Backtest..."
+		WindowStartupLocation="CenterScreen"
+		CanResize="False"
+		SizeToContent="Height">
+	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="24"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+		
+			<Label Name="_statusLabel" Grid.Row="0" Content="Opening backtest..." MaxWidth="800" HorizontalContentAlignment="Center" VerticalContentAlignment="Stretch"/>
+			<ProgressBar Name="_mainProgressBar" MaxWidth="800" Grid.Row="1" IsIndeterminate="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+			<Label Name="_filePathLabel" MaxWidth="800" Grid.Row="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Stretch"/>
+			<TextBox Name="_errorTextBlock" MaxWidth="800" Grid.Row="2" Margin="0" Padding="0" IsReadOnly="True" IsEnabled="False" IsVisible="False"
+					 HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource ErrorBrush}"/>
+		</Grid>
+	</Border>
+</Window>

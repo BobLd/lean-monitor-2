@@ -1,4 +1,5 @@
-﻿using Avalonia.Threading;
+﻿using Avalonia.Platform;
+using Avalonia.Threading;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
@@ -9,7 +10,9 @@ using Panoptes.Model.Sessions.File;
 using Panoptes.Model.Sessions.Stream;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -144,8 +147,10 @@ namespace Panoptes
             _messenger.Send(new AlgorithmStatusMessage(algorithmStatusPacket));
         }
 
-        public void Initialize()
+        public async void Initialize()
         {
+            // TODO - Not good at all, we need async here but it returns void!!
+
             // We try to load instructions to load a session from the commandline.
             // This format is a bit obscure because it tries to say compatible with the 'port only'
             // argument as used in the Lean project.
@@ -153,7 +158,64 @@ namespace Panoptes
             try
             {
                 var arguments = Environment.GetCommandLineArgs();
+
                 var argument = arguments.Last();
+
+                if (argument.EndsWith(".json") && File.Exists(argument))
+                {
+                    new Views.Windows.OpenBacktestWindow()
+                    {
+                        FilePath = argument,
+                        Topmost = true,
+                        ShowActivated = true,
+                        ShowInTaskbar = false,
+
+                        //https://stackoverflow.com/questions/65748375/avaloniaui-how-to-change-the-style-of-the-window-borderless-toolbox-etc
+                        ExtendClientAreaToDecorationsHint = true,
+                        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome,
+                        ExtendClientAreaTitleBarHeightHint = -1
+                    }.Show();
+
+                    await OpenAsync(new FileSessionParameters
+                    {
+                        FileName = argument,
+                        Watch = false
+                    }, CancellationToken.None).ConfigureAwait(false);
+                    return;
+                }
+                else if (argument.EndsWith(".qcb") && File.Exists(argument))
+                {
+                    var info = new FileInfo(argument);
+                    new Views.Windows.OpenBacktestWindow()
+                    {
+                        FilePath = $"{argument} ({info.Length / 1_048_576:0.#} MB)",
+                        Topmost = true,
+                        ShowActivated = true,
+                        ShowInTaskbar = false,
+
+                        //https://stackoverflow.com/questions/65748375/avaloniaui-how-to-change-the-style-of-the-window-borderless-toolbox-etc
+                        ExtendClientAreaToDecorationsHint = true,
+                        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome,
+                        ExtendClientAreaTitleBarHeightHint = -1
+                    }.Show();
+
+                    await OpenAsync(new FileSessionParameters
+                    {
+                        FileName = argument,
+                        Watch = false
+                    }, CancellationToken.None).ConfigureAwait(false);
+                    return;
+                }
+                //else if (argument.EndsWith(".qcb") && File.Exists(argument))
+                //{
+                //    // Expect it is a fileName
+                //    OpenAsync(new FileSessionParameters
+                //    {
+                //        FileName = argument,
+                //        Watch = false
+                //    }, CancellationToken.None).Wait();
+                //    return;
+                //}
 
                 // First try whether it is a port
                 /*
@@ -271,7 +333,7 @@ namespace Panoptes
                 throw new NullReferenceException("SessionService.Open: current session is null.");
             }
 
-            await OpenSession(session, cancellationToken).ConfigureAwait(false);
+            await OpenSessionAsync(session, cancellationToken).ConfigureAwait(false);
         }
 
         /*
@@ -289,7 +351,7 @@ namespace Panoptes
         }
         */
 
-        private async Task OpenSession(ISession session, CancellationToken cancellationToken)
+        private async Task OpenSessionAsync(ISession session, CancellationToken cancellationToken)
         {
             try
             {
@@ -308,22 +370,30 @@ namespace Panoptes
                 Debug.WriteLine("SessionService.OpenSession: Operation canceled.");
                 _messenger.Send(new SessionOpenedMessage(ocEx.ToString()));
                 ShutdownSession();
-                throw new OperationCanceledException("SessionService.OpenSession: Operation canceled.", ocEx);
+                throw new OperationCanceledException("SessionService.OpenSession: Operation canceled while opening the session.", ocEx);
             }
             catch (TimeoutException toEx)
             {
                 Debug.WriteLine("SessionService.OpenSession: Operation timeout.");
                 _messenger.Send(new SessionOpenedMessage(toEx.ToString()));
                 ShutdownSession();
-                throw new TimeoutException("SessionService.OpenSession: Operation timeout.", toEx);
+                throw new TimeoutException("SessionService.OpenSession: Operation timeout while opening the session.", toEx);
+            }
+            catch (JsonException jsonEx)
+            {
+                Debug.WriteLine($"SessionService.OpenSession:\n{jsonEx}");
+                _messenger.Send(new SessionOpenedMessage(jsonEx.ToString()));
+                ShutdownSession();
+                // We don't throw here, it's supposed to be handled now...
+                //throw new Exception("SessionService.OpenSession: Exception occured while opening the session.", e);
             }
             catch (Exception e)
             {
                 // Need log
-                Debug.WriteLine(e);
+                Debug.WriteLine($"SessionService.OpenSession:\n{e}");
                 _messenger.Send(new SessionOpenedMessage(e.ToString()));
                 ShutdownSession();
-                throw new Exception("SessionService.OpenSession: Exception occured while opening the session", e);
+                throw new Exception("SessionService.OpenSession: Exception occured while opening the session.", e);
             }
         }
 
@@ -333,6 +403,7 @@ namespace Panoptes
             {
                 return _session?.State == SessionState.Subscribed;
             }
+
             set
             {
                 if (_session.State == (value ? SessionState.Subscribed : SessionState.Unsubscribed)) return;

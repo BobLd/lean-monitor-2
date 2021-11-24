@@ -80,19 +80,19 @@ namespace Panoptes.Model.Sessions.Stream
                     _cts = new CancellationTokenSource();
 
                     // Configure the worker threads
-                    //_eternalQueueListener.WorkerSupportsCancellation = true;
                     _eternalQueueListener.DoWork += EventsListener;
                     _eternalQueueListener.RunWorkerAsync();
 
-                    //_queueReader.WorkerSupportsCancellation = true;
                     _queueReader.DoWork += QueueReader;
                     _queueReader.RunWorkerAsync();
 
                     State = SessionState.Subscribed;
+
+                    Debug.WriteLine("BaseStreamSession.Subscribe: New subscription.");
                 }
                 else
                 {
-                    // arleady subscribed
+                    Debug.WriteLine("BaseStreamSession.Subscribe: Cannot subscribe because aslready subscribed.");
                 }
             }
             catch (Exception e)
@@ -319,8 +319,12 @@ namespace Panoptes.Model.Sessions.Stream
         private SessionState _state = SessionState.Unsubscribed;
         public SessionState State
         {
-            get { return _state; }
-            private set
+            get
+            {
+                return _state;
+            }
+
+            protected set
             {
                 _state = value;
                 _sessionHandler.HandleStateChanged(value);

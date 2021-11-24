@@ -92,7 +92,7 @@ namespace Panoptes.Model.Sessions.File
             };
 
             // Send order events
-            result.OrderEvents.ForEach(oe =>
+            result.OrderEvents?.ForEach(oe =>
             {
                 _syncContext.Send(_ => _sessionHandler.HandleOrderEvent(new OrderEventPacket() { Event = oe, Type = PacketType.OrderEvent }), null);
             });
