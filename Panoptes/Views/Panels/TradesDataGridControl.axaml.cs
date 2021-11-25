@@ -10,7 +10,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Panoptes.Views.Panels
@@ -62,8 +61,7 @@ namespace Panoptes.Views.Panels
         public async Task SaveColumnsOrder()
         {
             Debug.WriteLine("TradesDataGridControl.ColumnReordered: Saving columns order...");
-            var indexes = _dataGrid.Columns.Select(c => new Tuple<int, string>(c.DisplayIndex, c.Header?.ToString())).ToArray();
-            await App.Current.SettingsManager.UpdateGridAsync(this.GetSettingsKey(), indexes).ConfigureAwait(false);
+            await App.Current.SettingsManager.UpdateGridAsync(this.GetSettingsKey(), _dataGrid.GetColumnsHeaderIndexPairs()).ConfigureAwait(false);
         }
         #endregion
 

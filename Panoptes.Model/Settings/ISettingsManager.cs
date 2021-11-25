@@ -10,9 +10,9 @@ namespace Panoptes.Model.Settings
 
         Task SaveAsync();
 
-        Task UpdateGridAsync(string name, IReadOnlyList<Tuple<int, string>> columns);
+        Task UpdateGridAsync(string name, IReadOnlyList<Tuple<string, int>> columns);
 
-        Task<IReadOnlyList<Tuple<int, string>>> GetGridAsync(string name);
+        Task<IReadOnlyList<Tuple<string, int>>> GetGridAsync(string name);
 
         bool IsInitialised { get; }
 

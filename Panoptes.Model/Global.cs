@@ -7,6 +7,8 @@ namespace Panoptes.Model
     {
         public const string AppName = "Panoptes";
 
+        public static string ProcessPath => Environment.ProcessPath;
+
         public static string MachineName => Environment.MachineName;
 
         public static string OSVersion => Environment.OSVersion.VersionString;
@@ -30,6 +32,7 @@ namespace Panoptes.Model
             {
                 // https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file
                 var fvi = FileVersionInfo.GetVersionInfo(Environment.ProcessPath);
+
 #pragma warning disable CS8603 // Possible null reference return.
                 if (fvi != null)
                 {

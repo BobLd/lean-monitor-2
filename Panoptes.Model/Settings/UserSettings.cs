@@ -8,14 +8,14 @@ namespace Panoptes.Model.Settings
     {
         public TimeZoneInfo SelectedTimeZone { get; set; }
 
-        public ConcurrentDictionary<string, IReadOnlyList<Tuple<int, string>>> GridsColumns { get; set; }
+        public IDictionary<string, IReadOnlyList<Tuple<string, int>>> GridsColumns { get; set; }
 
         public class DefaultUserSettings : UserSettings
         {
             public DefaultUserSettings()
             {
                 SelectedTimeZone = TimeZoneInfo.Local;
-                GridsColumns = new ConcurrentDictionary<string, IReadOnlyList<Tuple<int, string>>>();
+                GridsColumns = new ConcurrentDictionary<string, IReadOnlyList<Tuple<string, int>>>();
             }
         }
     }

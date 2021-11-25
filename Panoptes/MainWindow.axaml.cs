@@ -48,6 +48,7 @@ namespace Panoptes
             try
             {
                 ViewModel?.ShutdownSession();
+                ViewModel?.Terminate();
 
                 if (App.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
@@ -65,15 +66,15 @@ namespace Panoptes
             }
         }
 
-        private void OnClosed(object sender, EventArgs e)
-        {
-            ViewModel.Terminate();
-        }
-
         private void OnOpened(object sender, EventArgs e)
         {
             // Tell the viewModel we have loaded and we can process data
             ViewModel.Initialize();
+        }
+
+        private void OnClosed(object sender, EventArgs e)
+        {
+            // Nothing
         }
 
         private Task ShowWindowDialog<T>() where T : Window
