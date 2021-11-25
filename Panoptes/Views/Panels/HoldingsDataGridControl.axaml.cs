@@ -3,11 +3,16 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Panoptes.ViewModels.Panels;
+using Panoptes.Views.Controls;
+using System;
 using System.Collections;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Panoptes.Views.Panels
 {
-    public partial class HoldingsDataGridControl : UserControl
+    public partial class HoldingsDataGridControl : UserControl, IDataGridFromSettings
     {
         private readonly DataGrid _dataGrid;
 
@@ -15,12 +20,47 @@ namespace Panoptes.Views.Panels
         {
             InitializeComponent();
             _dataGrid = this.Get<DataGrid>("_dataGrid");
+            _dataGrid.Initialized += async (o, e) => await _dataGrid_Initialized(o, e).ConfigureAwait(false);
+            _dataGrid.ColumnReordered += async (o, e) => await _dataGrid_ColumnReordered(o, e).ConfigureAwait(false);
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
         }
+
+        private async Task _dataGrid_Initialized(object? sender, EventArgs e)
+        {
+            Debug.WriteLine("HoldingsDataGridControl.Initialized");
+            await LoadColumnsOrder().ConfigureAwait(false);
+        }
+
+        private async Task _dataGrid_ColumnReordered(object? sender, DataGridColumnEventArgs e)
+        {
+            Debug.WriteLine($"HoldingsDataGridControl.ColumnReordered: {e.Column.Header}");
+            await SaveColumnsOrder().ConfigureAwait(false);
+        }
+
+        #region IDataGridFromSettings
+        public async Task LoadColumnsOrder()
+        {
+            try
+            {
+                _dataGrid.ReorderColumns(await App.Current.SettingsManager.GetGridAsync(this.GetSettingsKey()).ConfigureAwait(true));
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task SaveColumnsOrder()
+        {
+            Debug.WriteLine("HoldingsDataGridControl.ColumnReordered: Saving columns order...");
+            var indexes = _dataGrid.Columns.Select(c => new Tuple<int, string>(c.DisplayIndex, c.Header?.ToString())).ToArray();
+            await App.Current.SettingsManager.UpdateGridAsync(this.GetSettingsKey(), indexes).ConfigureAwait(false);
+        }
+        #endregion
 
         /// <summary>
         /// Identifies the ItemsSource dependency property.

@@ -25,7 +25,7 @@
     <PackageReference Include="QuantConnect.Common" Version="2.5.13230" />
    </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" Condition=" '$(Configuration)' == 'Debug' "/>
+    <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" Condition=" '$(Configuration)' == 'Debug' " />
     <ProjectReference Include="..\Panoptes.Model.MongoDB\Panoptes.Model.MongoDB.csproj" />
     <ProjectReference Include="..\Panoptes.Model\Panoptes.Model.csproj" />
     <ProjectReference Include="..\Panoptes.ViewModels\Panoptes.ViewModels.csproj" />

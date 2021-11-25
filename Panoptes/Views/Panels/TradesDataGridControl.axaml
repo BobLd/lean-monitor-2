@@ -28,7 +28,7 @@
 			<DataGridTextColumn Header="Type" Binding="{Binding Type, Mode=OneWay}"/>
 			<DataGridTextColumn Header="TIF" Binding="{Binding TimeInForce, Mode=OneWay}"/>
 
-			<DataGridTextColumn Header="Type" Binding="{Binding SecurityType, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Security" Binding="{Binding SecurityType, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Side" Binding="{Binding Direction, Mode=OneWay}" CellStyleClasses="directionColored"/>
 			<DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 

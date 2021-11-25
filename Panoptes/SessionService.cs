@@ -8,6 +8,7 @@ using Panoptes.Model.Serialization.Packets;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
 using Panoptes.Model.Sessions.Stream;
+using Panoptes.Model.Settings;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -28,6 +29,7 @@ namespace Panoptes
         private readonly IResultConverter _resultConverter;
         private readonly IResultSerializer _resultSerializer;
         private readonly IResultMutator _resultMutator;
+        private readonly ISettingsManager _settingsManager;
         //private readonly IApiClient _apiClient;
 
         private ISession _session;
@@ -37,12 +39,13 @@ namespace Panoptes
         public bool IsSessionActive => _session != null;
 
         public SessionService(IMessenger messenger, IResultConverter resultConverter,
-            IResultSerializer resultSerializer, IResultMutator resultMutator)
+            IResultSerializer resultSerializer, IResultMutator resultMutator, ISettingsManager settingsManager)
         {
             _messenger = messenger;
             _resultConverter = resultConverter;
             _resultSerializer = resultSerializer;
             _resultMutator = resultMutator;
+            _settingsManager = settingsManager;
 
             // Need to check if it's a live session, or put it in Open(ISessionParameters parameters)
             // At a later stage, timer should be done on server side
@@ -155,6 +158,8 @@ namespace Panoptes
             // This format is a bit obscure because it tries to say compatible with the 'port only'
             // argument as used in the Lean project.
 
+            //await _settingsManager.InitialiseAsync().ConfigureAwait(false);
+
             try
             {
                 var arguments = Environment.GetCommandLineArgs();
@@ -165,15 +170,7 @@ namespace Panoptes
                 {
                     new Views.Windows.OpenBacktestWindow()
                     {
-                        FilePath = argument,
-                        Topmost = true,
-                        ShowActivated = true,
-                        ShowInTaskbar = false,
-
-                        //https://stackoverflow.com/questions/65748375/avaloniaui-how-to-change-the-style-of-the-window-borderless-toolbox-etc
-                        ExtendClientAreaToDecorationsHint = true,
-                        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome,
-                        ExtendClientAreaTitleBarHeightHint = -1
+                        FilePath = argument
                     }.Show();
 
                     await OpenAsync(new FileSessionParameters
@@ -189,14 +186,6 @@ namespace Panoptes
                     new Views.Windows.OpenBacktestWindow()
                     {
                         FilePath = $"{argument} ({info.Length / 1_048_576:0.#} MB)",
-                        Topmost = true,
-                        ShowActivated = true,
-                        ShowInTaskbar = false,
-
-                        //https://stackoverflow.com/questions/65748375/avaloniaui-how-to-change-the-style-of-the-window-borderless-toolbox-etc
-                        ExtendClientAreaToDecorationsHint = true,
-                        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome,
-                        ExtendClientAreaTitleBarHeightHint = -1
                     }.Show();
 
                     await OpenAsync(new FileSessionParameters
@@ -299,7 +288,7 @@ namespace Panoptes
             {
                 if (string.IsNullOrWhiteSpace(mongoParameters.Host))
                 {
-                    throw new ArgumentException("SessionService.Open: Host is required", nameof(parameters));
+                    throw new ArgumentException("SessionService.Open: Host is required.", nameof(parameters));
                 }
 
                 // Open a new session and open it
@@ -309,7 +298,7 @@ namespace Panoptes
             {
                 if (string.IsNullOrWhiteSpace(streamParameters.Host))
                 {
-                    throw new ArgumentException("SessionService.Open: Host is required", nameof(parameters));
+                    throw new ArgumentException("SessionService.Open: Host is required.", nameof(parameters));
                 }
 
                 // Open a new session and open it

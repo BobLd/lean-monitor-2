@@ -18,16 +18,16 @@
 	</UserControl.Styles>
 
 	<TabControl Padding="0">
-		<TabItem Header="Today">
-			<local:TradesDataGridControl Items="{Binding OrdersToday, Mode=OneWay}" Margin="0,2,0,0"/>
+		<TabItem Name="_todayTab" Header="Today">
+			<local:TradesDataGridControl Name="_todayTradesDataGrid" Items="{Binding OrdersToday, Mode=OneWay}" Margin="0,2,0,0"/>
 		</TabItem>
-		<TabItem Header="History">
+		<TabItem Name="_historyTab" Header="History">
 			<Grid Margin="0,2,0,0">
 				<Grid.RowDefinitions>
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="25"/>
 				</Grid.RowDefinitions>
-				<local:TradesDataGridControl Grid.Row="0" Items="{Binding OrdersHistory, Mode=OneWay}"/>
+				<local:TradesDataGridControl Name="_historyTradesDataGrid" Grid.Row="0" Items="{Binding OrdersHistory, Mode=OneWay}"/>
 				<StackPanel Grid.Row="1" Orientation="Horizontal">
 					<Label Content="From "/>
 					<CalendarDatePicker x:Name="_calendarDatePickerFrom" SelectedDate="{Binding FromDate, Mode=TwoWay}"

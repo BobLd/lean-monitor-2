@@ -103,13 +103,13 @@
 			<panels:StatisticsPanelControl DataContext="{Binding StatisticsPane}" Grid.Row="1" Grid.RowSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
 			<TabControl Padding="0" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" TabStripPlacement="Bottom">
-				<TabItem Header="Orders">
+				<TabItem Name="_ordersTab" Header="Orders">
 					<panels:TradesPanelControl DataContext="{Binding TradesPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
-				<TabItem Header="Holdings">
+				<TabItem Name="_holdingsTab" Header="Holdings">
 					<panels:HoldingsPanelControl DataContext="{Binding HoldingsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
-				<TabItem Header="Cash">
+				<TabItem Name="_cashTab" Header="Cash">
 					<panels:CashBookPanelControl DataContext="{Binding CashBookPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
 			</TabControl>

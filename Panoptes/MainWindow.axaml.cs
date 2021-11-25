@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.ViewModels;
@@ -12,6 +13,7 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Panoptes
 {
@@ -28,7 +30,7 @@ namespace Panoptes
             {
                 throw new ArgumentNullException("Could not find 'IMessenger' service in 'App.Current.Services'.");
             }
-            _messenger.Register<MainWindow, ShowNewSessionWindowMessage>(this, (r, _) => r.ShowWindowDialog<NewSessionWindow>());
+            _messenger.Register<MainWindow, ShowNewSessionWindowMessage>(this, async (r, _) => await r.ShowWindowDialog<NewSessionWindow>().ConfigureAwait(false));
 
             InitializeComponent();
 #if DEBUG
@@ -65,7 +67,7 @@ namespace Panoptes
 
         private void OnClosed(object sender, EventArgs e)
         {
-            // Do nothing for the moment
+            ViewModel.Terminate();
         }
 
         private void OnOpened(object sender, EventArgs e)
@@ -74,10 +76,13 @@ namespace Panoptes
             ViewModel.Initialize();
         }
 
-        private void ShowWindowDialog<T>() where T : Window
+        private Task ShowWindowDialog<T>() where T : Window
         {
-            var window = Activator.CreateInstance<T>();
-            window.ShowDialog(this);
+            return Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var window = Activator.CreateInstance<T>();
+                window.ShowDialog(this);
+            });
         }
 
         private static void OpenLink(string link)

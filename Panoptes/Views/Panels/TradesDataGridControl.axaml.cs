@@ -4,18 +4,18 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using Panoptes.ViewModels.Panels;
+using Panoptes.Views.Controls;
 using Panoptes.Views.Windows;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Panoptes.Views.Panels
 {
-    public partial class TradesDataGridControl : UserControl
+    public partial class TradesDataGridControl : UserControl, IDataGridFromSettings
     {
         private readonly ConcurrentDictionary<int, TradeInfoWindow> _openWindows = new ConcurrentDictionary<int, TradeInfoWindow>();
         private readonly DataGrid _dataGrid;
@@ -25,26 +25,47 @@ namespace Panoptes.Views.Panels
             InitializeComponent();
             _dataGrid = this.Get<DataGrid>("_dataGrid");
             _dataGrid.SelectionChanged += _dataGrid_SelectionChanged;
+            _dataGrid.Initialized += async (o, e) => await _dataGrid_Initialized(o, e).ConfigureAwait(false);
             _dataGrid.ColumnReordered += async (o, e) => await _dataGrid_ColumnReordered(o, e).ConfigureAwait(false);
-        }
-
-        private async Task _dataGrid_ColumnReordered(object? sender, DataGridColumnEventArgs e)
-        {
-            // Need to that async
-            var indexes = _dataGrid.Columns.Select(c => $"[{c.DisplayIndex},{c.Header}]").ToArray();
-
-            await File.WriteAllTextAsync("to_remove_TradesDataGridControl.txt", string.Join(",", indexes)).ConfigureAwait(false);
-
-            //Use System.Configuration.ConfigurationManager?
-
-            // Save new order
-            Debug.WriteLine($"TradesDataGridControl.ColumnReordered: {e.Column.Header}");
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
         }
+
+        private async Task _dataGrid_Initialized(object? sender, EventArgs e)
+        {
+            Debug.WriteLine($"TradesDataGridControl.Initialized");
+            await LoadColumnsOrder().ConfigureAwait(false);
+        }
+
+        private async Task _dataGrid_ColumnReordered(object? sender, DataGridColumnEventArgs e)
+        {
+            Debug.WriteLine($"TradesDataGridControl.ColumnReordered: {e.Column.Header}");
+            await SaveColumnsOrder().ConfigureAwait(false);
+        }
+
+        #region IDataGridFromSettings
+        public async Task LoadColumnsOrder()
+        {
+            try
+            {
+                _dataGrid.ReorderColumns(await App.Current.SettingsManager.GetGridAsync(this.GetSettingsKey()).ConfigureAwait(true));
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task SaveColumnsOrder()
+        {
+            Debug.WriteLine("TradesDataGridControl.ColumnReordered: Saving columns order...");
+            var indexes = _dataGrid.Columns.Select(c => new Tuple<int, string>(c.DisplayIndex, c.Header?.ToString())).ToArray();
+            await App.Current.SettingsManager.UpdateGridAsync(this.GetSettingsKey(), indexes).ConfigureAwait(false);
+        }
+        #endregion
 
         private void _dataGrid_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
@@ -77,7 +98,7 @@ namespace Panoptes.Views.Panels
                 // If not the case, check if any parent is a datagrid cell.
                 // This might happen when clicking within a cell content
                 Control parent = control;
-                while (!(parent is DataGridCell) && parent != null)
+                while (parent is not DataGridCell && parent != null)
                 {
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                     parent = parent.Parent as Control;

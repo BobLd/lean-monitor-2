@@ -1,16 +1,20 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Sessions;
+using Panoptes.Model.Settings;
+using Panoptes.Model.Settings.Json;
 using Panoptes.Model.Statistics;
 using Panoptes.ViewModels;
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.NewSession;
 using Panoptes.ViewModels.Panels;
 using System;
+using System.Threading.Tasks;
 
 namespace Panoptes
 {
@@ -18,6 +22,7 @@ namespace Panoptes
     {
         public App()
         {
+            Name = Global.AppName;
             System.Threading.Thread.CurrentThread.Name = "Avalonia UI Thread";
             Services = ConfigureServices();
         }
@@ -27,15 +32,59 @@ namespace Panoptes
             AvaloniaXamlLoader.Load(this);
         }
 
-        public override void OnFrameworkInitializationCompleted()
+        public override async void OnFrameworkInitializationCompleted()
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                desktop.MainWindow = new MainWindow();
-            }
-
             base.OnFrameworkInitializationCompleted();
+
+            try
+            {
+                if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                    await LoadSplashScreen().ConfigureAwait(true);
+
+                    desktop.MainWindow = new MainWindow();
+                    desktop.ShutdownMode = ShutdownMode.OnLastWindowClose;
+                    desktop.MainWindow.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
+
+        private async Task LoadSplashScreen()
+        {
+            // Show splash screen
+            var splashScreen = new Views.Windows.SplashScreenWindow();
+            splashScreen.Show();
+
+            await Task.Delay(500).ConfigureAwait(true);
+
+            // We need to get user setting before loading the UI
+            await SettingsManager.InitialiseAsync().ConfigureAwait(true);
+
+            splashScreen.Close();
+        }
+
+        /*
+        private void ShowSplashScreen()
+        {
+            // Show splash screen
+            _splashScreen = new Views.Windows.SplashScreenWindow();
+            _splashScreen.Show();
+
+            // We need to get user setting before loading the UI
+            SettingsManager.InitialiseAsync().ConfigureAwait(true).GetAwaiter().OnCompleted(() =>
+            {
+                _splashScreen.Close();
+                _splashScreen = null;
+            });
+        }
+        */
+
+        public ISettingsManager SettingsManager => (ISettingsManager)Services.GetService(typeof(ISettingsManager));
 
         /// <summary>
         /// Gets the current <see cref="App"/> instance in use.
@@ -51,6 +100,12 @@ namespace Panoptes
         {
             var services = new ServiceCollection();
 
+            // Messenger
+            services.AddSingleton<IMessenger, WeakReferenceMessenger>();
+
+            // Settings
+            services.AddSingleton<ISettingsManager, JsonSettingsManager>();
+
             // Results
             services.AddSingleton<IResultConverter, ResultConverter>();
             services.AddSingleton<IResultSerializer, AdvancedResultSerializer>();
@@ -63,13 +118,13 @@ namespace Panoptes
             // Api
             //For<IApiClient>().Singleton().Use<ApiClient>();
 
-            services.AddSingleton<IMessenger, WeakReferenceMessenger>();
-
             services.AddSingleton<INewSessionViewModel, NewStreamSessionViewModel>();
             services.AddSingleton<INewSessionViewModel, NewMongoSessionViewModel>();
             services.AddSingleton<INewSessionViewModel, NewFileSessionViewModel>();
 
             // Viewmodels
+            services.AddTransient<StatusViewModel>();
+            services.AddTransient<SettingsViewModel>();
             services.AddTransient<NewSessionWindowViewModel>();
             //services.AddTransient<AboutWindowViewModel>();
             services.AddTransient<MainWindowViewModel>();
@@ -80,7 +135,6 @@ namespace Panoptes
             services.AddTransient<CashBookPanelViewModel>();
             services.AddTransient<ProfitLossPanelViewModel>();
             services.AddTransient<LogPanelViewModel>();
-            services.AddTransient<StatusViewModel>();
             services.AddTransient<OxyPlotSelectionViewModel>();
 
             //services.AddTransient<ToolPaneViewModel>(); // abstract

@@ -6,9 +6,9 @@
              mc:Ignorable="d"
 			 d:DesignWidth="800" d:DesignHeight="450">
 	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
-		  DoubleTapped="OnDataGridDoubleTapped"
-		  CanUserResizeColumns="True" HeadersVisibility="Column"
-		  AlternatingRowBackground="Transparent" RowBackground="Transparent" SelectedItem="{Binding SelectedItem}">
+			  CanUserReorderColumns="True" CanUserResizeColumns="True"
+			  HeadersVisibility="Column" DoubleTapped="OnDataGridDoubleTapped"
+			  AlternatingRowBackground="Transparent" RowBackground="Transparent" SelectedItem="{Binding SelectedItem}">
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="Symbol" Binding="{Binding SymbolAndCurrency, Mode=OneWay}"/>
 			<!--<DataGridTextColumn Header="Currency Symbol" Binding="{Binding CurrencySymbol, Mode=OneWay}"/>-->

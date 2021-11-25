@@ -18,7 +18,7 @@ namespace Panoptes.ViewModels
         private readonly ISessionService _sessionService;
         //private readonly ILayoutManager _layoutManager;
 
-        private DispatcherTimer _timer = new DispatcherTimer();
+        private readonly DispatcherTimer _timer = new DispatcherTimer();
 
         public RelayCommand ExitCommand { get; }
         public RelayCommand OpenSessionCommand { get; }
@@ -70,14 +70,18 @@ namespace Panoptes.ViewModels
 
         public StatusViewModel StatusViewModel { get; }
 
+        public SettingsViewModel SettingsViewModel { get; }
+
         public MainWindowViewModel(ISessionService resultService, IMessenger messenger, StatusViewModel statusViewModel,
-            LogPanelViewModel logPanelViewModel, StatisticsPanelViewModel statisticsPanelViewModel,
+            SettingsViewModel settingsViewModel, LogPanelViewModel logPanelViewModel, StatisticsPanelViewModel statisticsPanelViewModel,
             RuntimeStatisticsPanelViewModel runtimeStatisticsPanelViewModel, ProfitLossPanelViewModel profitLossPanelViewModel,
             TradesPanelViewModel tradesPanelViewModel, HoldingsPanelViewModel holdingsPane, CashBookPanelViewModel cashBookPane,
             OxyPlotSelectionViewModel oxyPlotSelectionViewModel)
             : base(messenger)
         {
             StatusViewModel = statusViewModel;
+            SettingsViewModel = settingsViewModel;
+
             _sessionService = resultService;
 
             //_layoutManager = layoutManager;
@@ -176,6 +180,11 @@ namespace Panoptes.ViewModels
         public void Initialize()
         {
             _sessionService.Initialize();
+        }
+
+        public void Terminate()
+        {
+            SettingsViewModel.SettingsManager.SaveAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private DateTime _currentDateTimeUtc;
