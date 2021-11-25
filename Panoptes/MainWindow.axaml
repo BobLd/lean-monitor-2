@@ -78,8 +78,10 @@
 				</MenuItem>
 			</Menu>
 
+			<!--
 			<Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeLocal}" HorizontalAlignment="Right" ToolTip.Tip="Local time."/>
 			<Label DockPanel.Dock="Right" Content=" Local:" HorizontalAlignment="Right" ToolTip.Tip="Local time."/>
+			-->
 			<Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeUtc}" HorizontalAlignment="Right" ToolTip.Tip="UTC time."/>
 			<Label DockPanel.Dock="Right" Content="UTC:" HorizontalAlignment="Right" ToolTip.Tip="UTC time."/>
 		</DockPanel>

@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <DebugType>embedded</DebugType>
+    <Version>0.0.0.1-alpha2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" />
     <ProjectReference Include="..\Panoptes.Model.MongoDB\Panoptes.Model.MongoDB.csproj" />
     <ProjectReference Include="..\Panoptes.Model\Panoptes.Model.csproj" />
   </ItemGroup>

@@ -91,7 +91,7 @@ namespace Panoptes.ViewModels
             CashBookPane = cashBookPane;
             OxyPlotSelectionPane = oxyPlotSelectionViewModel;
 
-            Title = $"{Global.AppName} - LEAN Algorithm Monitor - {Global.AppVersion}";
+            Title = $"{Global.AppName} - LEAN Algorithm Monitor - {Global.AppVersion} - {Global.MachineName} ({Global.OSVersion})";
 
 #if DEBUG
             Title = "[DEBUG] " + Title;

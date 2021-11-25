@@ -29,7 +29,7 @@ namespace Panoptes.Model.MongoDB.Sessions
             {
                 Credential = MongoCredential.CreateCredential(null, parameters.UserName, parameters.Password),
                 Server = new MongoServerAddress(_host, _port),
-                ApplicationName = $"{Global.AppName} {Global.AppVersion}",
+                ApplicationName = $"{Global.AppName} {Global.AppVersion} {Global.MachineName} {Global.OSVersion}",
                 HeartbeatInterval = TimeSpan.FromSeconds(5),
                 HeartbeatTimeout = TimeSpan.FromSeconds(40)
             });

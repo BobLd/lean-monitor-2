@@ -4,8 +4,7 @@
 			 xmlns:local="clr-namespace:Panoptes"
 			 xmlns:charts="clr-namespace:Panoptes.Views.Charts"
 			 xmlns:converters="clr-namespace:Panoptes.Views.Converters"
-			 xmlns:panels="clr-namespace:Panoptes.Views.Panels">
-	
+			 xmlns:panels="clr-namespace:Panoptes.Views.Panels">	
 	
 	<Application.Styles>
 		<StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>

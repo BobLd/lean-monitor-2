@@ -1,10 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ApplicationIcon>Resources\icon\halloween53_109170.ico</ApplicationIcon>
-    <Version>0.0.0.1-alpha1</Version>
+    <Version>0.0.0.1-alpha2</Version>
+	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+	<NeutralLanguage>en</NeutralLanguage>
+	<DebugType>embedded</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\icon\halloween53_109170.ico" />
@@ -14,14 +17,15 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.10.10" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.10" />
     <PackageReference Include="Avalonia.Desktop" Version="0.10.10" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.10" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.10" Condition=" '$(Configuration)' == 'Debug' " />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-20210915.2" />
     <PackageReference Include="QuantConnect.Common" Version="2.5.13230" />
    </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" />
+    <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" Condition=" '$(Configuration)' == 'Debug' "/>
     <ProjectReference Include="..\Panoptes.Model.MongoDB\Panoptes.Model.MongoDB.csproj" />
     <ProjectReference Include="..\Panoptes.Model\Panoptes.Model.csproj" />
     <ProjectReference Include="..\Panoptes.ViewModels\Panoptes.ViewModels.csproj" />

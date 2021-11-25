@@ -1,11 +1,15 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System;
+using System.Diagnostics;
 
 namespace Panoptes.Model
 {
     public static class Global
     {
         public const string AppName = "Panoptes";
+
+        public static string MachineName => Environment.MachineName;
+
+        public static string OSVersion => Environment.OSVersion.VersionString;
 
         private static string _appVersion;
         public static string AppVersion
@@ -22,22 +26,29 @@ namespace Panoptes.Model
 
         private static string GetVersion()
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-#pragma warning disable CS8603 // Possible null reference return.
-            if (fvi != null)
+            try
             {
-                if (fvi.FileVersion == fvi.ProductVersion)
+                // https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file
+                var fvi = FileVersionInfo.GetVersionInfo(Environment.ProcessPath);
+#pragma warning disable CS8603 // Possible null reference return.
+                if (fvi != null)
                 {
-                    return fvi.FileVersion;
+                    if (fvi.FileVersion == fvi.ProductVersion)
+                    {
+                        return fvi.FileVersion;
+                    }
+                    else
+                    {
+                        return $"{fvi.FileVersion} ({fvi.ProductVersion})";
+                    }
                 }
-                else
-                {
-                    return $"{fvi.FileVersion} ({fvi.ProductVersion})";
-                }
-            }
-            return null;
+                return null;
 #pragma warning restore CS8603 // Possible null reference return.
+            }
+            catch (System.Exception e)
+            {
+                return $"ERROR in version: {e.Message}";
+            }
         }
     }
 }
