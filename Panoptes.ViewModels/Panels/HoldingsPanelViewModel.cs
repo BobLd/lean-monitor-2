@@ -1,5 +1,6 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
 using QuantConnect;
 using System;
 using System.Collections.Concurrent;
@@ -181,8 +182,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public HoldingsPanelViewModel(IMessenger messenger)
-            : base(messenger)
+        public HoldingsPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         {
             Name = "Holdings";
             Messenger.Register<HoldingsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -235,6 +236,12 @@ namespace Panoptes.ViewModels.Panels
 
             _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _resultBgWorker.RunWorkerAsync();
+        }
+
+        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        {
+            Debug.WriteLine($"HoldingsPanelViewModel.UpdateSettingsAsync: {type}.");
+            return Task.CompletedTask;
         }
 
         //private void ProcessTradeSelected(TradeSelectedMessage m)

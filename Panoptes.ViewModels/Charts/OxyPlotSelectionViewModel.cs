@@ -6,6 +6,7 @@ using OxyPlot.Series;
 using Panoptes.Model;
 using Panoptes.Model.Charting;
 using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
 using Panoptes.ViewModels.Charts.OxyPlot;
 using QuantConnect.Orders;
 using System;
@@ -431,8 +432,8 @@ namespace Panoptes.ViewModels.Charts
             */
         }
 
-        public OxyPlotSelectionViewModel(IMessenger messenger)
-            : base(messenger)
+        public OxyPlotSelectionViewModel(IMessenger messenger, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         {
             Name = "Charts";
             PlotAll = new AsyncRelayCommand(ProcessPlotAll, CanDoBarsAll);
@@ -513,6 +514,12 @@ namespace Panoptes.ViewModels.Charts
             }
 
             InvalidatePlotNoDataThreadUI();
+        }
+
+        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        {
+            Debug.WriteLine($"OxyPlotSelectionViewModelSetAndProcessPlot.UpdateSettingsAsync: {type}.");
+            return Task.CompletedTask;
         }
 
         private ObservableCollection<PlotModel> _plotModels = new ObservableCollection<PlotModel>();

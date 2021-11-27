@@ -1,10 +1,12 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
 {
@@ -38,8 +40,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public LogPanelViewModel(IMessenger messenger)
-            : base(messenger)
+        public LogPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         {
             Name = "Log";
             Messenger.Register<LogPanelViewModel, LogEntryReceivedMessage>(this, (r, m) => r._resultsQueue.Add(m));
@@ -70,6 +72,12 @@ namespace Panoptes.ViewModels.Panels
 
             _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _resultBgWorker.RunWorkerAsync();
+        }
+
+        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        {
+            Debug.WriteLine($"LogPanelViewModel.UpdateSettingsAsync: {type}");
+            return Task.CompletedTask;
         }
 
         private void Clear()

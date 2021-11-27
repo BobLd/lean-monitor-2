@@ -21,6 +21,7 @@ namespace Panoptes
         public static ProfitLossPanelViewModel ProfitLossPanel => GetViewModel<ProfitLossPanelViewModel>();
         public static LogPanelViewModel LogPanel => GetViewModel<LogPanelViewModel>();
         public static OxyPlotSelectionViewModel OxyPlotSelectionPanel => GetViewModel<OxyPlotSelectionViewModel>();
+        public static SettingsViewModel Settings => GetViewModel<SettingsViewModel>();
 
         private static T GetToolViewModel<T>() where T : ToolPaneViewModel
         {

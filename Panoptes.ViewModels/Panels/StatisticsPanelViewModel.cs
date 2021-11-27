@@ -1,11 +1,13 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
 using Panoptes.Model.Statistics;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
 {
@@ -25,8 +27,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public StatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter)
-            : base(messenger)
+        public StatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         {
             Name = "Statistics";
             _statisticsFormatter = statisticsFormatter;
@@ -61,6 +63,12 @@ namespace Panoptes.ViewModels.Panels
                 Value = s.Value,
                 State = _statisticsFormatter.Format(s.Key, s.Value)
             }));
+        }
+
+        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        {
+            Debug.WriteLine($"StatisticsPanelViewModel.UpdateSettingsAsync: {type}.");
+            return Task.CompletedTask;
         }
     }
 }

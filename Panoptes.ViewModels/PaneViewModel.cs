@@ -1,5 +1,8 @@
 ﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Messaging;
+using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels
 {
@@ -8,8 +11,8 @@ namespace Panoptes.ViewModels
         private bool _canClose;
         private string _key;
 
-        public DocumentPaneViewModel(IMessenger messenger)
-            : base(messenger)
+        public DocumentPaneViewModel(IMessenger messenger, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         { }
 
         public bool CanClose
@@ -53,8 +56,8 @@ namespace Panoptes.ViewModels
 
         private string _name;
 
-        public ToolPaneViewModel(IMessenger messenger)
-            : base(messenger)
+        public ToolPaneViewModel(IMessenger messenger, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         { }
 
         public string Name
@@ -88,9 +91,16 @@ namespace Panoptes.ViewModels
         private bool _isSelected;
         private bool _isActive;
 
-        public PaneViewModel(IMessenger messenger)
+        public ISettingsManager SettingsManager { get; }
+
+        public PaneViewModel(IMessenger messenger, ISettingsManager settingsManager)
             : base(messenger)
-        { }
+        {
+            SettingsManager = settingsManager;
+            Messenger.Register<PaneViewModel, SettingsMessage>(this, async (r, m) => await r.UpdateSettingsAsync(m.Value, m.Type).ConfigureAwait(false));
+        }
+
+        protected abstract Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type);
 
         public bool IsSelected
         {

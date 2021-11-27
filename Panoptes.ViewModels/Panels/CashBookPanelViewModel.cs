@@ -1,6 +1,7 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Concurrent;
@@ -218,8 +219,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public CashBookPanelViewModel(IMessenger messenger)
-            : base(messenger)
+        public CashBookPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         {
             Name = "CashBook";
             Messenger.Register<CashBookPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -346,6 +347,12 @@ namespace Panoptes.ViewModels.Panels
                     }
                 }
             }
+        }
+
+        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        {
+            Debug.WriteLine($"CashBookPanelViewModel.UpdateSettingsAsync: {type}.");
+            return Task.CompletedTask;
         }
     }
 }

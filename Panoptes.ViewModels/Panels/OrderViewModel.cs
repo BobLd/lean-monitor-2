@@ -19,8 +19,9 @@ namespace Panoptes.ViewModels.Panels
         public OrderViewModel()
         { }
 
-        public OrderViewModel(Order order) : this()
+        public OrderViewModel(Order order, TimeZoneInfo timeZoneInfo) : this()
         {
+            _timeZoneInfo = timeZoneInfo;
             Events = new ObservableCollection<OrderEvent>();
             BrokerId = new ObservableCollection<string>();
 
@@ -36,7 +37,7 @@ namespace Panoptes.ViewModels.Panels
             ContingentId = order.ContingentId;
             Symbol = order.Symbol;
             PriceCurrency = order.PriceCurrency;
-            Time = order.Time;
+            CreatedTime = order.Time;
 
             _price = order.Price;
             _lastFillTime = order.LastFillTime;
@@ -84,7 +85,7 @@ namespace Panoptes.ViewModels.Panels
             Debug.Assert(ContingentId == order.ContingentId);
             Debug.Assert(Symbol == order.Symbol);
             Debug.Assert(PriceCurrency == order.PriceCurrency);
-            Debug.Assert(Time == order.Time);
+            Debug.Assert(CreatedTime == order.Time);
 
             foreach (var id in order.BrokerId)
             {
@@ -190,6 +191,13 @@ namespace Panoptes.ViewModels.Panels
             {
                 BrokerId.Add(_pendingBrokerIds.Dequeue());
             }
+        }
+
+        private TimeZoneInfo _timeZoneInfo;
+        public void UpdateTimezone(TimeZoneInfo timeZoneInfo)
+        {
+            _timeZoneInfo = timeZoneInfo;
+            // TO DO
         }
 
         public ObservableCollection<OrderEvent> Events { get; }
@@ -302,16 +310,20 @@ namespace Panoptes.ViewModels.Panels
         public string PriceCurrency { get; }
 
         /// <summary>
-        /// Gets the utc time the order was created.
-        /// </summary>
-        public DateTime Time { get; }
-
-        /// <summary>
         /// Gets the utc time this order was created. Alias for <see cref="Time"/>
         /// </summary>
-        public DateTime CreatedTime => Time;
+        public DateTime CreatedTime { get; }
+
+        public DateTime? CreatedTimeLocal
+        {
+            get
+            {
+                return TimeZoneInfo.ConvertTime(CreatedTime, _timeZoneInfo);
+            }
+        }
 
         private DateTime? _lastFillTime;
+
         /// <summary>
         /// Gets the utc time the last fill was received, or null if no fills have been received
         /// </summary>
@@ -323,10 +335,21 @@ namespace Panoptes.ViewModels.Panels
                 if (_lastFillTime == value) return;
                 _lastFillTime = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(LastFillTimeLocal));
+            }
+        }
+
+        public DateTime? LastFillTimeLocal
+        {
+            get
+            {
+                if (!LastFillTime.HasValue) return null;
+                return TimeZoneInfo.ConvertTime(LastFillTime.Value, _timeZoneInfo);
             }
         }
 
         private DateTime? _lastUpdateTime;
+
         /// <summary>
         /// Gets the utc time this order was last updated, or null if the order has not been updated.
         /// </summary>
@@ -338,10 +361,21 @@ namespace Panoptes.ViewModels.Panels
                 if (_lastUpdateTime == value) return;
                 _lastUpdateTime = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(LastUpdateTimeLocal));
+            }
+        }
+
+        public DateTime? LastUpdateTimeLocal
+        {
+            get
+            {
+                if (!LastUpdateTime.HasValue) return null;
+                return TimeZoneInfo.ConvertTime(LastUpdateTime.Value, _timeZoneInfo);
             }
         }
 
         private DateTime? _canceledTime;
+
         /// <summary>
         /// Gets the utc time this order was canceled, or null if the order was not canceled.
         /// </summary>
@@ -353,6 +387,16 @@ namespace Panoptes.ViewModels.Panels
                 if (_canceledTime == value) return;
                 _canceledTime = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(CanceledTimeLocal));
+            }
+        }
+
+        public DateTime? CanceledTimeLocal
+        {
+            get
+            {
+                if (!CanceledTime.HasValue) return null;
+                return TimeZoneInfo.ConvertTime(CanceledTime.Value, _timeZoneInfo);
             }
         }
 
@@ -451,6 +495,16 @@ namespace Panoptes.ViewModels.Panels
                 if (_expiry == value) return;
                 _expiry = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(ExpiryLocal));
+            }
+        }
+
+        public DateTime? ExpiryLocal
+        {
+            get
+            {
+                if (!Expiry.HasValue) return null;
+                return TimeZoneInfo.ConvertTime(Expiry.Value, _timeZoneInfo);
             }
         }
 

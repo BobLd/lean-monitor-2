@@ -1,6 +1,8 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Data;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Panoptes
@@ -15,11 +17,15 @@ namespace Panoptes
         public static void ReorderColumns(this DataGrid dataGrid, IReadOnlyList<Tuple<string, int>> columnsOrder)
         {
             if (columnsOrder == null) return;
-            var currentColumns = dataGrid.Columns.ToDictionary(k => k.Header, k => k.DisplayIndex);
+            var currentColumns = dataGrid.Columns.ToDictionary(k => k.GetSettingsKey(), k => k.DisplayIndex);
             //dataGrid.BeginBatchUpdate();
             foreach (var order in columnsOrder)
             {
-                var oldIndex = currentColumns[order.Item1];
+                if (!currentColumns.TryGetValue(order.Item1, out var oldIndex))
+                {
+                    Debug.WriteLine($"Extensions.ReorderColumns(): Could not find '{order.Item1}' in the DataGrid's columns. Skipping.");
+                    continue;
+                }
                 if (oldIndex == order.Item2) continue;
                 dataGrid.Columns[oldIndex].DisplayIndex = order.Item2;
             }
@@ -32,7 +38,16 @@ namespace Panoptes
         /// <param name="dataGrid">The datagrid.</param>
         public static IReadOnlyList<Tuple<string, int>> GetColumnsHeaderIndexPairs(this DataGrid dataGrid)
         {
-            return dataGrid.Columns.Select(c => new Tuple<string, int>(c.Header?.ToString(), c.DisplayIndex)).ToArray();
+            return dataGrid.Columns.Select(c => new Tuple<string, int>(c.GetSettingsKey(), c.DisplayIndex)).ToArray();
+        }
+
+        public static string? GetSettingsKey(this DataGridColumn column)
+        {
+            if (column is DataGridBoundColumn boundColumn && boundColumn.Binding is Binding binding)
+            {
+                return $"{boundColumn.Header}-{binding.Path}";
+            }
+            return column.Header.ToString();
         }
 
         public static string GetSettingsKey(this Control control)

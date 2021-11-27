@@ -60,6 +60,9 @@
 					<MenuItem Header="_Connect" Command="{Binding ConnectCommand}"/>
 					<MenuItem Header="_Disconnect" Command="{Binding DisconnectCommand}"/>
 				</MenuItem>
+				<MenuItem Header="_Tools">
+					<MenuItem Header="_Options..." Command="{Binding OptionsCommand}"/>
+				</MenuItem>
 				<!--
 				<MenuItem Header="_Window">
 					<MenuItem Header="_Save Window Layout" Command="{Binding SaveLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
@@ -78,10 +81,8 @@
 				</MenuItem>
 			</Menu>
 
-			<!--
 			<Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeLocal}" HorizontalAlignment="Right" ToolTip.Tip="Local time."/>
 			<Label DockPanel.Dock="Right" Content=" Local:" HorizontalAlignment="Right" ToolTip.Tip="Local time."/>
-			-->
 			<Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeUtc}" HorizontalAlignment="Right" ToolTip.Tip="UTC time."/>
 			<Label DockPanel.Dock="Right" Content="UTC:" HorizontalAlignment="Right" ToolTip.Tip="UTC time."/>
 		</DockPanel>

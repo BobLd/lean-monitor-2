@@ -23,7 +23,7 @@ namespace Panoptes
         public App()
         {
             Name = Global.AppName;
-            System.Threading.Thread.CurrentThread.Name = "Avalonia UI Thread";
+            System.Threading.Thread.CurrentThread.Name = $"{Global.AppName} UI Thread";
             Services = ConfigureServices();
         }
 
@@ -63,28 +63,10 @@ namespace Panoptes
             await Task.Delay(500).ConfigureAwait(true);
 
             // We need to get user setting before loading the UI
-            await SettingsManager.InitialiseAsync().ConfigureAwait(true);
+            await ((ISettingsManager)Services.GetService(typeof(ISettingsManager))).InitialiseAsync().ConfigureAwait(true);
 
             splashScreen.Close();
         }
-
-        /*
-        private void ShowSplashScreen()
-        {
-            // Show splash screen
-            _splashScreen = new Views.Windows.SplashScreenWindow();
-            _splashScreen.Show();
-
-            // We need to get user setting before loading the UI
-            SettingsManager.InitialiseAsync().ConfigureAwait(true).GetAwaiter().OnCompleted(() =>
-            {
-                _splashScreen.Close();
-                _splashScreen = null;
-            });
-        }
-        */
-
-        public ISettingsManager SettingsManager => (ISettingsManager)Services.GetService(typeof(ISettingsManager));
 
         /// <summary>
         /// Gets the current <see cref="App"/> instance in use.

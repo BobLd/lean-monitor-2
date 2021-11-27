@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace Panoptes.Model
 {
@@ -7,10 +8,26 @@ namespace Panoptes.Model
     {
         public const string AppName = "Panoptes";
 
+        /// <summary>
+        /// Returns the path of the executable that started the currently executing process.
+        /// Returns null when the path is not available.
+        /// </summary>
         public static string ProcessPath => Environment.ProcessPath;
 
+        /// <summary>
+        /// Returns the directory of the executable that started the currently executing process.
+        /// Returns null when the path is not available.
+        /// </summary>
+        public static string ProcessDirectory => Path.GetDirectoryName(ProcessPath);
+
+        /// <summary>
+        /// Gets the NetBIOS name of this local computer.
+        /// </summary>
         public static string MachineName => Environment.MachineName;
 
+        /// <summary>
+        /// Gets the current platform identifier and version number.
+        /// </summary>
         public static string OSVersion => Environment.OSVersion.VersionString;
 
         private static string _appVersion;

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
 {
@@ -43,8 +45,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public ProfitLossPanelViewModel(IMessenger messenger)
-            : base(messenger)
+        public ProfitLossPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         {
             Name = "Profit & Loss";
             Messenger.Register<ProfitLossPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -79,6 +81,12 @@ namespace Panoptes.ViewModels.Panels
 
             _pnlBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _pnlBgWorker.RunWorkerAsync();
+        }
+
+        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        {
+            Debug.WriteLine($"ProfitLossPanelViewModel.UpdateSettingsAsync: {type}.");
+            return Task.CompletedTask;
         }
 
         private void Clear()

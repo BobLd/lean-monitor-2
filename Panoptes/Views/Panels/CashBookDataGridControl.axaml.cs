@@ -14,6 +14,8 @@ namespace Panoptes.Views.Panels
     {
         private readonly DataGrid _dataGrid;
 
+        public CashBookPanelViewModel ViewModel => (CashBookPanelViewModel)DataContext;
+
         public CashBookDataGridControl()
         {
             InitializeComponent();
@@ -44,7 +46,7 @@ namespace Panoptes.Views.Panels
         {
             try
             {
-                _dataGrid.ReorderColumns(await App.Current.SettingsManager.GetGridAsync(this.GetSettingsKey()).ConfigureAwait(true));
+                _dataGrid.ReorderColumns(await ViewModel.SettingsManager.GetGridAsync(this.GetSettingsKey()).ConfigureAwait(true));
             }
             catch (Exception ex)
             {
@@ -55,7 +57,7 @@ namespace Panoptes.Views.Panels
         public async Task SaveColumnsOrder()
         {
             Debug.WriteLine("CashBookDataGridControl.ColumnReordered: Saving columns order...");
-            await App.Current.SettingsManager.UpdateGridAsync(this.GetSettingsKey(), _dataGrid.GetColumnsHeaderIndexPairs()).ConfigureAwait(false);
+            await ViewModel.SettingsManager.UpdateGridAsync(this.GetSettingsKey(), _dataGrid.GetColumnsHeaderIndexPairs()).ConfigureAwait(false);
         }
         #endregion
 

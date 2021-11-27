@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Toolkit.Mvvm.Messaging;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Panoptes.Model.Settings.Json
 {
-    public sealed class JsonSettingsManager : ISettingsManager
+    public sealed class JsonSettingsManager : BaseSettingsManager
     {
         private const string UserSettingsFileName = "settings";
 
@@ -17,11 +17,9 @@ namespace Panoptes.Model.Settings.Json
 
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-        public UserSettings UserSettings { get; set; }
-
-        public JsonSettingsManager()
+        public JsonSettingsManager(IMessenger messenger) : base(messenger)
         {
-            _filePath = Path.Combine(Path.GetDirectoryName(Global.ProcessPath), UserSettingsFileName);
+            _filePath = Path.Combine(Global.ProcessDirectory, UserSettingsFileName);
             _jsonSerializerOptions = new JsonSerializerOptions()
             {
                 Converters =
@@ -39,25 +37,10 @@ namespace Panoptes.Model.Settings.Json
 #endif
         }
 
-        public TimeZoneInfo SelectedTimeZone
+        /// <inheritdoc/>
+        public override async Task InitialiseAsync()
         {
-            get
-            {
-                return UserSettings.SelectedTimeZone;
-            }
-
-            set
-            {
-                UserSettings.SelectedTimeZone = value;
-                // Save file?
-            }
-        }
-
-        public bool IsInitialised { get; private set; }
-
-        public async Task InitialiseAsync()
-        {
-            if (IsInitialised) // || UserSettings != null)
+            if (IsInitialised)
             {
                 Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Already initialised.");
                 return;
@@ -90,7 +73,8 @@ namespace Panoptes.Model.Settings.Json
             Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Initialising done.");
         }
 
-        public async Task SaveAsync()
+        /// <inheritdoc/>
+        public override async Task SaveAsync()
         {
             Debug.WriteLine("JsonSettingsManager.Save: Saving...");
 
@@ -116,35 +100,6 @@ namespace Panoptes.Model.Settings.Json
                 }
             }
             Debug.WriteLine("JsonSettingsManager.Save: Saving done.");
-        }
-
-        public Task UpdateGridAsync(string name, IReadOnlyList<Tuple<string, int>> columns)
-        {
-            return Task.Run(() =>
-            {
-                columns = columns.OrderBy(x => x.Item1).ToList();
-                if (UserSettings.GridsColumns.TryGetValue(name, out var grid))
-                {
-                    UserSettings.GridsColumns[name] = columns;
-                }
-                else
-                {
-                    // Grid does not exists
-                    UserSettings.GridsColumns.TryAdd(name, columns);
-                }
-            });
-        }
-
-        public Task<IReadOnlyList<Tuple<string, int>>> GetGridAsync(string name)
-        {
-            return Task.Run(() =>
-            {
-                if (UserSettings.GridsColumns.TryGetValue(name, out var columns))
-                {
-                    return columns;
-                }
-                return null;
-            });
         }
     }
 }

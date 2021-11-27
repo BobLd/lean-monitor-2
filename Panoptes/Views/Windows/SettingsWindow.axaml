@@ -1,0 +1,28 @@
+<Window x:Class="Panoptes.Views.Windows.SettingsWindow"
+		xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+		DataContext="{Binding Settings, Source={StaticResource Locator}}"
+		WindowStartupLocation="CenterOwner"
+		CanResize="False" SizeToContent="WidthAndHeight"
+        Title="Settings">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		
+		<TextBlock Grid.Row="0" Text="{Binding SelectedTimeZone}"/>
+		<ComboBox Grid.Row="1" Items="{Binding TimeZones}" SelectedItem="{Binding SelectedTimeZone}"/>
+
+		<ComboBox Grid.Row="2" Items="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" SelectedIndex="0"/>
+
+		<Grid Grid.Row="3" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="10">
+			<Button Content="OK" Command="{Binding SaveCommandAsync}" HorizontalAlignment="Right"/>
+		</Grid>
+	</Grid>
+</Window>

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
 using QuantConnect.Orders;
 using System;
 using System.Collections.Concurrent;
@@ -223,8 +224,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public TradesPanelViewModel(IMessenger messenger)
-            : base(messenger)
+        public TradesPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
+            : base(messenger, settingsManager)
         {
             Name = "Trades";
             Messenger.Register<TradesPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -326,6 +327,24 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
+        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        {
+            Debug.WriteLine($"TradesPanelViewModel.UpdateSettingsAsync: {type}.");
+
+            return Task.Run(() =>
+            {
+                switch (type)
+                {
+                    case UserSettingsUpdate.Timezone:
+                        _ordersDic.Values.ToList().AsParallel().ForAll(o => o.UpdateTimezone(userSettings.SelectedTimeZone));
+                        break;
+
+                    default:
+                        return;
+                }
+             });
+        }
+
         private void Clear()
         {
             try
@@ -365,7 +384,7 @@ namespace Panoptes.ViewModels.Panels
                     // Create new orders
                     for (int i = 0; i < result.Orders.Count; i++)
                     {
-                        var ovm = new OrderViewModel(result.Orders.ElementAt(i).Value);
+                        var ovm = new OrderViewModel(result.Orders.ElementAt(i).Value, SettingsManager.SelectedTimeZone);
 
                         PanoptesSounds.PlayNewOrder(); // Sound alert 
 

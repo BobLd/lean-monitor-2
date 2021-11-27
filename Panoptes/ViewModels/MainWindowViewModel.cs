@@ -9,6 +9,7 @@ using Panoptes.Model.Sessions;
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.Panels;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels
@@ -27,6 +28,8 @@ namespace Panoptes.ViewModels
 
         public RelayCommand ConnectCommand { get; }
         public RelayCommand DisconnectCommand { get; }
+
+        public RelayCommand OptionsCommand { get; }
 
         /*
         public RelayCommand<DockingManager> SaveLayoutCommand { get; }
@@ -95,7 +98,7 @@ namespace Panoptes.ViewModels
             CashBookPane = cashBookPane;
             OxyPlotSelectionPane = oxyPlotSelectionViewModel;
 
-            Title = $"{Global.AppName} - LEAN Algorithm Monitor - {Global.AppVersion} - {Global.MachineName} ({Global.OSVersion})";
+            Title = $"{Global.AppName} - LEAN Algorithm Monitor - {Global.AppVersion} - {Global.MachineName}";
 
 #if DEBUG
             Title = "[DEBUG] " + Title;
@@ -114,6 +117,11 @@ namespace Panoptes.ViewModels
             ExportCommand = new RelayCommand(Export, () => IsSessionActive && false); // deactivate for the moment
             ConnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = true, () => _sessionState != SessionState.Subscribed && _sessionService.CanSubscribe);
             DisconnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = false, () => _sessionState != SessionState.Unsubscribed);
+            OptionsCommand = new RelayCommand(() =>
+            {
+                Debug.WriteLine("Show Options window.");
+                new Views.Windows.SettingsWindow().Show();
+            });
 
             /*
             SaveLayoutCommand = new RelayCommand<DockingManager>(manager => _layoutManager.SaveLayout(manager));
@@ -208,7 +216,7 @@ namespace Panoptes.ViewModels
         {
             get
             {
-                return _currentDateTimeUtc.ToLocalTime();
+                return SettingsViewModel.SettingsManager.ConvertToSelectedTimezone(_currentDateTimeUtc);
             }
         }
 
