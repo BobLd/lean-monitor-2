@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Platform;
 using Panoptes.ViewModels.Panels;
 using Panoptes.Views.Controls;
 using Panoptes.Views.Windows;
@@ -10,6 +9,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Panoptes.Views.Panels
@@ -117,29 +117,22 @@ namespace Panoptes.Views.Panels
 
             if (sender is DataGrid dataGrid && dataGrid.SelectedItem is OrderViewModel order)
             {
+                // Bug: newly opened window cannot keep focus,
+                // see https://github.com/AvaloniaUI/Avalonia/issues/5740
+                // Seems to work since v0.10.11-rc.1
                 if (_openWindows.TryGetValue(order.Id, out var window))
                 {
                     window.Activate();
                 }
                 else
                 {
-                    var tradeInfoWindow = new TradeInfoWindow(order)
-                    {
-                        Topmost = true,
-                        ShowActivated = true,
-                        ShowInTaskbar = true,
-
-                        //https://stackoverflow.com/questions/65748375/avaloniaui-how-to-change-the-style-of-the-window-borderless-toolbox-etc
-                        //ExtendClientAreaToDecorationsHint = true,
-                        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome,
-                        ExtendClientAreaTitleBarHeightHint = -1
-                    };
-                    tradeInfoWindow.Closed += TradeInfoWindow_Closed;
-                    _openWindows.TryAdd(order.Id, tradeInfoWindow);
-
+                    var tradeInfoWindow = new TradeInfoWindow(order);
 #if DEBUG
                     tradeInfoWindow.AttachDevTools();
 #endif
+
+                    tradeInfoWindow.Closed += TradeInfoWindow_Closed;
+                    _openWindows.TryAdd(order.Id, tradeInfoWindow);
                     tradeInfoWindow.Show();
                 }
                 e.Handled = true;
@@ -151,6 +144,12 @@ namespace Panoptes.Views.Panels
             if (sender is TradeInfoWindow window)
             {
                 _openWindows.TryRemove(window.OrderId, out _);
+
+                // Activate previous window
+                if (!_openWindows.IsEmpty)
+                {
+                    _openWindows.First().Value.Activate();
+                }
             }
         }
     }

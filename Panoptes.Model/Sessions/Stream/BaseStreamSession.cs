@@ -259,6 +259,12 @@ namespace Panoptes.Model.Sessions.Stream
         /// <returns>Returns true if the packet was handled, otherwise false.</returns>
         protected bool HandlePacketEventsListener(string payload, PacketType packetType)
         {
+            if (_cts?.IsCancellationRequested != false)
+            {
+                Debug.WriteLine("BaseStreamSession.HandlePacketEventsListener: Canceled.");
+                return false;
+            }
+
             switch (packetType)
             {
                 case PacketType.AlgorithmStatus:
@@ -298,7 +304,7 @@ namespace Panoptes.Model.Sessions.Stream
                     break;
 
                 default:
-                    Debug.WriteLine($"HandlePacketEventsListener: Unknown packet type '{packetType}'.");
+                    Debug.WriteLine($"BaseStreamSession.HandlePacketEventsListener: Unknown packet type '{packetType}'.");
                     return false;
             }
             return true;

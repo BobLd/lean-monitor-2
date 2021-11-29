@@ -60,7 +60,8 @@ namespace Panoptes
             var splashScreen = new Views.Windows.SplashScreenWindow();
             splashScreen.Show();
 
-            await Task.Delay(500).ConfigureAwait(true);
+            // Wait 1 second to make sure the splash screen is visible
+            await Task.Delay(1_000).ConfigureAwait(true);
 
             // We need to get user setting before loading the UI
             await ((ISettingsManager)Services.GetService(typeof(ISettingsManager))).InitialiseAsync().ConfigureAwait(true);
@@ -94,12 +95,13 @@ namespace Panoptes
             services.AddSingleton<IResultMutator, BenchmarkResultMutator>();
             services.AddSingleton<IStatisticsFormatter, StatisticsFormatter>();
 
-            // Sessions
+            // Session
             services.AddSingleton<ISessionService, SessionService>(); //SessionService>();
 
             // Api
             //For<IApiClient>().Singleton().Use<ApiClient>();
 
+            // Sessions
             services.AddSingleton<INewSessionViewModel, NewStreamSessionViewModel>();
             services.AddSingleton<INewSessionViewModel, NewMongoSessionViewModel>();
             services.AddSingleton<INewSessionViewModel, NewFileSessionViewModel>();

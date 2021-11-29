@@ -6,6 +6,7 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Sessions;
+using Panoptes.Model.Settings;
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.Panels;
 using System;
@@ -129,6 +130,7 @@ namespace Panoptes.ViewModels
             ResetLayoutCommand = new RelayCommand<DockingManager>(manager => _layoutManager.ResetLayout(manager));
             */
 
+            Messenger.Register<MainWindowViewModel, SettingsMessage>(this, async (r, m) => await r.UpdateSettingsAsync(m.Value, m.Type).ConfigureAwait(false));
             Messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, async (r, _) => await r.InvalidateCommands().ConfigureAwait(false));
             Messenger.Register<MainWindowViewModel, SessionClosedMessage>(this, async (r, _) =>
             {
@@ -143,9 +145,9 @@ namespace Panoptes.ViewModels
                 await r.InvalidateCommands().ConfigureAwait(false);
             });
 
+            /*
             Messenger.Register<MainWindowViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
-                /*
                 try
                 {
                     lock (_documents)
@@ -157,12 +159,10 @@ namespace Panoptes.ViewModels
                 {
                     Trace.WriteLine(e);
                 }
-                */
             });
 
             Messenger.Register<MainWindowViewModel, GridRequestMessage>(this, (r, m) =>
             {
-                /*
                 var chartTableViewModel = new GridPanelViewModel
                 {
                     Key = m.Key
@@ -177,8 +177,8 @@ namespace Panoptes.ViewModels
                 // Get the latest data for this tab and inject it
                 var chart = _sessionService.LastResult.Charts[m.Key];
                 chartTableViewModel.ParseChart(chart);
-                */
             });
+            */
 
             _timer.Interval = TimeSpan.FromMilliseconds(100);
             _timer.Tick += (s, e) => CurrentDateTimeUtc = DateTime.UtcNow;
@@ -217,6 +217,14 @@ namespace Panoptes.ViewModels
             get
             {
                 return SettingsViewModel.SettingsManager.ConvertToSelectedTimezone(_currentDateTimeUtc);
+            }
+        }
+
+        public string SelectedTimeZone
+        {
+            get
+            {
+                return SettingsViewModel.SettingsManager.SelectedTimeZone.DisplayName;
             }
         }
 
@@ -267,6 +275,24 @@ namespace Panoptes.ViewModels
                 ExportCommand.NotifyCanExecuteChanged();
                 ConnectCommand.NotifyCanExecuteChanged();
                 DisconnectCommand.NotifyCanExecuteChanged();
+            });
+        }
+
+        private Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        {
+            Debug.WriteLine($"TradesPanelViewModel.UpdateSettingsAsync: {type}.");
+
+            return Task.Run(() =>
+            {
+                switch (type)
+                {
+                    case UserSettingsUpdate.Timezone:
+                        OnPropertyChanged(nameof(SelectedTimeZone));
+                        break;
+
+                    default:
+                        return;
+                }
             });
         }
     }

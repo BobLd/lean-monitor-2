@@ -12,8 +12,7 @@
 		Topmost="True" ShowActivated="True" ShowInTaskbar="False"
 		ExtendClientAreaToDecorationsHint="True" ExtendClientAreaChromeHints="NoChrome"
 		ExtendClientAreaTitleBarHeightHint="-1"
-		CanResize="False"
-		SizeToContent="Height">
+		CanResize="False" SizeToContent="Height">
 	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
 		<Grid>
 			<Grid.RowDefinitions>

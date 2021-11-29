@@ -10,8 +10,7 @@
 		Topmost="True" ShowActivated="True" ShowInTaskbar="False"
 		ExtendClientAreaToDecorationsHint="True" ExtendClientAreaChromeHints="NoChrome"
 		ExtendClientAreaTitleBarHeightHint="-1"
-		CanResize="False"
-        Title="SplashScreenWindow">
+		CanResize="False" Title="Panoptes Splash Screen">
 	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
 		<Grid>
 			<Grid.RowDefinitions>

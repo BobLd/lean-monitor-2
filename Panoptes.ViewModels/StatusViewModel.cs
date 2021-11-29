@@ -3,6 +3,7 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Sessions;
+using Panoptes.Model.Settings;
 using QuantConnect;
 using System;
 using System.Collections.Generic;
@@ -14,9 +15,12 @@ namespace Panoptes.ViewModels
     {
         private readonly ISessionService _sessionService;
 
-        public StatusViewModel(IMessenger messenger, ISessionService sessionService) : base(messenger)
+        public ISettingsManager SettingsManager { get; }
+
+        public StatusViewModel(IMessenger messenger, ISessionService sessionService, ISettingsManager settingsManager) : base(messenger)
         {
             _sessionService = sessionService;
+            SettingsManager = settingsManager;
 
             Messenger.Register<StatusViewModel, SessionOpenedMessage>(this, (r, m) =>
             {
@@ -83,7 +87,11 @@ namespace Panoptes.ViewModels
             {
                 if (_isLive == value) return;
                 _isLive = value;
-                if (_isLive.HasValue) PanoptesSounds.CanPlaySounds = _isLive.Value;
+                if (_isLive == false)
+                {
+                    // If we are in backtest, we override
+                    PanoptesSounds.CanPlaySounds = false;
+                }
                 OnPropertyChanged();
             }
         }

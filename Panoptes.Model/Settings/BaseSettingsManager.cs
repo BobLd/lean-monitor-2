@@ -34,6 +34,14 @@ namespace Panoptes.Model.Settings
 
         public bool IsInitialised { get; protected set; }
 
+        public bool SoundsActivated
+        {
+            get { return UserSettings.SoundsActivated; }
+            set { UserSettings.SoundsActivated = value; }
+        }
+
+        public IEnumerable<string> SetupGridsColumns => UserSettings.GridsColumns.Keys;
+
         public abstract Task InitialiseAsync();
 
         public abstract Task SaveAsync();
@@ -79,6 +87,13 @@ namespace Panoptes.Model.Settings
             }
 
             return TimeZoneInfo.ConvertTime(dateTime, SelectedTimeZone);
+        }
+
+        /// <inheritdoc/>
+        public void SetSoundsActivated(bool enable)
+        {
+            PanoptesSounds.CanPlaySounds = enable;
+            UserSettings.SoundsActivated = enable;
         }
     }
 }

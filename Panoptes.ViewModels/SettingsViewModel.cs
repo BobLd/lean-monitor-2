@@ -22,7 +22,7 @@ namespace Panoptes.ViewModels
             SettingsManager = settingsManager;
 
             TimeZones = new ObservableCollection<TimeZoneInfo>(TimeZoneInfo.GetSystemTimeZones());
-            Grids = new ObservableCollection<string> (SettingsManager.UserSettings.GridsColumns.Keys);
+            Grids = new ObservableCollection<string>(SettingsManager.SetupGridsColumns);
 
             SaveCommandAsync = new AsyncRelayCommand(SaveChanges, () => _hasChanged);
 
@@ -33,6 +33,21 @@ namespace Panoptes.ViewModels
         public ObservableCollection<TimeZoneInfo> TimeZones { get; }
 
         public ObservableCollection<string> Grids { get; }
+
+        public bool SoundsActivated
+        {
+            get
+            {
+                return SettingsManager.SoundsActivated;
+            }
+
+            set
+            {
+                SettingsManager.SetSoundsActivated(value);
+                OnPropertyChanged();
+                NotifyChanged();
+            }
+        }
 
         private string _selectedGrid;
         public string SelectedGrid

@@ -30,6 +30,11 @@ namespace Panoptes.Model.Settings
         Task<IReadOnlyList<Tuple<string, int>>> GetGridAsync(string name);
 
         /// <summary>
+        /// Activate/Deactivate sounds.
+        /// </summary>
+        void SetSoundsActivated(bool enable);
+
+        /// <summary>
         /// Convert to selected timezone.
         /// </summary>
         /// <param name="dateTime">The <see cref="DateTime"/> to convert.</param>
@@ -37,7 +42,11 @@ namespace Panoptes.Model.Settings
 
         bool IsInitialised { get; }
 
+        IEnumerable<string> SetupGridsColumns { get; }
+
         TimeZoneInfo SelectedTimeZone { get; set; }
+
+        bool SoundsActivated { get; }
 
         UserSettings UserSettings { get; }
     }

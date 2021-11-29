@@ -10,6 +10,8 @@ namespace Panoptes.Model.Settings
 
         public IDictionary<string, IReadOnlyList<Tuple<string, int>>> GridsColumns { get; set; }
 
+        public bool SoundsActivated { get; set; }
+
         public class DefaultUserSettings : UserSettings
         {
             public DefaultUserSettings()

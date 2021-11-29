@@ -3,26 +3,50 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+		Icon="/Resources/icon/halloween53_109170.ico"
 		DataContext="{Binding Settings, Source={StaticResource Locator}}"
 		WindowStartupLocation="CenterOwner"
+		Topmost="True" ShowActivated="True" ShowInTaskbar="True"
 		CanResize="False" SizeToContent="WidthAndHeight"
-        Title="Settings">
-	<Grid>
+        Title="Settings"
+		MinWidth="400"
+		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450">
+	<Grid Margin="2">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
-			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 		
-		<TextBlock Grid.Row="0" Text="{Binding SelectedTimeZone}"/>
-		<ComboBox Grid.Row="1" Items="{Binding TimeZones}" SelectedItem="{Binding SelectedTimeZone}"/>
+		<TabControl Grid.Row="0" TabStripPlacement="Left">
+			<TabItem Header="General">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
 
-		<ComboBox Grid.Row="2" Items="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" SelectedIndex="0"/>
+					<TextBlock Grid.Row="0" Text="{Binding SelectedTimeZone}"/>
+					<ComboBox Grid.Row="1" Items="{Binding TimeZones}" SelectedItem="{Binding SelectedTimeZone}"/>
 
-		<Grid Grid.Row="3" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="10">
-			<Button Content="OK" Command="{Binding SaveCommandAsync}" HorizontalAlignment="Right"/>
+					<ComboBox Grid.Row="2" Items="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" SelectedIndex="0"/>
+				</Grid>			
+			</TabItem>
+			<TabItem Header="Sounds">
+				<Grid>
+					<CheckBox Content="Sound activated" IsThreeState="False" IsChecked="{Binding SoundsActivated}"/>
+				</Grid>
+			</TabItem>
+			<TabItem Header="Colors">
+				<Grid>
+					
+				</Grid>
+			</TabItem>
+		</TabControl>
+		
+		<Grid Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="10">
+			<Button Content="Save" IsDefault="True" Command="{Binding SaveCommandAsync}" HorizontalAlignment="Right"/>
 		</Grid>
 	</Grid>
 </Window>

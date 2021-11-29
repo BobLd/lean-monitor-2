@@ -16,10 +16,10 @@
     <AvaloniaResource Include="Resources\icon\halloween53_109170.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.10" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.10" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.10" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.10" Condition=" '$(Configuration)' == 'Debug' " />
+    <PackageReference Include="Avalonia" Version="0.10.11-rc.1" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.11-rc.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.11-rc.1" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.11-rc.1" Condition=" '$(Configuration)' == 'Debug' " />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-20210915.2" />
     <PackageReference Include="QuantConnect.Common" Version="2.5.13230" />
