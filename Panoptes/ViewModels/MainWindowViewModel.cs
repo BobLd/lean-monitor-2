@@ -288,6 +288,7 @@ namespace Panoptes.ViewModels
                 {
                     case UserSettingsUpdate.Timezone:
                         OnPropertyChanged(nameof(SelectedTimeZone));
+                        OnPropertyChanged(nameof(CurrentDateTimeLocal));
                         break;
 
                     default:
