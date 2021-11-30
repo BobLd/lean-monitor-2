@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ApplicationIcon>Resources\icon\logo_plain.ico</ApplicationIcon>
-    <Version>0.0.0.1-alpha2</Version>
+    <Version>0.0.0.1-alpha3</Version>
 	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	<NeutralLanguage>en</NeutralLanguage>
 	<DebugType>embedded</DebugType>
