@@ -45,7 +45,7 @@ namespace Panoptes.Model.Mock
         public MockStreamingMessageHandler(StreamSessionParameters streamParameters)
         {
             _port = streamParameters.Port;
-            _startTime = DateTime.Now;
+            _startTime = DateTime.UtcNow;
             _currentTime = _startTime;
             _orderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
         }
