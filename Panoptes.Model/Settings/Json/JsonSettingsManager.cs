@@ -53,6 +53,7 @@ namespace Panoptes.Model.Settings.Json
             {
                 UserSettings = new UserSettings.DefaultUserSettings();
                 Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Initialising done - using default.");
+                await SaveAsync().ConfigureAwait(false);
                 return;
             }
 

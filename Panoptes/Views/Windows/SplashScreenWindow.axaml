@@ -11,15 +11,55 @@
 		ExtendClientAreaToDecorationsHint="True" ExtendClientAreaChromeHints="NoChrome"
 		ExtendClientAreaTitleBarHeightHint="-1"
 		CanResize="False" Title="Panoptes Splash Screen">
+
+	<Window.Styles>
+		<!--Default animation-->
+		<Style Selector="Rectangle.red">
+			<Setter Property="Height" Value="100"/>
+			<Setter Property="Width" Value="100"/>
+			<Style.Animations>
+				<Animation Duration="0:0:1" IterationCount="Infinite" PlaybackDirection="Alternate">
+					<KeyFrame Cue="0%">
+						<Setter Property="Opacity" Value="0.2"/>
+						<Setter Property="Fill" Value="Red"/>
+						<Setter Property="RotateTransform.Angle" Value="-45"/>
+					</KeyFrame>
+					<KeyFrame Cue="100%">
+						<Setter Property="Opacity" Value="1.0"/>
+						<Setter Property="Fill" Value="Green"/>
+						<Setter Property="RotateTransform.Angle" Value="45"/>
+					</KeyFrame>
+				</Animation>
+			</Style.Animations>
+		</Style>
+		
+		<!--On mouse over animation-->
+		<Style Selector="Rectangle.red:pointerover">
+			<Style.Animations>
+				<Animation Duration="0:0:0.5" Easing="SineEaseInOut">
+					<KeyFrame Cue="50%">
+						<Setter Property="ScaleTransform.ScaleX" Value="0.4"/>
+						<Setter Property="ScaleTransform.ScaleY" Value="0.4"/>
+					</KeyFrame>
+				</Animation>
+			</Style.Animations>
+		</Style>
+	</Window.Styles>
+	
 	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
 		<Grid>
 			<Grid.RowDefinitions>
 				<RowDefinition Height="24"/>
-				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="*"/>
+				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
 
 			<Label Name="_statusLabel" Grid.Row="0" Content="Opening Panoptes..." HorizontalContentAlignment="Center" VerticalContentAlignment="Stretch"/>
+
+			<Border BorderBrush="AliceBlue" BorderThickness="1" Grid.Row="1">
+				<Rectangle Classes="red"/>
+			</Border>
+			
 			<TextBox Name="_errorTextBlock" Grid.Row="1" Margin="0" Padding="0" IsReadOnly="True" IsEnabled="False" IsVisible="False"
 					 HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource ErrorBrush}"/>
 
