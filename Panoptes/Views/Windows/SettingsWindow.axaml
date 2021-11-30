@@ -19,29 +19,35 @@
 		</Grid.RowDefinitions>
 		<TabControl Grid.Row="0" TabStripPlacement="Left">
 			<TabItem Header="General">
-				<Grid>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
+				<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1">
+					<Grid>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+						</Grid.RowDefinitions>
 
-					<TextBlock Grid.Row="0" Text="{Binding SelectedTimeZone}"/>
-					<ComboBox Grid.Row="1" Items="{Binding TimeZones}" SelectedItem="{Binding SelectedTimeZone}"/>
+						<TextBlock Grid.Row="0" Text="{Binding SelectedTimeZone}"/>
+						<ComboBox Grid.Row="1" Items="{Binding TimeZones}" SelectedItem="{Binding SelectedTimeZone}"/>
 
-					<ComboBox Grid.Row="2" Items="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" SelectedIndex="0"/>
-				</Grid>			
+						<ComboBox Grid.Row="2" Items="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" SelectedIndex="0"/>
+					</Grid>
+				</Border>
 			</TabItem>
 			<TabItem Header="Sounds">
-				<Grid>
-					<CheckBox Content="Sound activated" IsThreeState="False" IsChecked="{Binding SoundsActivated}"/>
-				</Grid>
+				<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1">
+					<Grid>
+						<CheckBox Content="Sound activated" IsThreeState="False" IsChecked="{Binding SoundsActivated}"/>
+					</Grid>
+				</Border>
 			</TabItem>
 			<TabItem Header="Colors">
-				<Grid>
-					
-				</Grid>
+				<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1">
+					<Grid>
+
+					</Grid>
+				</Border>
 			</TabItem>
 		</TabControl>
 		
