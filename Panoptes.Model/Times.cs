@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Panoptes.Model
 {
@@ -18,7 +14,7 @@ namespace Panoptes.Model
 
         public static double GetSecondsToNextMinute()
         {
-            var timeOfDay = DateTime.Now.TimeOfDay;
+            var timeOfDay = DateTime.UtcNow.TimeOfDay;
             var nextFullMinute = TimeSpan.FromMinutes(Math.Ceiling(timeOfDay.TotalMinutes));
             return (nextFullMinute - timeOfDay).TotalSeconds;
         }
