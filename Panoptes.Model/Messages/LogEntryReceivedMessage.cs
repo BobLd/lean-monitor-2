@@ -21,8 +21,13 @@ namespace Panoptes.Model.Messages
             EntryType = entryType;
         }
 
+        /// <summary>
+        /// UTC time.
+        /// </summary>
         public DateTime DateTime { get; }
+
         public string Message { get; }
+
         public LogItemType EntryType { get; }
     }
 }

@@ -132,7 +132,7 @@ namespace Panoptes
 
             Debug.Assert(!string.IsNullOrEmpty(message));
 
-            _messenger.Send(new LogEntryReceivedMessage(DateTime.Now, message, type));
+            _messenger.Send(new LogEntryReceivedMessage(DateTime.UtcNow, message, type));
         }
 
         public void HandleStateChanged(SessionState state)
