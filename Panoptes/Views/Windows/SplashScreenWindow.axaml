@@ -22,13 +22,13 @@
 				<Animation Duration="0:0:1" IterationCount="Infinite" PlaybackDirection="Alternate">
 					<KeyFrame Cue="0%">
 						<Setter Property="Opacity" Value="0.2"/>
-						<Setter Property="Fill" Value="Red"/>
+						<Setter Property="Fill" Value="Blue"/>
 						<Setter Property="RotateTransform.Angle" Value="-45"/>
 					</KeyFrame>
 					<KeyFrame Cue="100%">
 						<Setter Property="Opacity" Value="1.0"/>
 						<Setter Property="Fill" Value="Green"/>
-						<Setter Property="RotateTransform.Angle" Value="45"/>
+						<Setter Property="RotateTransform.Angle" Value="-45"/>
 					</KeyFrame>
 				</Animation>
 			</Style.Animations>
@@ -45,6 +45,31 @@
 				</Animation>
 			</Style.Animations>
 		</Style>
+
+		<Style Selector="DrawingPresenter.Opacity">
+			<Style.Animations>
+				<Animation Duration="0:0:2.0" IterationCount="Infinite" PlaybackDirection="Alternate">
+					<KeyFrame Cue="0%">
+						<Setter Property="Opacity" Value="0.2"/>
+					</KeyFrame>
+					<KeyFrame Cue="100%">
+						<Setter Property="Opacity" Value="1.0"/>						
+					</KeyFrame>
+				</Animation>
+			</Style.Animations>
+		</Style>
+
+		<!--On mouse over animation-->
+		<Style Selector="DrawingPresenter.Opacity:pointerover">
+			<Style.Animations>
+				<Animation Duration="0:0:1.5" Easing="SineEaseInOut" PlaybackDirection="Alternate">
+					<KeyFrame Cue="50%">
+						<Setter Property="ScaleTransform.ScaleX" Value="-0.5"/>
+						<Setter Property="ScaleTransform.ScaleY" Value="0.5"/>
+					</KeyFrame>
+				</Animation>
+			</Style.Animations>
+		</Style>
 	</Window.Styles>
 	
 	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderLowBrush}">
@@ -57,7 +82,8 @@
 
 			<Label Name="_statusLabel" Grid.Row="0" Content="Opening Panoptes..." HorizontalContentAlignment="Center" VerticalContentAlignment="Stretch"/>
 
-			<Rectangle Classes="red" Grid.Row="1"/>
+			<DrawingPresenter Grid.Row="1" Drawing="{StaticResource LogoPlain.Main}" Classes="Opacity" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+			<!--<Rectangle Classes="red" Grid.Row="1"/>-->
 			
 			<TextBox Name="_errorTextBlock" Grid.Row="1" Margin="0" Padding="0" IsReadOnly="True" IsEnabled="False" IsVisible="False"
 					 HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource ErrorBrush}"/>

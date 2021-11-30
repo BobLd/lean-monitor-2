@@ -10,7 +10,7 @@
 		xmlns:panels1="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
 		xmlns:viewModel="clr-namespace:Panoptes.ViewModels"
 		xmlns:qc="clr-namespace:QuantConnect;assembly=QuantConnect.Common"
-		Icon="/Resources/icon/halloween53_109170.ico"
+		Icon="/Resources/icon/logo_plain.ico"
 		DataContext="{Binding MainWindow, Source={StaticResource Locator}}"
 		Opened="OnOpened"
 		Closed="OnClosed"

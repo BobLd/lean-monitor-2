@@ -3,17 +3,17 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <ApplicationIcon>Resources\icon\halloween53_109170.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\icon\logo_plain.ico</ApplicationIcon>
     <Version>0.0.0.1-alpha2</Version>
 	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	<NeutralLanguage>en</NeutralLanguage>
 	<DebugType>embedded</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Resources\icon\halloween53_109170.ico" />
+    <None Remove="Resources\icon\logo_plain.ico" />
   </ItemGroup>
   <ItemGroup>
-    <AvaloniaResource Include="Resources\icon\halloween53_109170.ico" />
+    <AvaloniaResource Include="Resources\icon\logo_plain.ico" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.10.11-rc.1" />

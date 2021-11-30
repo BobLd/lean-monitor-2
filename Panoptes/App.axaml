@@ -11,8 +11,9 @@
 		<StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseDark.xaml"/>
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Default.xaml"/>
 		<StyleInclude Source="avares://Panoptes/Resources/TablerIcons.axaml"/>
+		<StyleInclude Source="avares://Panoptes/Resources/LogoPlain.axaml"/>
 		<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>
-
+		
 		<Style Selector="TabItem">
 			<Setter Property="FontSize" Value="11"/>
 			<Setter Property="Padding" Value="7,2,7,3"/>
@@ -21,14 +22,14 @@
 
 		<!--OxyPlot-->
 		<Style Selector="charts|AxisTrackerControl">
-			<Setter Property="Background" Value="#F2C6E6FF" />
+			<Setter Property="Background" Value="#F2C6E6FF"/>
 			<Setter Property="LineStroke" Value="#B3C6E6FF"/>
-			<Setter Property="BorderBrush" Value="Black" />
-			<Setter Property="BorderThickness" Value="1" />
-			<Setter Property="HorizontalLineVisibility" Value="True" />
-			<Setter Property="VerticalLineVisibility" Value="True" />
-			<Setter Property="Distance" Value="5" />
-			<Setter Property="ShowPointer" Value="False" />
+			<Setter Property="BorderBrush" Value="Black"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="HorizontalLineVisibility" Value="True"/>
+			<Setter Property="VerticalLineVisibility" Value="True"/>
+			<Setter Property="Distance" Value="5"/>
+			<Setter Property="ShowPointer" Value="False"/>
 			<Setter Property="Template">
 				<ControlTemplate TargetType="{x:Type charts:AxisTrackerControl}">
 					<Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">

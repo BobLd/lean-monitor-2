@@ -61,8 +61,11 @@ namespace Panoptes
             splashScreen.Show();
 
             // Wait 1 second to make sure the splash screen is visible
+#if DEBUG
+            await Task.Delay(10_000).ConfigureAwait(true);
+#else
             await Task.Delay(1_000).ConfigureAwait(true);
-
+#endif
             // We need to get user setting before loading the UI
             await ((ISettingsManager)Services.GetService(typeof(ISettingsManager))).InitialiseAsync().ConfigureAwait(true);
 
