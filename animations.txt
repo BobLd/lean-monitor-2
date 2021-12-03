@@ -1,0 +1,134 @@
+			<Image x:Key="Logo.Spinning" Name="Spinner">
+				<Image.Source>
+					<DrawingImage Drawing="{StaticResource Logo}"/>
+				</Image.Source>
+				<Image.Styles>
+					<Style Selector="Image#Spinner">
+						<Style.Animations>
+							<Animation Duration="0:0:1" IterationCount="Infinite">
+								<KeyFrame Cue="100%">
+									<Setter Property="RotateTransform.Angle" Value="360"/>
+								</KeyFrame>
+							</Animation>
+						</Style.Animations>
+					</Style>
+				</Image.Styles>
+			</Image>
+
+			<Grid x:Key="Logo.Advanced">
+				<!--eye-->
+				<Image Name="Eye">
+					<Image.Source>
+						<DrawingImage>
+							<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush2}" Geometry="F0 M10,10z M0,0z M6.52709,5.85596L4.13392,6.51986 3.46716,4.12098 5.86033,3.45708z"/>
+						</DrawingImage>
+					</Image.Source>
+					<Image.Styles>
+						<Style Selector="Image#Eye">
+							<Style.Animations>
+								<Animation Duration="0:0:2" IterationCount="Infinite" PlaybackDirection="Alternate">
+									<KeyFrame Cue="0%">
+										<Setter Property="Opacity" Value="0.2"/>
+									</KeyFrame>
+									<KeyFrame Cue="100%">
+										<Setter Property="Opacity" Value="1.0"/>
+									</KeyFrame>
+								</Animation>
+							</Style.Animations>
+						</Style>
+					</Image.Styles>
+				</Image>
+
+				<!--left-->
+				<Image Name="Left">
+					<Image.Source>
+						<DrawingImage>
+							<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush}" Geometry="F0 M10,10z M0,0z M2.64722,2.35488L3.83861,6.61306 2.09777,7.09595 0,5z"/>
+						</DrawingImage>
+					</Image.Source>
+					<Image.Styles>
+						<Style Selector="Image#Left">
+							<Style.Animations>
+								<Animation Duration="0:0:1" IterationCount="Infinite" PlaybackDirection="Alternate">
+									<KeyFrame Cue="0%">
+										<Setter Property="Opacity" Value="0.2"/>
+									</KeyFrame>
+									<KeyFrame Cue="100%">
+										<Setter Property="Opacity" Value="1.0"/>
+									</KeyFrame>
+								</Animation>
+							</Style.Animations>
+						</Style>
+					</Image.Styles>
+				</Image>
+
+				<!--bottom-->
+				<Image Name="Bottom">
+					<Image.Source>
+						<DrawingImage>
+							<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush}" Geometry="F0 M10,10z M0,0z M2.34413,7.35036L6.61083,6.16437 7.09546,7.90223 5,10z"/>
+						</DrawingImage>
+					</Image.Source>
+					<Image.Styles>
+						<Style Selector="Image#Bottom">
+							<Style.Animations>
+								<Animation Delay="0:0:1" Duration="0:0:1" IterationCount="Infinite" PlaybackDirection="Alternate">
+									<KeyFrame Cue="0%">
+										<Setter Property="Opacity" Value="0.2"/>
+									</KeyFrame>
+									<KeyFrame Cue="100%">
+										<Setter Property="Opacity" Value="1.0"/>
+									</KeyFrame>
+								</Animation>
+							</Style.Animations>
+						</Style>
+					</Image.Styles>
+				</Image>
+				
+				<!--right-->
+				<Image Name="Right">
+					<Image.Source>
+						<DrawingImage>
+							<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush}" Geometry="F0 M10,10z M0,0z M7.34663,7.65128L6.16120,3.38637 7.90049,2.90214 10,5z"/>
+						</DrawingImage>
+					</Image.Source>
+					<Image.Styles>
+						<Style Selector="Image#Right">
+							<Style.Animations>
+								<Animation Duration="0:0:1" IterationCount="Infinite" PlaybackDirection="Alternate">
+									<KeyFrame Cue="0%">
+										<Setter Property="Opacity" Value="0.2"/>
+									</KeyFrame>
+									<KeyFrame Cue="100%">
+										<Setter Property="Opacity" Value="1.0"/>
+									</KeyFrame>
+								</Animation>
+							</Style.Animations>
+						</Style>
+					</Image.Styles>
+				</Image>
+
+				<!--top-->
+				<Image Name="Top">
+					<Image.Source>
+						<DrawingImage>
+							<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush}" Geometry="F0 M10,10z M0,0z M7.64933,2.65118L3.38705,3.83371 2.90261,2.09143 5,0z"/>
+						</DrawingImage>
+					</Image.Source>
+					<Image.Styles>
+						<Style Selector="Image#Top">
+							<Style.Animations>
+								<Animation Delay="0:0:1" Duration="0:0:1" IterationCount="Infinite" PlaybackDirection="Alternate">
+									<KeyFrame Cue="0%">
+										<Setter Property="Opacity" Value="0.2"/>
+									</KeyFrame>
+									<KeyFrame Cue="100%">
+										<Setter Property="Opacity" Value="1.0"/>
+									</KeyFrame>
+								</Animation>
+							</Style.Animations>
+						</Style>
+					</Image.Styles>
+				</Image>
+				
+			</Grid>

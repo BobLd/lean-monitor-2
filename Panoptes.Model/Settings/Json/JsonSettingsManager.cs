@@ -63,6 +63,8 @@ namespace Panoptes.Model.Settings.Json
                 using (var settingsFile = File.Open(_filePath, FileMode.Open))
                 {
                     UserSettings = await JsonSerializer.DeserializeAsync<UserSettings>(settingsFile, _jsonSerializerOptions).ConfigureAwait(false);
+
+                    CheckVersion();
                 }
             }
             catch (Exception ex)

@@ -34,7 +34,9 @@
 		
 		<CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding FileWatch}" Content="Monitor for changes"
 				  IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
-		
+
+		<Label Grid.Row="3" Grid.ColumnSpan="3" Content="{Binding FileNameAndSize, Mode=OneWay}" MaxWidth="800"
+			   HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>
 		<ProgressBar Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
 					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>
 

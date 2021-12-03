@@ -68,11 +68,11 @@
 				<TextBox Text="{Binding Symbol.Value, Mode=OneWay}" Grid.Row="0" Grid.Column="3"/>
 
 
-				<Label Content="Sec. Type" Grid.Row="1" Grid.Column="0" ToolTip.Tip="The security type."/>
-				<TextBox Text="{Binding Symbol.SecurityType, Mode=OneWay}" Grid.Row="1" Grid.Column="1" ToolTip.Tip="The security type."/>
+				<Label Content="Sec. Type" Grid.Row="1" Grid.Column="0" ToolTip.Tip="The security type"/>
+				<TextBox Text="{Binding Symbol.SecurityType, Mode=OneWay}" Grid.Row="1" Grid.Column="1" ToolTip.Tip="The security type"/>
 
-				<Label Content="Currency" Grid.Row="1" Grid.Column="2" ToolTip.Tip="Currency for the order price."/>
-				<TextBox Text="{Binding PriceCurrency, Mode=OneWay}" Grid.Row="1" Grid.Column="3" ToolTip.Tip="Currency for the order price."/>
+				<Label Content="Currency" Grid.Row="1" Grid.Column="2" ToolTip.Tip="Currency for the order price"/>
+				<TextBox Text="{Binding PriceCurrency, Mode=OneWay}" Grid.Row="1" Grid.Column="3" ToolTip.Tip="Currency for the order price"/>
 
 				<Label Content="Underlying" Grid.Row="2" Grid.Column="0"/>
 				<TextBox Text="{Binding Symbol.Underlying, Mode=OneWay}" Grid.Row="2" Grid.Column="1"/>
@@ -95,29 +95,29 @@
 					<RowDefinition Height="Auto"/>
 				</Grid.RowDefinitions>
 
-				<Label Content="Id" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Order ID."/>
-				<TextBox Text="{Binding Id, Mode=OneWay}" Grid.Row="0" Grid.Column="1" ToolTip.Tip="Order ID."/>
+				<Label Content="Id" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Order ID"/>
+				<TextBox Text="{Binding Id, Mode=OneWay}" Grid.Row="0" Grid.Column="1" ToolTip.Tip="Order ID"/>
 
-				<Label Content="Created" Grid.Row="0" Grid.Column="2" ToolTip.Tip="UTC time this order was created."/>
-				<TextBox Text="{Binding CreatedTime, Mode=OneWay}" Grid.Row="0" Grid.Column="3" ToolTip.Tip="UTC time this order was created."/>
+				<Label Content="Created" Grid.Row="0" Grid.Column="2" ToolTip.Tip="UTC time this order was created"/>
+				<TextBox Text="{Binding CreatedTime, Mode=OneWay}" Grid.Row="0" Grid.Column="3" ToolTip.Tip="UTC time this order was created"/>
 
 
-				<Label Content="Type" Grid.Row="1" Grid.Column="0" ToolTip.Tip="Order type."/>
-				<TextBox Text="{Binding Type, Mode=OneWay}" Grid.Row="1" Grid.Column="1" ToolTip.Tip="Order type."/>
+				<Label Content="Type" Grid.Row="1" Grid.Column="0" ToolTip.Tip="Order type"/>
+				<TextBox Text="{Binding Type, Mode=OneWay}" Grid.Row="1" Grid.Column="1" ToolTip.Tip="Order type"/>
 
 				<Label Content="Direction" Grid.Row="1" Grid.Column="2"/>
 				<TextBox Text="{Binding Direction, Mode=OneWay}" Grid.Row="1" Grid.Column="3"/>
 
 
-				<Label Content="Time in Force" Grid.Row="2" Grid.Column="0" ToolTip.Tip="Order Time In Force."/>
-				<TextBox Text="{Binding TimeInForce, Mode=OneWay}" Grid.Row="2" Grid.Column="1" ToolTip.Tip="Order Time In Force."/>
+				<Label Content="Time in Force" Grid.Row="2" Grid.Column="0" ToolTip.Tip="Order Time In Force"/>
+				<TextBox Text="{Binding TimeInForce, Mode=OneWay}" Grid.Row="2" Grid.Column="1" ToolTip.Tip="Order Time In Force"/>
 
-				<Label Content="Expiry" Grid.Row="2" Grid.Column="2" ToolTip.Tip="The date/time on which the order will expire and will be cancelled."/>
-				<TextBox Text="{Binding Expiry, Mode=OneWay}" Grid.Row="2" Grid.Column="3" ToolTip.Tip="The date/time on which the order will expire and will be cancelled."/>
+				<Label Content="Expiry" Grid.Row="2" Grid.Column="2" ToolTip.Tip="The date/time on which the order will expire and will be cancelled"/>
+				<TextBox Text="{Binding Expiry, Mode=OneWay}" Grid.Row="2" Grid.Column="3" ToolTip.Tip="The date/time on which the order will expire and will be cancelled"/>
 
 
-				<Label Content="Quantity" Grid.Row="3" Grid.Column="0" ToolTip.Tip="Number of shares to execute."/>
-				<TextBox Text="{Binding Quantity, Mode=OneWay}" Grid.Row="4" Grid.Column="1" ToolTip.Tip="Number of shares to execute."/>
+				<Label Content="Quantity" Grid.Row="3" Grid.Column="0" ToolTip.Tip="Number of shares to execute"/>
+				<TextBox Text="{Binding Quantity, Mode=OneWay}" Grid.Row="4" Grid.Column="1" ToolTip.Tip="Number of shares to execute"/>
 
 				<Label Content="Exchange" Grid.Row="3" Grid.Column="2"/>
 				<TextBox Text="{Binding Properties.Exchange, Mode=OneWay}" Grid.Row="4" Grid.Column="3"/>
@@ -141,11 +141,11 @@
 					<RowDefinition Height="Auto"/>
 				</Grid.RowDefinitions>
 
-				<Label Content="Status" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Status of the Order."/>
-				<TextBox Text="{Binding Status, Mode=OneWay}" Grid.Row="0" Grid.Column="1" ToolTip.Tip="Status of the Order."/>
+				<Label Content="Status" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Status of the order"/>
+				<TextBox Text="{Binding Status, Mode=OneWay}" Grid.Row="0" Grid.Column="1" ToolTip.Tip="Status of the order"/>
 
-				<Label Content="Last Fill" Grid.Column="2" Grid.Row="0" ToolTip.Tip="UTC time the last fill was received."/>
-				<TextBox Text="{Binding LastFillTime, Mode=OneWay}" Grid.Column="3" Grid.Row="0" ToolTip.Tip="UTC time the last fill was received."/>
+				<Label Content="Last Fill" Grid.Column="2" Grid.Row="0" ToolTip.Tip="UTC time the last fill was received"/>
+				<TextBox Text="{Binding LastFillTime, Mode=OneWay}" Grid.Column="3" Grid.Row="0" ToolTip.Tip="UTC time the last fill was received"/>
 
 
 				<Label Content="Filled" Grid.Column="0" Grid.Row="1"/>
@@ -155,8 +155,8 @@
 				<TextBox Text="{Binding OpenQuantity, Mode=OneWay}" Grid.Column="3" Grid.Row="1"/>
 
 
-				<Label Content="Price" Grid.Row="2" Grid.Column="0" ToolTip.Tip="Price of the Order."/>
-				<TextBox Text="{Binding Price, Mode=OneWay}" Grid.Row="2" Grid.Column="1" ToolTip.Tip="Price of the Order."/>
+				<Label Content="Price" Grid.Row="2" Grid.Column="0" ToolTip.Tip="Price of the order"/>
+				<TextBox Text="{Binding Price, Mode=OneWay}" Grid.Row="2" Grid.Column="1" ToolTip.Tip="Price of the order"/>
 
 				<Label Content="Value" Grid.Row="2" Grid.Column="2"/>
 				<TextBox Text="{Binding Value, Mode=OneWay}" Grid.Row="2" Grid.Column="3"/>
@@ -196,17 +196,17 @@
 						<RowDefinition Height="Auto"/>
 					</Grid.RowDefinitions>
 
-					<Label Content="Bid" Grid.Column="0" Grid.Row="0" ToolTip.Tip="The bid price at order submission time."/>
-					<TextBox Text="{Binding BidPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="0" ToolTip.Tip="The bid price at order submission time."/>
+					<Label Content="Bid" Grid.Column="0" Grid.Row="0" ToolTip.Tip="The bid price at order submission time"/>
+					<TextBox Text="{Binding BidPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="0" ToolTip.Tip="The bid price at order submission time"/>
 
-					<Label Content="Ask" Grid.Column="0" Grid.Row="1" ToolTip.Tip="The ask price at order submission time."/>
-					<TextBox Text="{Binding AskPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="1" ToolTip.Tip="The ask price at order submission time."/>
+					<Label Content="Ask" Grid.Column="0" Grid.Row="1" ToolTip.Tip="The ask price at order submission time"/>
+					<TextBox Text="{Binding AskPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="1" ToolTip.Tip="The ask price at order submission time"/>
 
-					<Label Content="Last" Grid.Column="0" Grid.Row="2" ToolTip.Tip="The current price at order submission time."/>
-					<TextBox Text="{Binding LastPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="2" ToolTip.Tip="The current price at order submission time."/>
+					<Label Content="Last" Grid.Column="0" Grid.Row="2" ToolTip.Tip="The current price at order submission time"/>
+					<TextBox Text="{Binding LastPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="2" ToolTip.Tip="The current price at order submission time"/>
 
-					<Label Content="Change %" Grid.Column="0" Grid.Row="3" ToolTip.Tip="Change in % from last price at order submission time to order price."/>
-					<TextBox Text="{Binding PriceChangePct, Mode=OneWay, StringFormat='{}{0:0.#%}'}" Grid.Column="1" Grid.Row="3" ToolTip.Tip="Change in % from last price at order submission time to order price."/>
+					<Label Content="Change %" Grid.Column="0" Grid.Row="3" ToolTip.Tip="Change in % from last price at order submission time to order price"/>
+					<TextBox Text="{Binding PriceChangePct, Mode=OneWay, StringFormat='{}{0:0.#%}'}" Grid.Column="1" Grid.Row="3" ToolTip.Tip="Change in % from last price at order submission time to order price"/>
 				</Grid>
 			</Border>
 
@@ -237,25 +237,25 @@
 					<Label Content="Stop" Grid.Column="0" Grid.Row="1"/>
 					<TextBox Text="{Binding StopPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="1"/>
 
-					<Label Content="Trigger" Grid.Column="0" Grid.Row="2" ToolTip.Tip="The price which, when touched, will trigger the setting of a limit order at limit price."/>
-					<TextBox Text="{Binding TriggerPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="2" ToolTip.Tip="The price which, when touched, will trigger the setting of a limit order at limit price."/>
+					<Label Content="Trigger" Grid.Column="0" Grid.Row="2" ToolTip.Tip="The price which, when touched, will trigger the setting of a limit order at limit price"/>
+					<TextBox Text="{Binding TriggerPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="2" ToolTip.Tip="The price which, when touched, will trigger the setting of a limit order at limit price"/>
 
 					<Label Content="Marketable" Grid.Column="0" Grid.Row="3" ToolTip.Tip="True if market order or limit order with:&#x0a;- Buy and Limit price &gt;= Ask price or &#x0a;- Sell and Limit price &lt;= Bid price"/>
 					<TextBox Text="{Binding IsMarketable, Mode=OneWay}" Grid.Column="1" Grid.Row="3" ToolTip.Tip="True if market order or limit order with:&#x0a;- Buy and Limit price &gt;= Ask price or &#x0a;- Sell and Limit price &lt;= Bid price"/>
 
 
-					<Label Content="Triggerd" Grid.Column="2" Grid.Row="1" ToolTip.Tip="Signal showing the 'StopLimitOrder' has been converted into a Limit Order"/>
-					<TextBox Text="{Binding StopTriggered, Mode=OneWay}" Grid.Row="1" Grid.Column="3" ToolTip.Tip="Signal showing the 'StopLimitOrder' has been converted into a Limit Order"/>
+					<Label Content="Triggerd" Grid.Column="2" Grid.Row="1" ToolTip.Tip="Signal showing the 'StopLimitOrder' has been converted into a limit order"/>
+					<TextBox Text="{Binding StopTriggered, Mode=OneWay}" Grid.Row="1" Grid.Column="3" ToolTip.Tip="Signal showing the 'StopLimitOrder' has been converted into a limit order"/>
 
-					<Label Content="Touched" Grid.Column="2" Grid.Row="2" ToolTip.Tip="Whether or not the trigger price has been touched."/>
-					<TextBox Text="{Binding TriggerTouched, Mode=OneWay}" Grid.Row="2" Grid.Column="3" ToolTip.Tip="Whether or not the trigger price has been touched."/>
+					<Label Content="Touched" Grid.Column="2" Grid.Row="2" ToolTip.Tip="Whether or not the trigger price has been touched"/>
+					<TextBox Text="{Binding TriggerTouched, Mode=OneWay}" Grid.Row="2" Grid.Column="3" ToolTip.Tip="Whether or not the trigger price has been touched"/>
 				</Grid>
 			</Border>
 
 			<Border Grid.Column="2">
 				<!--Header="Broker ID"-->
 				<DataGrid Items="{Binding BrokerId}" IsReadOnly="True" AutoGenerateColumns="False" HeadersVisibility="None"
-						  AlternatingRowBackground="Transparent" RowBackground="Transparent" ToolTip.Tip="Brokerage Id for this order for when the brokerage splits orders into multiple pieces.">
+						  AlternatingRowBackground="Transparent" RowBackground="Transparent" ToolTip.Tip="Brokerage Id for this order for when the brokerage splits orders into multiple pieces">
 					<DataGrid.Columns>
 						<DataGridTemplateColumn Header="ID">
 							<DataGridTemplateColumn.CellTemplate>
@@ -270,7 +270,7 @@
 
 			<Border Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Padding="0">
 				<!--Header="Tag"-->
-				<TextBox Text="{Binding Tag, Mode=OneWay}" VerticalAlignment="Stretch" ToolTip.Tip="Tag with custom data."/>
+				<TextBox Text="{Binding Tag, Mode=OneWay}" VerticalAlignment="Stretch" ToolTip.Tip="Tag with custom data"/>
 			</Border>
 		</Grid>
 

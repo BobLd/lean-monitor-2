@@ -1,36 +1,31 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Design.PreviewWith>
-        <Border Padding="20">
-            <!-- Add Controls for Previewer Here -->
-			<DrawingPresenter Width="150" Height="150" Drawing="{StaticResource LogoPlain.Main}"/>
-        </Border>
-    </Design.PreviewWith>
+	<Design.PreviewWith>
+		<Border Padding="5" Height="100" Width="100" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+			<!-- Add Controls for Previewer Here -->
+
+			<DrawingPresenter Margin="0" Width="100" Height="100" Drawing="{StaticResource Logo}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+		</Border>
+	</Design.PreviewWith>
 
     <!-- Add Styles Here -->
-	<Style>
+	<Style>		
 		<Style.Resources>
-			<DrawingGroup x:Key="LogoPlain.Main">
-				<DrawingGroup Opacity="1">
-					<DrawingGroup Opacity="1">
-						<GeometryDrawing Brush="#FF333333" Geometry="F0 M101.55859,101.64259z M0,0z M68.535156,61.806641C60.433594,64.05599 52.332032,66.305338 44.23047,
-										 68.554687 41.973308,60.427083 39.716146,52.299479 37.458984,44.171875 45.560547,41.922526 53.66211,39.673177 61.763672,
-										 37.423828 64.020833,45.551432 66.277995,53.679037 68.535156,61.806641z"/>
-						<DrawingGroup Opacity="1">
-							<GeometryDrawing Brush="#FFF8991D" Geometry="F0 M101.55859,101.64259z M0,0z M79.90625,29.126953C65.477214,33.133463 51.048177,
-											 37.139974 36.619141,41.146484 34.979167,35.243489 33.339193,29.340495 31.699219,23.4375 38.785823,16.351562 45.872427,
-											 9.265625 52.959031,2.1796875 61.941437,11.162109 70.923844,20.144531 79.90625,29.126953z M76.832031,79.949219C72.81901,
-											 65.499349 68.80599,51.049479 64.792969,36.599609 70.68099,34.958984 76.56901,33.318359 82.457031,31.677734 89.564454,
-											 38.785156 96.671877,45.892578 103.7793,53 94.796877,61.983073 85.814454,70.966146 76.832031,79.949219z M26.027344,
-											 76.890625C40.471354,72.872396 54.915365,68.854166 69.359375,64.835937 71,70.723958 72.640625,76.611979 74.28125,
-											 82.5 67.173828,89.607423 60.066406,96.714847 52.958984,103.82227 43.981771,94.845055 35.004557,85.86784 26.027344,
-											 76.890625z M29.105469,26.115234C33.138672,40.542317 37.171875,54.969401 41.205078,69.396484 35.311849,71.032552 29.41862,
-											 72.668619 23.525391,74.304687 16.423828,67.203125 9.3222657,60.101562 2.2207031,53 11.182292,44.038411 20.14388,
-											 35.076823 29.105469,26.115234z"/>
-						</DrawingGroup>
-					</DrawingGroup>
-				</DrawingGroup>
+
+			<DrawingGroup x:Key="Logo" ClipGeometry="M0,0 V10 H10 V0 H0 Z">
+				<!-- 'F0 M10,10z M0,0z' removed from each element-->
+				<!--eye-->
+				<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush2}" Geometry="M6.52709,5.85596L4.13392,6.51986 3.46716,4.12098 5.86033,3.45708z"/>
+				<!--left-->
+				<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush}" Geometry="M2.64722,2.35488L3.83861,6.61306 2.09777,7.09595 0,5z"/>
+				<!--bottom-->
+				<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush}" Geometry="M2.34413,7.35036L6.61083,6.16437 7.09546,7.90223 5,10z"/>
+				<!--right-->
+				<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush}" Geometry="M7.34663,7.65128L6.16120,3.38637 7.90049,2.90214 10,5z"/>
+				<!--top-->
+				<GeometryDrawing Brush="{StaticResource ThemePanoptesBrush}" Geometry="M7.64933,2.65118L3.38705,3.83371 2.90261,2.09143 5,0z"/>
 			</DrawingGroup>
+			
 		</Style.Resources>
 	</Style>
 </Styles>

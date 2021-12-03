@@ -1,5 +1,4 @@
-﻿using Avalonia.Platform;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;

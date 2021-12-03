@@ -61,8 +61,8 @@
 
 		<!--Logo-->
 		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
-				Padding="10" MinWidth="80" MinHeight="80" Focusable="False" IsEnabled="False" Opacity="200">
-			<DrawingPresenter Drawing="{StaticResource LogoPlain.Main}"/>
+				Padding="50" MinWidth="80" MinHeight="80" Focusable="False" IsEnabled="False" Opacity="200">
+			<DrawingPresenter Drawing="{StaticResource Logo}" MinWidth="40" MinHeight="40"/>
 		</Border>
 
 		<!--https://github.com/oxyplot/oxyplot-avalonia/blob/master/Source/OxyPlot.Avalonia/Themes/Default.xaml-->

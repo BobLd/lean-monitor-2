@@ -65,9 +65,30 @@ namespace Panoptes.Model
                 return null;
 #pragma warning restore CS8603 // Possible null reference return.
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 return $"ERROR in version: {e.Message}";
+            }
+        }
+
+        public static Version ParseVersion(string VersionStr)
+        {
+            if (Version.TryParse(VersionStr, out var version))
+            {
+                return version;
+            }
+
+            if (VersionStr.Contains(' '))
+            {
+                if (Version.TryParse(VersionStr.Split(' ')[0], out version))
+                {
+                    return version;
+                }
+                throw new ArgumentException();
+            }
+            else
+            {
+                throw new ArgumentException();
             }
         }
     }

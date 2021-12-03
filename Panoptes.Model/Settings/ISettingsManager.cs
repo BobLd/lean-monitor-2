@@ -40,6 +40,11 @@ namespace Panoptes.Model.Settings
         /// <param name="dateTime">The <see cref="DateTime"/> to convert.</param>
         DateTime ConvertToSelectedTimezone(DateTime dateTime);
 
+        /// <summary>
+        /// Checks the settings version against the app version.
+        /// </summary>
+        void CheckVersion();
+
         bool IsInitialised { get; }
 
         IEnumerable<string> SetupGridsColumns { get; }

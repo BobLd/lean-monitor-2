@@ -32,6 +32,7 @@ namespace Panoptes.Views.Windows
 
         private void TradeInfoWindow_KeyDown(object? sender, KeyEventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine($"TradeInfoWindow.KeyDown: {e.Key} - {e.KeyModifiers}");
             if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
             {
                 e.Handled = true;

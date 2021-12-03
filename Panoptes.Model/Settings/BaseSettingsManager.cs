@@ -2,6 +2,7 @@
 using Panoptes.Model.Messages;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -94,6 +95,37 @@ namespace Panoptes.Model.Settings
         {
             PanoptesSounds.CanPlaySounds = enable;
             UserSettings.SoundsActivated = enable;
+        }
+
+        /// <inheritdoc/>
+        public void CheckVersion()
+        {
+            if (UserSettings == null)
+            {
+                Debug.WriteLine("JsonSettingsManager.CheckVersion: Error - Cannot check version because UserSettings is null.");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(UserSettings.Version))
+            {
+                // Do string comparison first?
+
+                var settingsVersion = Global.ParseVersion(UserSettings.Version);
+                var currentVersion = Global.ParseVersion(Global.AppVersion);
+                if (settingsVersion != currentVersion)
+                {
+                    Debug.WriteLine($"JsonSettingsManager.CheckVersion: Warning - Settings version is '{settingsVersion}' and app version is '{currentVersion}'. This might create unexpected behaviour.");
+                }
+                else
+                {
+                    Debug.WriteLine($"JsonSettingsManager.CheckVersion: Settings version and app version are both '{settingsVersion}'.");
+                }
+            }
+            else
+            {
+                UserSettings.Version = Global.AppVersion;
+                Debug.WriteLine($"JsonSettingsManager.CheckVersion: Warning - Settings version is unknown and was set to {Global.AppVersion} This might create unexpected behaviour.");
+            }
         }
     }
 }

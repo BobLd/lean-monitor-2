@@ -14,6 +14,7 @@ using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.NewSession;
 using Panoptes.ViewModels.Panels;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Panoptes
@@ -56,18 +57,33 @@ namespace Panoptes
 
         private async Task LoadSplashScreen()
         {
+            // Wait 1.5 seconds to make sure the splash screen is visible
+#if DEBUG
+            var minDisplayTime = TimeSpan.FromMilliseconds(3_000);
+#else
+            var minDisplayTime = TimeSpan.FromMilliseconds(1_500);
+#endif
+
             // Show splash screen
             var splashScreen = new Views.Windows.SplashScreenWindow();
             splashScreen.Show();
 
-            // Wait 1 second to make sure the splash screen is visible
-#if DEBUG
-            await Task.Delay(10_000).ConfigureAwait(true);
-#else
-            await Task.Delay(1_000).ConfigureAwait(true);
-#endif
+            var sw = new Stopwatch();
+            sw.Start();
+
+            // Load what need to be loaded
+
             // We need to get user setting before loading the UI
             await ((ISettingsManager)Services.GetService(typeof(ISettingsManager))).InitialiseAsync().ConfigureAwait(true);
+
+            // End of loading
+
+            sw.Stop();
+
+            if (sw.Elapsed < minDisplayTime)
+            {
+                await Task.Delay(minDisplayTime - sw.Elapsed).ConfigureAwait(true);
+            }
 
             splashScreen.Close();
         }
@@ -99,7 +115,7 @@ namespace Panoptes
             services.AddSingleton<IStatisticsFormatter, StatisticsFormatter>();
 
             // Session
-            services.AddSingleton<ISessionService, SessionService>(); //SessionService>();
+            services.AddSingleton<ISessionService, SessionService>();
 
             // Api
             //For<IApiClient>().Singleton().Use<ApiClient>();

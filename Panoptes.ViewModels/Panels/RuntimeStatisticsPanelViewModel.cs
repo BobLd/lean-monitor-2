@@ -122,8 +122,7 @@ namespace Panoptes.ViewModels.Panels
         {
             while (!_statisticsBgWorker.CancellationPending)
             {
-                var statistics = _statisticsQueue.Take(); // Need cancelation token
-                foreach (var stat in statistics)
+                foreach (var stat in _statisticsQueue.Take()) // Need cancelation token
                 {
                     if (!_statisticsDico.ContainsKey(stat.Key))
                     {

@@ -21,6 +21,7 @@ namespace Panoptes.Views.Windows
             {
                 throw new ArgumentNullException("Could not find 'IMessenger' service in 'App.Current.Services'.");
             }
+
             _messenger.Register<OpenBacktestWindow, SessionOpenedMessage>(this, (r, m) =>
             {
                 if (m.IsSuccess)

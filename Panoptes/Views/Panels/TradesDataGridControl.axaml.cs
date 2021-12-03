@@ -37,14 +37,15 @@ namespace Panoptes.Views.Panels
 
         private async Task _dataGrid_Initialized(object? sender, EventArgs e)
         {
-            Debug.WriteLine($"TradesDataGridControl.Initialized");
             await LoadColumnsOrder().ConfigureAwait(false);
+            //_dataGrid.Columns[0].Sort(System.ComponentModel.ListSortDirection.Descending);
+            Debug.WriteLine("TradesDataGridControl.Initialized");
         }
 
         private async Task _dataGrid_ColumnReordered(object? sender, DataGridColumnEventArgs e)
         {
-            Debug.WriteLine($"TradesDataGridControl.ColumnReordered: {e.Column.Header}");
             await SaveColumnsOrder().ConfigureAwait(false);
+            Debug.WriteLine($"TradesDataGridControl.ColumnReordered: {e.Column.Header}");
         }
 
         #region IDataGridFromSettings

@@ -13,8 +13,7 @@
 	</UserControl.Styles>
 
 	<Grid>
-		<DataGrid IsReadOnly="True" AutoGenerateColumns="False" GridLinesVisibility="None" Items="{Binding LogEntries}"
-				  AlternatingRowBackground="Transparent" RowBackground="Transparent" CanUserResizeColumns="True">
+		<DataGrid IsReadOnly="True" AutoGenerateColumns="False" Items="{Binding LogEntries}" CanUserResizeColumns="True">
 			<DataGrid.Columns>
 				<DataGridTemplateColumn Header="Type" SortMemberPath="EntryType" MaxWidth="100">
 					<DataGridTemplateColumn.CellTemplate>

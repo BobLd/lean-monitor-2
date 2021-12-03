@@ -638,8 +638,8 @@ namespace Panoptes.ViewModels.Charts
                                     LineColor = serie.Value.Color.ToOxyColor().Negative(),
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
-                                    SerieType = PlotSerieTypes.Candles,
-                                    Period = Times.FiveMinutes
+                                    SerieType = PlotSerieTypes.Line, // Default to line
+                                    Period = Times.Zero
                                 };
                                 plot.Series.Add(s);
                                 break;
@@ -651,7 +651,7 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     SerieType = PlotSerieTypes.Line,
-                                    Period = Times.FiveMinutes
+                                    Period = Times.Zero
                                 };
                                 plot.Series.Add(s);
                                 break;

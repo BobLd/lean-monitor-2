@@ -2,14 +2,27 @@
 	   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	   xmlns:sys="clr-namespace:System;assembly=netstandard">
     <Design.PreviewWith>
-        <Border Padding="20">
+        <Border Padding="2">
             <!-- Add Controls for Previewer Here -->
+			<StackPanel Orientation="Horizontal">
+				<Rectangle Fill="{StaticResource ThemePanoptesBrush}" Height="60" Width="60"/>
+				<Rectangle Fill="{StaticResource ThemePanoptesBrush2}" Height="60" Width="60"/>
+
+				<Rectangle Fill="{StaticResource ThemeAccentBrush}" Height="60" Width="60"/>
+				<Rectangle Fill="{StaticResource ThemeAccentBrush2}" Height="60" Width="60"/>
+				<Rectangle Fill="{StaticResource ThemeAccentBrush3}" Height="60" Width="60"/>
+				<Rectangle Fill="{StaticResource ThemeAccentBrush4}" Height="60" Width="60"/>
+
+			</StackPanel>
         </Border>
     </Design.PreviewWith>
 
     <!-- Add Styles Here -->
 	<Style.Resources>
 
+		<Color x:Key="ThemePanoptesColor">#FFF8991D</Color>
+		<Color x:Key="ThemePanoptesColor2">#FF333333</Color>
+		
 		<Color x:Key="ThemeAccentColor">#CCF8991D</Color>
 		<Color x:Key="ThemeAccentColor2">#99F8991D</Color>
 		<Color x:Key="ThemeAccentColor3">#66F8991D</Color>
@@ -52,6 +65,10 @@
 
 		<SolidColorBrush x:Key="HighlightBrush" Color="{DynamicResource HighlightColor}"></SolidColorBrush>
 		<SolidColorBrush x:Key="HighlightForegroundBrush" Color="{DynamicResource HighlightForegroundColor}"></SolidColorBrush>
+
+		<SolidColorBrush x:Key="ThemePanoptesBrush" Color="{DynamicResource ThemePanoptesColor}"></SolidColorBrush>
+		<SolidColorBrush x:Key="ThemePanoptesBrush2" Color="{DynamicResource ThemePanoptesColor2}"></SolidColorBrush>
+
 		<SolidColorBrush x:Key="ThemeAccentBrush" Color="{DynamicResource ThemeAccentColor}"></SolidColorBrush>
 		<SolidColorBrush x:Key="ThemeAccentBrush2" Color="{DynamicResource ThemeAccentColor2}"></SolidColorBrush>
 		<SolidColorBrush x:Key="ThemeAccentBrush3" Color="{DynamicResource ThemeAccentColor3}"></SolidColorBrush>

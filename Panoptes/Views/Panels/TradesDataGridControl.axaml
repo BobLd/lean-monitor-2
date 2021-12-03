@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450">	
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450">
 	<UserControl.Styles>
 		<Style Selector="DataGridCell.statusColored">
 			<Setter Property="Foreground" Value="{Binding Path=Status, Mode=OneWay, Converter={StaticResource TradesColorConverter}}"/>
@@ -19,7 +19,7 @@
 			  DoubleTapped="OnDataGridDoubleTapped" SelectedItem="{Binding SelectedItem}"
 			  CanUserResizeColumns="True" CanUserReorderColumns="True"
 			  AlternatingRowBackground="Transparent" RowBackground="Transparent"
-			  ToolTip.ShowDelay="2000" ToolTip.Tip="List of orders.&#x0a;Double-click on an order for full details.">
+			  ToolTip.ShowDelay="2000" ToolTip.Tip="List of orders.&#x0a;Double-click on an order for full details">
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Created" Binding="{Binding CreatedTime, Mode=OneWay}"/>

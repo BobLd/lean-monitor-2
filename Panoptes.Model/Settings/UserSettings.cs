@@ -7,6 +7,7 @@ namespace Panoptes.Model.Settings
     public class UserSettings
     {
         // TODO: Panoptes Version for compatibility check
+        public string Version { get; set; }
 
         public TimeZoneInfo SelectedTimeZone { get; set; }
 
@@ -20,6 +21,8 @@ namespace Panoptes.Model.Settings
             {
                 SelectedTimeZone = TimeZoneInfo.Local;
                 GridsColumns = new ConcurrentDictionary<string, IReadOnlyList<Tuple<string, int>>>();
+                SoundsActivated = true;
+                Version = Global.AppVersion;
             }
         }
     }

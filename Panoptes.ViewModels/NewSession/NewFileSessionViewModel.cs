@@ -78,14 +78,28 @@ namespace Panoptes.ViewModels.NewSession
             return fieldsToValidate.All(field => string.IsNullOrEmpty(this[field]));
         }
 
+        public string FileNameAndSize
+        {
+            get
+            {
+                if (!File.Exists(FileName))
+                {
+                    return $"{FileName} (N/A MB)";
+                }
+                return $"{FileName} ({new FileInfo(FileName).Length / 1_048_576:0.#} MB)";
+            }
+        }
+
         public string FileName
         {
             get { return _fileSessionParameters.FileName; }
             set
             {
+                if (_fileSessionParameters.FileName == value) return;
                 _fileSessionParameters.FileName = value;
                 Error = null;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(FileNameAndSize));
                 OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
