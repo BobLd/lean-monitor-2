@@ -28,17 +28,6 @@
 			</Style.Animations>
 		</Style>
 
-		<!--On mouse over animation-->
-		<Style Selector="DrawingPresenter.Opacity:pointerover">
-			<Style.Animations>
-				<Animation Duration="0:0:1.5" Easing="SineEaseInOut" PlaybackDirection="Alternate">
-					<KeyFrame Cue="50%">
-						<Setter Property="ScaleTransform.ScaleX" Value="-0.5"/>
-						<Setter Property="ScaleTransform.ScaleY" Value="0.5"/>
-					</KeyFrame>
-				</Animation>
-			</Style.Animations>
-		</Style>
 	</Window.Styles>
 	
 	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderLowBrush}">
