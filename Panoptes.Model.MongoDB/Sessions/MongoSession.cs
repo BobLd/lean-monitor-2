@@ -18,8 +18,8 @@ namespace Panoptes.Model.MongoDB.Sessions
         private IMongoDatabase _database;
         private IMongoCollection<MongoDbPacket> _collection;
 
-        public const string DatabaseName = "backtest-test"; // Should be a parameter
-        public const string CollectionName = "bar-3";       // Should be a parameter
+        public string DatabaseName { get; }
+        public string CollectionName { get; }
 
         public MongoSession(ISessionHandler sessionHandler, IResultConverter resultConverter, MongoSessionParameters parameters)
             : base(sessionHandler, resultConverter, parameters)
@@ -33,6 +33,9 @@ namespace Panoptes.Model.MongoDB.Sessions
                 HeartbeatInterval = TimeSpan.FromSeconds(5),
                 HeartbeatTimeout = TimeSpan.FromSeconds(40)
             });
+
+            DatabaseName = parameters.DatabaseName;
+            CollectionName = parameters.CollectionName;
         }
 
         public override void Initialize()
@@ -41,12 +44,12 @@ namespace Panoptes.Model.MongoDB.Sessions
             _database = _client.GetDatabase(DatabaseName); // backtest or live
             _collection = _database.GetCollection<MongoDbPacket>(CollectionName); // algo name / id
 
-            //LoadPreviousData();
             base.Initialize();
         }
 
         public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
+            Debug.WriteLine($"MongoSession.InitializeAsync: {_client.Settings}, DB: {DatabaseName}, Collection: {CollectionName}");
             _database = _client.GetDatabase(DatabaseName); // backtest or live
             _collection = _database.GetCollection<MongoDbPacket>(CollectionName); // algo name / id
 
@@ -60,10 +63,11 @@ namespace Panoptes.Model.MongoDB.Sessions
             return cashOk && holdingsOk;
         }
 
-        public async Task LoadRecentData(CancellationToken cancellationToken)
+        public async Task LoadRecentDataAsync(CancellationToken cancellationToken)
         {
             try
             {
+                Debug.WriteLine($"MongoSession.LoadRecentDataAsync: {_client.Settings}, DB: {DatabaseName}, Collection: {CollectionName}");
                 var collection = _client.GetDatabase(DatabaseName).GetCollection<MongoDbPacket>(CollectionName); // backtest or live + algo name / id
                 var builder = Builders<MongoDbPacket>.Filter;
 
@@ -71,8 +75,22 @@ namespace Panoptes.Model.MongoDB.Sessions
                 //var dateFilter = builder.Gte(x => x.Id, new ObjectId(DateTime.UtcNow.AddDays(-1), 0, 0, 0)); // last 24h
                 var sort = Builders<MongoDbPacket>.Sort.Descending("_id");
 
+                // Live node LiveNode
+                var liveNodeFilter = builder.Eq(x => x.Type, "LiveNode");
+                using (IAsyncCursor<MongoDbPacket> cursor = await collection.FindAsync(liveNodeFilter, new FindOptions<MongoDbPacket> { BatchSize = 1, NoCursorTimeout = false, Sort = sort, Limit = 1 }, cancellationToken).ConfigureAwait(false))
+                {
+                    while (await cursor.MoveNextAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        foreach (var packet in cursor.Current)
+                        {
+                            HandlePacketEventsListener(packet.Message, Enum.Parse<PacketType>(packet.Type));
+                        }
+                        break;
+                    }
+                }
+
                 // Status
-                var statusFilter = builder.Eq(x => x.Type, "AlgorithmStatus"); // builder.And(dateFilter, builder.Eq(x => x.Type, "AlgorithmStatus"));
+                var statusFilter = builder.Eq(x => x.Type, "AlgorithmStatus");
                 using (IAsyncCursor<MongoDbPacket> cursor = await collection.FindAsync(statusFilter, new FindOptions<MongoDbPacket> { BatchSize = 1, NoCursorTimeout = false, Sort = sort, Limit = 1 }, cancellationToken).ConfigureAwait(false))
                 {
                     while (await cursor.MoveNextAsync(cancellationToken).ConfigureAwait(false))
@@ -192,7 +210,6 @@ namespace Panoptes.Model.MongoDB.Sessions
             {
                 Unsubscribe();
                 Debug.WriteLine($"MongoSession.EventsListener: Session timed out and proceeded with unsubscribing. {toEx}");
-                //throw;
             }
             catch (MongoAuthenticationException authEx)
             {

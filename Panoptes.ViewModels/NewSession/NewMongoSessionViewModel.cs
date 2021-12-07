@@ -3,6 +3,7 @@ using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.MongoDB.Sessions;
 using Panoptes.Model.Sessions;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -15,6 +16,16 @@ namespace Panoptes.ViewModels.NewSession
     public sealed class NewMongoSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
         private readonly ISessionService _sessionService;
+        private readonly MongoSessionParameters _sessionParameters = new MongoSessionParameters
+        {
+            Host = "localhost",
+            Port = "27017",
+#if DEBUG
+            UserName = "admin-bob",
+            DatabaseName = "backtest-test",
+            CollectionName = "bar-3"
+#endif
+        };
 
         public string Password { private get; set; }
 
@@ -54,16 +65,10 @@ namespace Panoptes.ViewModels.NewSession
                         }
                         Password = string.Empty;
                     }
+                    _sessionParameters.Password = secureString;
 
                     // Need to open async
-                    await _sessionService.OpenAsync(new MongoSessionParameters
-                    {
-                        CloseAfterCompleted = true,
-                        Host = Host,
-                        Port = int.Parse(Port),
-                        UserName = UserName,
-                        Password = secureString
-                    }, cancellationToken).ConfigureAwait(false);
+                    await _sessionService.OpenAsync(_sessionParameters, cancellationToken).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException ocEx)
                 {
@@ -72,7 +77,7 @@ namespace Panoptes.ViewModels.NewSession
                 }
                 catch (TimeoutException toEx)
                 {
-                    Error = toEx.Message.ToString();
+                    Error = toEx.Message;
                 }
                 catch (Exception ex)
                 {
@@ -100,47 +105,98 @@ namespace Panoptes.ViewModels.NewSession
                 nameof(Host),
                 nameof(Port),
                 nameof(UserName),
+                nameof(DatabaseName),
+                nameof(CollectionName),
             };
 
             return fieldsToValidate.All(field => string.IsNullOrEmpty(this[field]));
         }
 
-        private string _host = "localhost";
+        public void LoadParameters(IDictionary<string, string> parameters)
+        {
+            if (parameters == null || parameters.Count == 0) return;
+
+            if (parameters.TryGetValue(nameof(Host), out var host))
+            {
+                Host = host;
+            }
+
+            if (parameters.TryGetValue(nameof(Port), out var port))
+            {
+                Port = port;
+            }
+
+            if (parameters.TryGetValue(nameof(UserName), out var user))
+            {
+                UserName = user;
+            }
+
+            if (parameters.TryGetValue(nameof(DatabaseName), out var db))
+            {
+                DatabaseName = db;
+            }
+
+            if (parameters.TryGetValue(nameof(CollectionName), out var collec))
+            {
+                CollectionName = collec;
+            }
+        }
+
         public string Host
         {
-            get { return _host; }
+            get { return _sessionParameters.Host; }
             set
             {
-                _host = value;
+                if (_sessionParameters.Host == value) return;
+                _sessionParameters.Host = value;
                 OnPropertyChanged();
                 OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
 
-        private string _port = "27017";
         public string Port
         {
-            get { return _port; }
+            get { return _sessionParameters.Port; }
             set
             {
-                _port = value;
+                if (_sessionParameters.Port == value) return;
+                _sessionParameters.Port = value;
                 OnPropertyChanged();
                 OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
-
-#if DEBUG
-        private string _username = "admin-bob";
-#else
-        private string _username = "";
-#endif
 
         public string UserName
         {
-            get { return _username; }
+            get { return _sessionParameters.UserName; }
             set
             {
-                _username = value;
+                if (_sessionParameters.UserName == value) return;
+                _sessionParameters.UserName = value;
+                OnPropertyChanged();
+                OpenCommandAsync.NotifyCanExecuteChanged();
+            }
+        }
+
+        public string DatabaseName
+        {
+            get { return _sessionParameters.DatabaseName; }
+            set
+            {
+                if (_sessionParameters.DatabaseName == value) return;
+                _sessionParameters.DatabaseName = value;
+                OnPropertyChanged();
+                OpenCommandAsync.NotifyCanExecuteChanged();
+            }
+        }
+
+        public string CollectionName
+        {
+            get { return _sessionParameters.CollectionName; }
+            set
+            {
+                if (_sessionParameters.CollectionName == value) return;
+                _sessionParameters.CollectionName = value;
                 OnPropertyChanged();
                 OpenCommandAsync.NotifyCanExecuteChanged();
             }
@@ -167,7 +223,19 @@ namespace Panoptes.ViewModels.NewSession
                         if (!int.TryParse(Port, out _)) return "Port should be numeric";
                         break;
 
-                        //TODO password and username
+                    case nameof(UserName):
+                        if (string.IsNullOrWhiteSpace(UserName)) return "User name is required";
+                        break;
+
+                    case nameof(DatabaseName):
+                        if (string.IsNullOrWhiteSpace(DatabaseName)) return "Database name is required";
+                        break;
+
+                    case nameof(CollectionName):
+                        if (string.IsNullOrWhiteSpace(CollectionName)) return "Collection name is required";
+                        break;
+
+                        //TODO password?
                 }
 
                 return string.Empty;

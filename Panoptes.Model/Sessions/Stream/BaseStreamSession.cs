@@ -45,7 +45,11 @@ namespace Panoptes.Model.Sessions.Stream
             _resultConverter = resultConverter;
 
             _host = parameters.Host;
-            _port = parameters.Port;
+            if (!int.TryParse(parameters.Port, out var port))
+            {
+                throw new ArgumentOutOfRangeException("The port should be an integer.", nameof(port));
+            }
+            _port = port;
             _closeAfterCompleted = parameters.CloseAfterCompleted;
 
             _syncContext = SynchronizationContext.Current;
@@ -168,8 +172,7 @@ namespace Panoptes.Model.Sessions.Stream
                     break;
 
                 case PacketType.LiveNode:
-                    var liveNodePacket = (LiveNodePacket)packet;
-                    // TODO
+                    _syncContext.Send(_ => _sessionHandler.HandleLiveNode((LiveNodePacket)packet), null);
                     return false;
 
                 case PacketType.AlgorithmNode:
@@ -259,55 +262,57 @@ namespace Panoptes.Model.Sessions.Stream
         /// <returns>Returns true if the packet was handled, otherwise false.</returns>
         protected bool HandlePacketEventsListener(string payload, PacketType packetType)
         {
-            if (_cts?.IsCancellationRequested != false)
+            try
             {
-                Debug.WriteLine("BaseStreamSession.HandlePacketEventsListener: Canceled.");
+                switch (packetType)
+                {
+                    case PacketType.AlgorithmStatus:
+                        _packetQueue.Add(JsonSerializer.Deserialize<AlgorithmStatusPacket>(payload, _options));
+                        break;
+
+                    case PacketType.LiveNode:
+                        _packetQueue.Add(JsonSerializer.Deserialize<LiveNodePacket>(payload, _options));
+                        break;
+
+                    case PacketType.AlgorithmNode:
+                        _packetQueue.Add(JsonSerializer.Deserialize<AlgorithmNodePacket>(payload, _options));
+                        break;
+
+                    case PacketType.LiveResult:
+                        _packetQueue.Add(JsonSerializer.Deserialize<LiveResultPacket>(payload, _options));
+                        break;
+
+                    case PacketType.BacktestResult:
+                        _packetQueue.Add(JsonSerializer.Deserialize<BacktestResultPacket>(payload, _options));
+                        break;
+
+                    case PacketType.OrderEvent:
+                        _packetQueue.Add(JsonSerializer.Deserialize<OrderEventPacket>(payload, _options));
+                        break;
+
+                    case PacketType.Log:
+                        _packetQueue.Add(JsonSerializer.Deserialize<LogPacket>(payload, _options));
+                        break;
+
+                    case PacketType.Debug:
+                        _packetQueue.Add(JsonSerializer.Deserialize<DebugPacket>(payload, _options));
+                        break;
+
+                    case PacketType.HandledError:
+                        _packetQueue.Add(JsonSerializer.Deserialize<HandledErrorPacket>(payload, _options));
+                        break;
+
+                    default:
+                        Debug.WriteLine($"BaseStreamSession.HandlePacketEventsListener: Unknown packet type '{packetType}'.");
+                        return false;
+                }
+                return true;
+            }
+            catch (ObjectDisposedException)
+            {
+                Debug.WriteLine("BaseStreamSession.HandlePacketEventsListener: Queue is disposed.");
                 return false;
             }
-
-            switch (packetType)
-            {
-                case PacketType.AlgorithmStatus:
-                    _packetQueue.Add(JsonSerializer.Deserialize<AlgorithmStatusPacket>(payload, _options));
-                    break;
-
-                case PacketType.LiveNode:
-                    _packetQueue.Add(JsonSerializer.Deserialize<LiveNodePacket>(payload, _options));
-                    break;
-
-                case PacketType.AlgorithmNode:
-                    _packetQueue.Add(JsonSerializer.Deserialize<AlgorithmNodePacket>(payload, _options));
-                    break;
-
-                case PacketType.LiveResult:
-                    _packetQueue.Add(JsonSerializer.Deserialize<LiveResultPacket>(payload, _options));
-                    break;
-
-                case PacketType.BacktestResult:
-                    _packetQueue.Add(JsonSerializer.Deserialize<BacktestResultPacket>(payload, _options));
-                    break;
-
-                case PacketType.OrderEvent:
-                    _packetQueue.Add(JsonSerializer.Deserialize<OrderEventPacket>(payload, _options));
-                    break;
-
-                case PacketType.Log:
-                    _packetQueue.Add(JsonSerializer.Deserialize<LogPacket>(payload, _options));
-                    break;
-
-                case PacketType.Debug:
-                    _packetQueue.Add(JsonSerializer.Deserialize<DebugPacket>(payload, _options));
-                    break;
-
-                case PacketType.HandledError:
-                    _packetQueue.Add(JsonSerializer.Deserialize<HandledErrorPacket>(payload, _options));
-                    break;
-
-                default:
-                    Debug.WriteLine($"BaseStreamSession.HandlePacketEventsListener: Unknown packet type '{packetType}'.");
-                    return false;
-            }
-            return true;
         }
         #endregion
 

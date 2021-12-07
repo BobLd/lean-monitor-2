@@ -13,5 +13,7 @@ namespace Panoptes.Model.Sessions
         void HandleOrderEvent(OrderEventPacket orderEvent);
 
         void HandleAlgorithmStatus(AlgorithmStatusPacket algorithmStatusPacket);
+
+        void HandleLiveNode(LiveNodePacket algorithmStatusPacket);
     }
 }

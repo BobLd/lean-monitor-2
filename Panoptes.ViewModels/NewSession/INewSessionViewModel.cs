@@ -1,4 +1,5 @@
 ﻿using Microsoft.Toolkit.Mvvm.Input;
+using System.Collections.Generic;
 
 namespace Panoptes.ViewModels.NewSession
 {
@@ -9,5 +10,7 @@ namespace Panoptes.ViewModels.NewSession
         RelayCommand CancelCommand { get; }
 
         string Header { get; }
+
+        void LoadParameters(IDictionary<string, string> parameters);
     }
 }

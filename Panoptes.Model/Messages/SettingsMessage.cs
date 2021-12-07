@@ -16,6 +16,6 @@ namespace Panoptes.Model.Messages
     public enum UserSettingsUpdate
     {
         Timezone = 0,
-
+        SoundsActivated = 1
     }
 }

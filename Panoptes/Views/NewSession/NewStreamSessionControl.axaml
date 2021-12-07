@@ -27,17 +27,17 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<Label Grid.Row="0">Host</Label>
+		<Label Grid.Row="0" Content="Host"/>
 		<TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Host}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
-		<Label Grid.Row="1" Grid.Column="0">Port</Label>
+		<Label Grid.Row="1" Grid.Column="0" Content="Port"/>
 		<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Port}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
-		<Label Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">
-			<TextBlock TextWrapping="Wrap">NOT RECOMMENDED - Will block the Lean engine and this app will become the bottleneck.
-Configure LEAN to use the 'StreamingMessageHandler' implementation. You can start this program to connect automatically to localhost by passing the port as a commandline parameter.</TextBlock>
-		</Label>
+		<StackPanel Orientation="Vertical" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">
+			<TextBlock TextWrapping="Wrap" Text="Configure LEAN to use the 'StreamingMessageHandler' implementation. You can start this program to connect automatically to localhost by passing the port as a commandline parameter."/>
+			<TextBlock Foreground="{StaticResource HighlightBrush}" TextWrapping="Wrap" Text="NOT RECOMMENDED - Will block the Lean engine and this app will become the bottleneck."/>
+		</StackPanel>
 	</Grid>
 </UserControl>

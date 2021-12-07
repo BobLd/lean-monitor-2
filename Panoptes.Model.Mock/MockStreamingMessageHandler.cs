@@ -42,9 +42,14 @@ namespace Panoptes.Model.Mock
         /// </summary>
         public bool HasSubscribers { get; set; }
 
-        public MockStreamingMessageHandler(StreamSessionParameters streamParameters)
+        public MockStreamingMessageHandler(StreamSessionParameters parameters)
         {
-            _port = streamParameters.Port;
+            if (!int.TryParse(parameters.Port, out var port))
+            {
+                throw new ArgumentOutOfRangeException("The port should be an integer.", nameof(port));
+            }
+            _port = port;
+
             _startTime = DateTime.UtcNow;
             _currentTime = _startTime;
             _orderEventJsonConverter = new OrderEventJsonConverter(AlgorithmId);
@@ -218,7 +223,7 @@ namespace Panoptes.Model.Mock
                         break;
 
                     case PacketType.LiveNode:
-                        _packetQueue.Add(GetLiveNodePacket());
+                        //_packetQueue.Add(GetLiveNodePacket());
                         break;
 
                     //case PacketType.AlgorithmNode:

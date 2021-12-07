@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Panoptes.Model.Settings.Json
 {
-    // https://github.com/dotnet/runtime/issues/58690
+    // Fixes https://github.com/dotnet/runtime/issues/58690
     // https://josef.codes/custom-dictionary-string-object-jsonconverter-for-system-text-json/
     internal sealed class GridsColumnsJsonConverter : JsonConverter<IDictionary<string, IReadOnlyList<Tuple<string, int>>>>
     {

@@ -3,6 +3,7 @@ using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -15,7 +16,7 @@ namespace Panoptes.ViewModels.NewSession
     public sealed class NewFileSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
         private readonly ISessionService _sessionService;
-        private readonly FileSessionParameters _fileSessionParameters = new FileSessionParameters
+        private readonly FileSessionParameters _sessionParameters = new FileSessionParameters
         {
 #if DEBUG
             FileName = @"C:\Users\Bob\Desktop\bt\SableSMA_4_14\SableSMA_4_14.json",
@@ -50,7 +51,7 @@ namespace Panoptes.ViewModels.NewSession
             try
             {
                 Error = null;
-                await _sessionService.OpenAsync(_fileSessionParameters, cancellationToken).ConfigureAwait(false);
+                await _sessionService.OpenAsync(_sessionParameters, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException ocEx)
             {
@@ -78,6 +79,21 @@ namespace Panoptes.ViewModels.NewSession
             return fieldsToValidate.All(field => string.IsNullOrEmpty(this[field]));
         }
 
+        public void LoadParameters(IDictionary<string, string> parameters)
+        {
+            if (parameters == null || parameters.Count == 0) return;
+
+            if (parameters.TryGetValue(nameof(FileName), out var fileName))
+            {
+                FileName = fileName;
+            }
+
+            if (parameters.TryGetValue(nameof(FileWatch), out var fileWatchStr) && bool.TryParse(fileWatchStr, out var fileWatch))
+            {
+                FileWatch = fileWatch;
+            }
+        }
+
         public string FileNameAndSize
         {
             get
@@ -92,11 +108,11 @@ namespace Panoptes.ViewModels.NewSession
 
         public string FileName
         {
-            get { return _fileSessionParameters.FileName; }
+            get { return _sessionParameters.FileName; }
             set
             {
-                if (_fileSessionParameters.FileName == value) return;
-                _fileSessionParameters.FileName = value;
+                if (_sessionParameters.FileName == value) return;
+                _sessionParameters.FileName = value;
                 Error = null;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(FileNameAndSize));
@@ -106,10 +122,10 @@ namespace Panoptes.ViewModels.NewSession
 
         public bool FileWatch
         {
-            get { return _fileSessionParameters.Watch; }
+            get { return _sessionParameters.Watch; }
             set
             {
-                _fileSessionParameters.Watch = value;
+                _sessionParameters.Watch = value;
                 OnPropertyChanged();
             }
         }

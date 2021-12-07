@@ -52,7 +52,7 @@ namespace Panoptes.Model.Settings.Json
             if (!File.Exists(_filePath))
             {
                 UserSettings = new UserSettings.DefaultUserSettings();
-                Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Initialising done - using default.");
+                Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Initialising done - No file found, using default.");
                 await SaveAsync().ConfigureAwait(false);
                 return;
             }
@@ -63,7 +63,6 @@ namespace Panoptes.Model.Settings.Json
                 using (var settingsFile = File.Open(_filePath, FileMode.Open))
                 {
                     UserSettings = await JsonSerializer.DeserializeAsync<UserSettings>(settingsFile, _jsonSerializerOptions).ConfigureAwait(false);
-
                     CheckVersion();
                 }
             }
@@ -93,7 +92,6 @@ namespace Panoptes.Model.Settings.Json
             {
                 try
                 {
-                    // Error here https://github.com/dotnet/runtime/issues/58690
                     await JsonSerializer.SerializeAsync(settingsFile, UserSettings, _jsonSerializerOptions).ConfigureAwait(false);
                 }
                 catch (Exception ex)

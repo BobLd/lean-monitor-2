@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Panoptes.Model.Sessions;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -45,11 +46,15 @@ namespace Panoptes.Model.Settings
         /// </summary>
         void CheckVersion();
 
+        void UpdateSessionParameters(ISessionParameters sessionParameters);
+
         bool IsInitialised { get; }
 
         IEnumerable<string> SetupGridsColumns { get; }
 
         TimeZoneInfo SelectedTimeZone { get; set; }
+
+        IDictionary<string, string> SessionParameters { get; }
 
         bool SoundsActivated { get; }
 

@@ -8,5 +8,9 @@ namespace Panoptes.Model.MongoDB.Sessions
         public string UserName { get; set; }
 
         public SecureString Password { get; set; }
+
+        public string DatabaseName { get; set; }
+
+        public string CollectionName { get; set; }
     }
 }

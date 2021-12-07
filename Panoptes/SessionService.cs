@@ -149,6 +149,11 @@ namespace Panoptes
             _messenger.Send(new AlgorithmStatusMessage(algorithmStatusPacket));
         }
 
+        public void HandleLiveNode(LiveNodePacket liveNodePacket)
+        {
+            _messenger.Send(new LiveNodeMessage(liveNodePacket));
+        }
+
         public async void Initialize()
         {
             // TODO - Not good at all, we need async here but it returns void!!
@@ -156,8 +161,6 @@ namespace Panoptes
             // We try to load instructions to load a session from the commandline.
             // This format is a bit obscure because it tries to say compatible with the 'port only'
             // argument as used in the Lean project.
-
-            //await _settingsManager.InitialiseAsync().ConfigureAwait(false);
 
             try
             {
@@ -277,6 +280,9 @@ namespace Panoptes
                 ShutdownSession();
             }
 
+            // Save session parameters in settings
+            _settingsManager.UpdateSessionParameters(parameters);
+
             ISession session = null;
 
             // We need to make sure to create the session in UI thread. If not, SynchronizationContext.Current will be null
@@ -346,7 +352,7 @@ namespace Panoptes
                 _session = session;
                 if (session is ISessionHistory sessionHistory)
                 {
-                    await sessionHistory.LoadRecentData(cancellationToken).ConfigureAwait(false);
+                    await sessionHistory.LoadRecentDataAsync(cancellationToken).ConfigureAwait(false);
                 }
 
                 await _session.InitializeAsync(cancellationToken).ConfigureAwait(false);

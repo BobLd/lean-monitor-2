@@ -6,7 +6,6 @@ namespace Panoptes.Model.Settings
 {
     public class UserSettings
     {
-        // TODO: Panoptes Version for compatibility check
         public string Version { get; set; }
 
         public TimeZoneInfo SelectedTimeZone { get; set; }
@@ -14,6 +13,8 @@ namespace Panoptes.Model.Settings
         public IDictionary<string, IReadOnlyList<Tuple<string, int>>> GridsColumns { get; set; }
 
         public bool SoundsActivated { get; set; }
+
+        public IDictionary<string, string> SessionParameters { get; set; }
 
         public class DefaultUserSettings : UserSettings
         {

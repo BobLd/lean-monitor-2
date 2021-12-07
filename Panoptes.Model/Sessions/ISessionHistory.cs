@@ -5,6 +5,6 @@ namespace Panoptes.Model.Sessions
 {
     public interface ISessionHistory
     {
-        Task LoadRecentData(CancellationToken cancellationToken);
+        Task LoadRecentDataAsync(CancellationToken cancellationToken);
     }
 }

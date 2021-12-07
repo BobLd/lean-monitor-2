@@ -1,9 +1,11 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
+using Panoptes.Model.Sessions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Panoptes.Model.Settings
@@ -16,7 +18,7 @@ namespace Panoptes.Model.Settings
             Messenger = messenger;
         }
 
-        public UserSettings UserSettings { get; set; }
+        public UserSettings UserSettings { get; protected set; }
 
         public TimeZoneInfo SelectedTimeZone
         {
@@ -31,6 +33,31 @@ namespace Panoptes.Model.Settings
                 UserSettings.SelectedTimeZone = value;
                 Messenger.Send(new SettingsMessage(UserSettings, UserSettingsUpdate.Timezone));
             }
+        }
+
+        public IDictionary<string, string> SessionParameters
+        {
+            get
+            {
+                return UserSettings.SessionParameters;
+            }
+        }
+
+        public void UpdateSessionParameters(ISessionParameters sessionParameters)
+        {
+            var type = sessionParameters.GetType();
+            UserSettings.SessionParameters = new Dictionary<string, string>
+            {
+                ["type"] = type.Name,
+            };
+
+            foreach (var prop in (PropertyInfo[])type.GetProperties())
+            {
+                if (prop.Name.Equals("Password", StringComparison.OrdinalIgnoreCase)) continue;
+                UserSettings.SessionParameters[prop.Name] = prop.GetValue(sessionParameters).ToString();
+            }
+
+            Debug.WriteLine($"BaseSettingsManager.UpdateSessionParameters: Updated {UserSettings.SessionParameters.Count} parameters.");
         }
 
         public bool IsInitialised { get; protected set; }
@@ -102,7 +129,7 @@ namespace Panoptes.Model.Settings
         {
             if (UserSettings == null)
             {
-                Debug.WriteLine("JsonSettingsManager.CheckVersion: Error - Cannot check version because UserSettings is null.");
+                Debug.WriteLine("BaseSettingsManager.CheckVersion: Error - Cannot check version because UserSettings is null.");
                 return;
             }
 
@@ -114,17 +141,17 @@ namespace Panoptes.Model.Settings
                 var currentVersion = Global.ParseVersion(Global.AppVersion);
                 if (settingsVersion != currentVersion)
                 {
-                    Debug.WriteLine($"JsonSettingsManager.CheckVersion: Warning - Settings version is '{settingsVersion}' and app version is '{currentVersion}'. This might create unexpected behaviour.");
+                    Debug.WriteLine($"BaseSettingsManager.CheckVersion: Warning - Settings version is '{settingsVersion}' and app version is '{currentVersion}'. This might create unexpected behaviour.");
                 }
                 else
                 {
-                    Debug.WriteLine($"JsonSettingsManager.CheckVersion: Settings version and app version are both '{settingsVersion}'.");
+                    Debug.WriteLine($"BaseSettingsManager.CheckVersion: Settings version and app version are both '{settingsVersion}'.");
                 }
             }
             else
             {
                 UserSettings.Version = Global.AppVersion;
-                Debug.WriteLine($"JsonSettingsManager.CheckVersion: Warning - Settings version is unknown and was set to {Global.AppVersion} This might create unexpected behaviour.");
+                Debug.WriteLine($"BaseSettingsManager.CheckVersion: Warning - Settings version is unknown and was set to {Global.AppVersion} This might create unexpected behaviour.");
             }
         }
     }

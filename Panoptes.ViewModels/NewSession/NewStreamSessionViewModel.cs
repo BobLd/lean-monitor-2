@@ -3,6 +3,7 @@ using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.Stream;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -14,6 +15,11 @@ namespace Panoptes.ViewModels.NewSession
     public sealed class NewStreamSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
         private readonly ISessionService _sessionService;
+        private readonly StreamSessionParameters _sessionParameters = new StreamSessionParameters
+        {
+            Host = "localhost",
+            Port = "33333"
+        };
 
         public NewStreamSessionViewModel(ISessionService sessionService)
         {
@@ -34,17 +40,11 @@ namespace Panoptes.ViewModels.NewSession
         {
             try
             {
-                await _sessionService.OpenAsync(new StreamSessionParameters
-                {
-                    CloseAfterCompleted = true,
-                    Host = Host,
-                    Port = int.Parse(Port)
-                }, cancellationToken).ConfigureAwait(false);
+                await _sessionService.OpenAsync(_sessionParameters, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException ocEx)
             {
                 Debug.WriteLine($"NewStreamSessionViewModel.OpenAsync: Operation was canceled.\n{ocEx}");
-                //Error = ocEx.ToString();
             }
             catch (Exception ex)
             {
@@ -70,25 +70,40 @@ namespace Panoptes.ViewModels.NewSession
             return fieldsToValidate.All(field => string.IsNullOrEmpty(this[field]));
         }
 
-        private string _host = "localhost";
+        public void LoadParameters(IDictionary<string, string> parameters)
+        {
+            if (parameters == null || parameters.Count == 0) return;
+
+            if (parameters.TryGetValue(nameof(Host), out var host))
+            {
+                Host = host;
+            }
+
+            if (parameters.TryGetValue(nameof(Port), out var port))
+            {
+                Port = port;
+            }
+        }
+
         public string Host
         {
-            get { return _host; }
+            get { return _sessionParameters.Host; }
             set
             {
-                _host = value;
+                if (_sessionParameters.Host == value) return;
+                _sessionParameters.Host = value;
                 OnPropertyChanged();
                 OpenCommandAsync.NotifyCanExecuteChanged();
             }
         }
 
-        private string _port = "33333";
         public string Port
         {
-            get { return _port; }
+            get { return _sessionParameters.Port.ToString(); }
             set
             {
-                _port = value;
+                if (_sessionParameters.Port == value) return;
+                _sessionParameters.Port = value;
                 OnPropertyChanged();
                 OpenCommandAsync.NotifyCanExecuteChanged();
             }

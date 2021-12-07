@@ -544,6 +544,8 @@ namespace Panoptes.ViewModels.Charts
                 _selectedSeries = value;
                 // Need to update toggle buttons for candles/lines, period selected
                 // or deactivate them
+
+                // v TODO - Investigate: This throws 'Collection was modified' exception sometimes at startup v
                 OnPropertyChanged();
             }
         }

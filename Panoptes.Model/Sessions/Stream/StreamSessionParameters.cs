@@ -4,7 +4,7 @@
     {
         public string Host { get; set; }
 
-        public int Port { get; set; }
+        public string Port { get; set; }
 
         /// <summary>
         /// Gets or sets whether this session should close after the last packet has been received.

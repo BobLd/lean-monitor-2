@@ -23,30 +23,38 @@
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="5"/>
+			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<Label Grid.Row="0">Host</Label>
+		<Label Grid.Row="0" Content="Host"/>
 		<TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Host}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
-		<Label Grid.Row="1" Grid.Column="0">Port</Label>
+		<Label Grid.Row="1" Grid.Column="0" Content="Port"/>
 		<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Port}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
-		<Label Grid.Row="2" Grid.Column="0">User Name</Label>
+		<Label Grid.Row="2" Grid.Column="0" Content="User Name"/>
 		<TextBox Grid.Row="2" Grid.Column="1" Text="{Binding UserName}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
-
-		<Label Grid.Row="3" Grid.Column="0">Password</Label>
-		<TextBox Grid.Row="3" Grid.Column="1" PasswordChar="*" Text="{Binding Password}"
+		
+		<Label Grid.Row="3" Grid.Column="0" Content="Database"/>
+		<TextBox Grid.Row="3" Grid.Column="1" Text="{Binding DatabaseName}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
 
-		<ProgressBar Grid.Row="5" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+		<Label Grid.Row="4" Grid.Column="0" Content="Collection"/>
+		<TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CollectionName}"
+				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>		
+		
+		<Label Grid.Row="5" Grid.Column="0" Content="Password"/>
+		<TextBox Grid.Row="5" Grid.Column="1" PasswordChar="*" Text="{Binding Password}"
+				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+
+		<ProgressBar Grid.Row="6" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
 					 IsIndeterminate="{Binding OpenCommandAsync.IsRunning}" IsVisible="{Binding OpenCommandAsync.IsRunning}"/>
 
-		<TextBlock Grid.Row="6" Grid.ColumnSpan="3" Text="{Binding Error}" Foreground="{StaticResource ErrorBrush}"/>
+		<TextBlock Grid.Row="7" Grid.ColumnSpan="3" Text="{Binding Error}" Foreground="{StaticResource ErrorBrush}"/>
 	</Grid>
 </UserControl>

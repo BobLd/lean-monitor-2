@@ -1,4 +1,5 @@
 ﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
+using Panoptes.Model.Settings;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -38,11 +39,22 @@ namespace Panoptes.ViewModels.NewSession
             }
         }
 
-        public NewSessionWindowViewModel(IEnumerable<INewSessionViewModel> newSessionViewModels)
+        public NewSessionWindowViewModel(IEnumerable<INewSessionViewModel> newSessionViewModels, ISettingsManager settingsManager)
         {
-            foreach (var session in newSessionViewModels)
+            string type = null;
+            if (settingsManager.SessionParameters != null)
             {
-                session.OpenCommandAsync.PropertyChanged += OpenCommandAsync_PropertyChanged;
+                type = $"New{settingsManager.SessionParameters["type"].Replace("Parameters", "")}ViewModel";
+            }
+
+            foreach (var sessionViewModel in newSessionViewModels)
+            {
+                sessionViewModel.OpenCommandAsync.PropertyChanged += OpenCommandAsync_PropertyChanged;
+                if (!string.IsNullOrEmpty(type) && sessionViewModel.GetType().Name == type)
+                {
+                    SelectedViewModel = sessionViewModel;
+                    SelectedViewModel.LoadParameters(settingsManager.SessionParameters);
+                }
             }
             NewSessionViewModels = new ObservableCollection<INewSessionViewModel>(newSessionViewModels);
         }

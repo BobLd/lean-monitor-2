@@ -65,6 +65,12 @@ namespace Panoptes.ViewModels
                 ProcessServerStatistics(m.ResultContext.Result.ServerStatistics);
             });
             Messenger.Register<StatusViewModel, AlgorithmStatusMessage>(this, (r, m) => r.AlgorithmStatus = m.Value.Status);
+            Messenger.Register<StatusViewModel, LiveNodeMessage>(this, (r, m) =>
+            {
+                r.ProjectName = m.Value.ProjectName;
+                r.IsLive = true;
+                r.IsProgressIndeterminate = true;
+            });
         }
 
         private string _serverStatistics;
