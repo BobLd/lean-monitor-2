@@ -8,9 +8,10 @@ Legacy WPF version available in the[ wpf-legacy branch](https://github.com/BobLd
 
 ## How to use
 ### Sessions
-- **Mock**: Build in debug mode and open a 'Stream' session. This will launch a mock data feed.
-- **Stream**
-- **File**: Open the main backtest `.json` file. The `order-events.jsom` file will also be loaded. If the button is grayed out, it means that the app can't find the file.
-- **MongoDB**
 
+- **File**: For backtest, open the main backtest `.json` file. The `order-events.jsom` file will also be loaded. If the button is grayed out, it means that the app can't find the file.
+![backtest](https://github.com/BobLd/lean-monitor-2/blob/master/capture.png)
+- **Stream**
+- **MongoDB**
+- **Mock**: Build in debug mode and open a 'Stream' session. This will launch a mock data feed.
 ![demo](https://github.com/BobLd/lean-monitor-2/blob/master/demo.gif)
