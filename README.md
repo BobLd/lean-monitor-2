@@ -9,7 +9,7 @@ Legacy WPF version available in the[ wpf-legacy branch](https://github.com/BobLd
 ## How to use
 ### Sessions
 
-- **File**: For backtest, open the main backtest `.json` file. The `order-events.jsom` file will also be loaded. If the button is grayed out, it means that the app can't find the file.
+- **File**: For backtest, open the main backtest `.json` file. The `order-events.jsom` file will also be loaded. If the button is grayed out, it means that the app can't find the file. You can also replace the `.json` extension by `.qcb` and use Panoptes to open the main file by double clicking on the `.qcb` file.
 ![backtest](https://github.com/BobLd/lean-monitor-2/blob/master/capture.png)
 - **Stream**
 - **MongoDB**
