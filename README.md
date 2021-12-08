@@ -1,4 +1,6 @@
-# Panoptes (lean-monitor-2)
+
+
+# <img src="https://github.com/BobLd/lean-monitor-2/blob/master/logo/logo_plain.ico" width="25"> Panoptes (lean-monitor-2)
 ## About
 Panoptes is an open-source Desktop based tool to browse [QuantConnect Lean](https://github.com/QuantConnect/Lean) engine's backtest and monitor live performances. It is updated and ported from https://github.com/mirthestam/lean-monitor.
 
