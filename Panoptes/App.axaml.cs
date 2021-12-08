@@ -103,7 +103,7 @@ namespace Panoptes
             var services = new ServiceCollection();
 
             // Messenger
-            services.AddSingleton<IMessenger, WeakReferenceMessenger>();
+            services.AddSingleton<IMessenger, StrongReferenceMessenger>();
 
             // Settings
             services.AddSingleton<ISettingsManager, JsonSettingsManager>();

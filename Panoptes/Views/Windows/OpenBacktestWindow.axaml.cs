@@ -16,7 +16,7 @@ namespace Panoptes.Views.Windows
 
         public OpenBacktestWindow()
         {
-            _messenger = (WeakReferenceMessenger)App.Current.Services.GetService(typeof(IMessenger));
+            _messenger = (IMessenger)App.Current.Services.GetService(typeof(IMessenger));
             if (_messenger == null)
             {
                 throw new ArgumentNullException("Could not find 'IMessenger' service in 'App.Current.Services'.");

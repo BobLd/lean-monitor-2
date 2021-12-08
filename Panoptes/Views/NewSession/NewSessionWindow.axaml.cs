@@ -20,7 +20,7 @@ namespace Panoptes.Views.NewSession
             this.AttachDevTools();
 #endif
             // TODO: Implement dependency injection for the messenger
-            _messenger = (WeakReferenceMessenger)App.Current.Services.GetService(typeof(IMessenger)) ?? throw new NullReferenceException($"NewSessionWindow: '{nameof(_messenger)}' is null");
+            _messenger = (IMessenger)App.Current.Services.GetService(typeof(IMessenger)) ?? throw new NullReferenceException($"NewSessionWindow: '{nameof(_messenger)}' is null");
             _messenger.Register<NewSessionWindow, SessionOpenedMessage>(this, (r, m) =>
             {
                 if (m.IsSuccess)
