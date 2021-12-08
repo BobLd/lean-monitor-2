@@ -14,5 +14,7 @@
         /// Gets or sets whether the FileSession will monitor the file for changes.
         /// </summary>
         public bool Watch { get; set; }
+
+        public bool IsFromCmdLine { get; init; }
     }
 }

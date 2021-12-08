@@ -21,8 +21,13 @@
     <PackageReference Include="Avalonia.Desktop" Version="0.10.11-rc.1" />
     <PackageReference Include="Avalonia.Diagnostics" Version="0.10.11-rc.1" Condition=" '$(Configuration)' == 'Debug' " />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-20210915.2" />
     <PackageReference Include="QuantConnect.Common" Version="2.5.13307" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" Condition=" '$(Configuration)' == 'Debug' " />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
    </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Panoptes.Model.Mock\Panoptes.Model.Mock.csproj" Condition=" '$(Configuration)' == 'Debug' " />

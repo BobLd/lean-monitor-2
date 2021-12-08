@@ -1,9 +1,9 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Sessions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -12,9 +12,11 @@ namespace Panoptes.Model.Settings
 {
     public abstract class BaseSettingsManager : ISettingsManager
     {
+        protected readonly ILogger _logger;
         public IMessenger Messenger { get; }
-        public BaseSettingsManager(IMessenger messenger)
+        public BaseSettingsManager(IMessenger messenger, ILogger<BaseSettingsManager> logger)
         {
+            _logger = logger;
             Messenger = messenger;
         }
 
@@ -43,6 +45,7 @@ namespace Panoptes.Model.Settings
             }
         }
 
+        private readonly string[] _paramsToIgnore = new string[] { "Password", "IsFromCmdLine" };
         public void UpdateSessionParameters(ISessionParameters sessionParameters)
         {
             var type = sessionParameters.GetType();
@@ -53,11 +56,11 @@ namespace Panoptes.Model.Settings
 
             foreach (var prop in (PropertyInfo[])type.GetProperties())
             {
-                if (prop.Name.Equals("Password", StringComparison.OrdinalIgnoreCase)) continue;
+                if (_paramsToIgnore.Contains(prop.Name)) continue;
                 UserSettings.SessionParameters[prop.Name] = prop.GetValue(sessionParameters).ToString();
             }
 
-            Debug.WriteLine($"BaseSettingsManager.UpdateSessionParameters: Updated {UserSettings.SessionParameters.Count} parameters.");
+            _logger.LogInformation("BaseSettingsManager.UpdateSessionParameters: Updated {Count} parameters.", UserSettings.SessionParameters.Count);
         }
 
         public bool IsInitialised { get; protected set; }
@@ -129,7 +132,7 @@ namespace Panoptes.Model.Settings
         {
             if (UserSettings == null)
             {
-                Debug.WriteLine("BaseSettingsManager.CheckVersion: Error - Cannot check version because UserSettings is null.");
+                _logger.LogInformation("BaseSettingsManager.CheckVersion: Error - Cannot check version because UserSettings is null.");
                 return;
             }
 
@@ -141,17 +144,17 @@ namespace Panoptes.Model.Settings
                 var currentVersion = Global.ParseVersion(Global.AppVersion);
                 if (settingsVersion != currentVersion)
                 {
-                    Debug.WriteLine($"BaseSettingsManager.CheckVersion: Warning - Settings version is '{settingsVersion}' and app version is '{currentVersion}'. This might create unexpected behaviour.");
+                    _logger.LogInformation("BaseSettingsManager.CheckVersion: Warning - Settings version is '{settingsVersion}' and app version is '{currentVersion}'. This might create unexpected behaviour.", settingsVersion, currentVersion);
                 }
                 else
                 {
-                    Debug.WriteLine($"BaseSettingsManager.CheckVersion: Settings version and app version are both '{settingsVersion}'.");
+                    _logger.LogInformation("BaseSettingsManager.CheckVersion: Settings version and app version are both '{settingsVersion}'.", settingsVersion);
                 }
             }
             else
             {
                 UserSettings.Version = Global.AppVersion;
-                Debug.WriteLine($"BaseSettingsManager.CheckVersion: Warning - Settings version is unknown and was set to {Global.AppVersion} This might create unexpected behaviour.");
+                _logger.LogInformation("BaseSettingsManager.CheckVersion: Warning - Settings version is unknown and was set to {AppVersion} This might create unexpected behaviour.", Global.AppVersion);
             }
         }
     }

@@ -3,8 +3,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Microsoft.Toolkit.Mvvm.Input;
+using Serilog;
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,12 +47,16 @@ namespace Panoptes.Views.NewSession
                 // Other type of ApplicationLifetime
                 throw new ArgumentException($"Unknown ApplicationLifetime type, got '{App.Current.ApplicationLifetime?.GetType()}'.");
             }
-            catch (Exception ex)
+            catch (TypeLoadException tlEx)
             {
                 // TypeLoadException when publishing in signle file - apparently fixed in 
                 // https://github.com/AvaloniaUI/Avalonia/pull/7028
-                System.IO.File.WriteAllText("NewFileSessionControl.txt", ex.ToString());
-                Debug.WriteLine($"NewFileSessionControl.GetPath:\n{ex}");
+                Log.Error(tlEx, "NewFileSessionControl.GetPath: Known Avalonia error when publishing in signle file, should be fixed in https://github.com/AvaloniaUI/Avalonia/pull/7028");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "NewFileSessionControl.GetPath");
                 throw;
             }
         }

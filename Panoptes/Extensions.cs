@@ -1,8 +1,8 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Data;
+using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Panoptes
@@ -23,7 +23,7 @@ namespace Panoptes
             {
                 if (!currentColumns.TryGetValue(order.Item1, out var oldIndex))
                 {
-                    Debug.WriteLine($"Extensions.ReorderColumns(): Could not find '{order.Item1}' in the DataGrid's columns. Skipping.");
+                    Log.Warning("Extensions.ReorderColumns(): Could not find '{Item1}' in the DataGrid's columns. Skipping.", order.Item1);
                     continue;
                 }
                 if (oldIndex == order.Item2) continue;

@@ -1,6 +1,6 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -17,7 +17,7 @@ namespace Panoptes.Model.Settings.Json
 
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-        public JsonSettingsManager(IMessenger messenger) : base(messenger)
+        public JsonSettingsManager(IMessenger messenger, ILogger<JsonSettingsManager> logger) : base(messenger, logger)
         {
             _filePath = Path.Combine(Global.ProcessDirectory, UserSettingsFileName);
             _jsonSerializerOptions = new JsonSerializerOptions()
@@ -42,17 +42,17 @@ namespace Panoptes.Model.Settings.Json
         {
             if (IsInitialised)
             {
-                Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Already initialised.");
+                _logger.LogInformation("JsonSettingsManager.InitialiseAsync: Already initialised.");
                 return;
             }
 
             IsInitialised = true;
-            Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Initialising...");
+            _logger.LogInformation("JsonSettingsManager.InitialiseAsync: Initialising...");
 
             if (!File.Exists(_filePath))
             {
                 UserSettings = new UserSettings.DefaultUserSettings();
-                Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Initialising done - No file found, using default.");
+                _logger.LogInformation("JsonSettingsManager.InitialiseAsync: Initialising done - No file found, using default.");
                 await SaveAsync().ConfigureAwait(false);
                 return;
             }
@@ -68,21 +68,21 @@ namespace Panoptes.Model.Settings.Json
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"JsonSettingsManager.InitialiseAsync:\n{ex}");
+                _logger.LogError(ex, "JsonSettingsManager.InitialiseAsync");
                 UserSettings = new UserSettings.DefaultUserSettings();
             }
 
-            Debug.WriteLine("JsonSettingsManager.InitialiseAsync: Initialising done.");
+            _logger.LogInformation("JsonSettingsManager.InitialiseAsync: Initialising done.");
         }
 
         /// <inheritdoc/>
         public override async Task SaveAsync()
         {
-            Debug.WriteLine("JsonSettingsManager.Save: Saving...");
+            _logger.LogInformation("JsonSettingsManager.Save: Saving...");
 
             if (!IsInitialised || UserSettings == null)
             {
-                Debug.WriteLine("JsonSettingsManager.Save: Not initialised, nothing to save.");
+                _logger.LogInformation("JsonSettingsManager.Save: Not initialised, nothing to save.");
                 return;
             }
 
@@ -96,11 +96,11 @@ namespace Panoptes.Model.Settings.Json
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"JsonSettingsManager.SaveAsync:\n{ex}\n\n{string.Join("\n", UserSettings.GridsColumns.Select(d => string.Join(":", d.Key, string.Join(",", d.Value))))}");
-                    File.WriteAllText("JsonSettingsManager.SaveAsync.txt", $"{ex}\n\n{string.Join("\n", UserSettings.GridsColumns.Select(d => string.Join(":", d.Key, string.Join(",", d.Value))))}");
+                    var columns = UserSettings.GridsColumns.Select(d => string.Join(":", d.Key, string.Join(",", d.Value))).ToArray();
+                    _logger.LogError(ex, "JsonSettingsManager.SaveAsync: {columns}", columns);
                 }
             }
-            Debug.WriteLine("JsonSettingsManager.Save: Saving done.");
+            _logger.LogInformation("JsonSettingsManager.Save: Saving done.");
         }
     }
 }

@@ -1,9 +1,9 @@
-﻿using Panoptes.Model.Serialization;
+﻿using Microsoft.Extensions.Logging;
+using Panoptes.Model.Serialization;
 using Panoptes.Model.Serialization.Packets;
 using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading;
@@ -16,30 +16,41 @@ namespace Panoptes.Model
         private readonly IResultConverter _resultConverter;
 
         private readonly JsonSerializerOptions _options;
+        private readonly ILogger _logger;
 
-        public AdvancedResultSerializer(IResultConverter resultConverter)
+        public AdvancedResultSerializer(IResultConverter resultConverter, ILogger<AdvancedResultSerializer> logger)
         {
+            _logger = logger;
             _resultConverter = resultConverter;
             _options = DefaultJsonSerializerOptions.Default;
         }
 
         public async Task<Result> DeserializeAsync(string pathToResult, CancellationToken cancellationToken)
         {
-            // https://github.com/JamesNK/Newtonsoft.Json/issues/1193
+            _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Deserialization starting for {pathToResult}", pathToResult);
 
             List<OrderEvent> orderEvents = null;
             BacktestResult backtestResult;
             try
             {
+                var sw = new System.Diagnostics.Stopwatch();
                 string orderEventsPath = GetOrderEvents(pathToResult);
                 if (File.Exists(orderEventsPath))
                 {
+                    var orderFileSizeMb = new FileInfo(orderEventsPath).Length / 1_048_576;
+                    _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening Order events file '{orderEventsPath}' with size {fileSizeMb:0.0000}MB.", orderEventsPath, orderFileSizeMb);
+                    sw.Start();
                     using (var orderEventsStream = File.Open(orderEventsPath, FileMode.Open))
                     {
                         orderEvents = await JsonSerializer.DeserializeAsync<List<OrderEvent>>(orderEventsStream, _options, cancellationToken).ConfigureAwait(false);
                     }
+                    sw.Stop();
+                    _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening Order events file done in {ElapsedMilliseconds}ms.", sw.ElapsedMilliseconds);
                 }
 
+                var fileSizeMb = new FileInfo(pathToResult).Length / 1_048_576;
+                _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening main backtest file '{pathToResult}' with size {fileSizeMb:0.0000}MB.", orderEventsPath, fileSizeMb);
+                sw.Restart();
                 using (var backtestResultStream = File.Open(pathToResult, FileMode.Open))
                 {
                     backtestResult = await JsonSerializer.DeserializeAsync<BacktestResult>(backtestResultStream, _options, cancellationToken).ConfigureAwait(false);
@@ -49,20 +60,26 @@ namespace Panoptes.Model
                     }
 
                     backtestResult.OrderEvents = orderEvents;
+                    sw.Stop();
+                    _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening main backtest done in {ElapsedMilliseconds}ms.", sw.ElapsedMilliseconds);
                     return _resultConverter.FromBacktestResult(backtestResult);
                 }
             }
-            catch (TaskCanceledException tcex)
+            catch (TaskCanceledException)
             {
+                _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Deserialization was canceled.");
                 orderEvents.Clear();
                 backtestResult = null;
                 throw;
             }
             catch (Exception ex)
             {
-                // need to log
-                Trace.WriteLine($"AdvancedResultSerializer.DeserializeAsync: {ex}");
+                _logger.LogError(ex, "AdvancedResultSerializer.DeserializeAsync: Unknown exception for file '{pathToResult}'.", pathToResult);
                 throw;
+            }
+            finally
+            {
+                _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Deserialization finished.");
             }
         }
 

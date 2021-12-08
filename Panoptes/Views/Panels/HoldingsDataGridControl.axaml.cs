@@ -4,9 +4,9 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Panoptes.ViewModels.Panels;
 using Panoptes.Views.Controls;
+using Serilog;
 using System;
 using System.Collections;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Panoptes.Views.Panels
@@ -32,13 +32,13 @@ namespace Panoptes.Views.Panels
 
         private async Task _dataGrid_Initialized(object? sender, EventArgs e)
         {
-            Debug.WriteLine("HoldingsDataGridControl.Initialized");
+            Log.Information("HoldingsDataGridControl.Initialized");
             await LoadColumnsOrder().ConfigureAwait(false);
         }
 
         private async Task _dataGrid_ColumnReordered(object? sender, DataGridColumnEventArgs e)
         {
-            Debug.WriteLine($"HoldingsDataGridControl.ColumnReordered: {e.Column.Header}");
+            Log.Information("HoldingsDataGridControl.ColumnReordered: Reordered column '{Header}'", e.Column.Header);
             await SaveColumnsOrder().ConfigureAwait(false);
         }
 
@@ -51,13 +51,14 @@ namespace Panoptes.Views.Panels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "HoldingsDataGridControl.LoadColumnsOrder");
                 throw;
             }
         }
 
         public async Task SaveColumnsOrder()
         {
-            Debug.WriteLine("HoldingsDataGridControl.ColumnReordered: Saving columns order...");
+            Log.Information("HoldingsDataGridControl.ColumnReordered: Saving columns order...");
             await ViewModel.SettingsManager.UpdateGridAsync(this.GetSettingsKey(), _dataGrid.GetColumnsHeaderIndexPairs()).ConfigureAwait(false);
         }
         #endregion

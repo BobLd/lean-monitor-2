@@ -13,6 +13,7 @@ using Panoptes.ViewModels;
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.NewSession;
 using Panoptes.ViewModels.Panels;
+using Serilog;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -51,6 +52,7 @@ namespace Panoptes
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "OnFrameworkInitializationCompleted");
                 throw;
             }
         }
@@ -69,6 +71,8 @@ namespace Panoptes
             splashScreen.Show();
 
             var sw = new Stopwatch();
+
+            Log.Information("App.LoadSplashScreen: Loading settings and showing splash screen.");
             sw.Start();
 
             // Load what need to be loaded
@@ -79,6 +83,7 @@ namespace Panoptes
             // End of loading
 
             sw.Stop();
+            Log.Information("App.LoadSplashScreen: Loading settings done in {ElapsedMilliseconds}ms.", sw.ElapsedMilliseconds);
 
             if (sw.Elapsed < minDisplayTime)
             {
@@ -101,6 +106,8 @@ namespace Panoptes
         private static IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
+
+            services.AddLogging(c => c.AddSerilog(dispose: true));
 
             // Messenger
             services.AddSingleton<IMessenger, WeakReferenceMessenger>();

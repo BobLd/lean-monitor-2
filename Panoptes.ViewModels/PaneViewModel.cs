@@ -1,4 +1,5 @@
-﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
@@ -11,8 +12,8 @@ namespace Panoptes.ViewModels
         private bool _canClose;
         private string _key;
 
-        public DocumentPaneViewModel(IMessenger messenger, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public DocumentPaneViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<DocumentPaneViewModel> logger)
+            : base(messenger, settingsManager, logger)
         { }
 
         public bool CanClose
@@ -56,8 +57,8 @@ namespace Panoptes.ViewModels
 
         private string _name;
 
-        public ToolPaneViewModel(IMessenger messenger, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public ToolPaneViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<ToolPaneViewModel> logger)
+            : base(messenger, settingsManager, logger)
         { }
 
         public string Name
@@ -93,9 +94,12 @@ namespace Panoptes.ViewModels
 
         public ISettingsManager SettingsManager { get; }
 
-        public PaneViewModel(IMessenger messenger, ISettingsManager settingsManager)
+        public ILogger Logger { get; }
+
+        public PaneViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<PaneViewModel> logger)
             : base(messenger)
         {
+            Logger = logger;
             SettingsManager = settingsManager;
             Messenger.Register<PaneViewModel, SettingsMessage>(this, async (r, m) => await r.UpdateSettingsAsync(m.Value, m.Type).ConfigureAwait(false));
         }

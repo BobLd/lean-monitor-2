@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Panoptes.ViewModels.Panels;
+using Serilog;
 
 namespace Panoptes.Views.Windows
 {
@@ -32,7 +33,7 @@ namespace Panoptes.Views.Windows
 
         private void TradeInfoWindow_KeyDown(object? sender, KeyEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"TradeInfoWindow.KeyDown: {e.Key} - {e.KeyModifiers}");
+            Log.Debug("TradeInfoWindow.KeyDown: Key={Key} - KeyModifiers={KeyModifiers}.", e.Key, e.KeyModifiers);
             if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
             {
                 e.Handled = true;

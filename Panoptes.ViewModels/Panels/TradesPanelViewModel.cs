@@ -1,4 +1,5 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
@@ -8,7 +9,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -85,7 +85,7 @@ namespace Panoptes.ViewModels.Panels
                 SetSelectedItem(value);
 
                 if (_selectedItem == null) return; // We might want to be able to send null id
-                Debug.WriteLine($"Selected item #{_selectedItem.Id} and sending message.");
+                Logger.LogInformation("Selected item #{Id} and sending message.", _selectedItem.Id);
                 Messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
             }
         }
@@ -186,7 +186,7 @@ namespace Panoptes.ViewModels.Panels
             try
             {
                 DisplayLoading = true;
-                Debug.WriteLine($"TradesPanelViewModel: Start applying filters from {fromDate} to {toDate}...");
+                Logger.LogInformation("TradesPanelViewModel: Start applying filters from {fromDate} to {toDate}...", fromDate, toDate);
                 var (Add, Remove) = await GetFilteredOrders(fromDate, toDate).ConfigureAwait(false);
 
                 foreach (var remove in Remove)
@@ -198,13 +198,12 @@ namespace Panoptes.ViewModels.Panels
                 {
                     _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderAddHistory, add);
                 }
-                Debug.WriteLine($"TradesPanelViewModel: Done applying filters from {fromDate} to {toDate}!");
+                Logger.LogInformation("TradesPanelViewModel: Done applying filters from {fromDate} to {toDate}!", fromDate, toDate);
                 DisplayLoading = false; // should be in 'finally'?
             }
             catch (Exception ex)
             {
-                // Need to log
-                Trace.WriteLine(ex);
+                Logger.LogError(ex, "TradesPanelViewModel");
             }
         }
 
@@ -224,8 +223,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public TradesPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public TradesPanelViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<TradesPanelViewModel> logger)
+            : base(messenger, settingsManager, logger)
         {
             Name = "Trades";
             Messenger.Register<TradesPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -318,18 +317,18 @@ namespace Panoptes.ViewModels.Panels
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
                     // - Clear 'Today' order (now yesterday's one)
-                    Debug.WriteLine($"TradesPanelViewModel: NewDay @ {timerMessage.DateTimeUtc:O}");
+                    Logger.LogDebug("TradesPanelViewModel: NewDay @ {DateTimeUtc:O}", timerMessage.DateTimeUtc);
                     break;
 
                 default:
-                    Debug.WriteLine($"TradesPanelViewModel: {timerMessage} @ {timerMessage.DateTimeUtc:O}");
+                    Logger.LogDebug("TradesPanelViewModel: {Value} @ {DateTimeUtc:O}", timerMessage.Value, timerMessage.DateTimeUtc);
                     break;
             }
         }
 
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"TradesPanelViewModel.UpdateSettingsAsync: {type}.");
+            Logger.LogInformation("TradesPanelViewModel.UpdateSettingsAsync: {type}.", type);
 
             return Task.Run(() =>
             {
@@ -349,7 +348,7 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Debug.WriteLine("TradesPanelViewModel: Clear");
+                Logger.LogInformation("TradesPanelViewModel: Clear");
                 // _resultsQueue ??
                 _orderEventsDic.Clear();
                 _ordersDic.Clear();
@@ -357,7 +356,7 @@ namespace Panoptes.ViewModels.Panels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"TradesPanelViewModel: ERROR\n{ex}");
+                Logger.LogError(ex, "TradesPanelViewModel");
                 throw;
             }
         }

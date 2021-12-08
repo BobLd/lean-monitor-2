@@ -9,8 +9,8 @@ using Panoptes.Model.Sessions;
 using Panoptes.Model.Settings;
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.Panels;
+using Serilog;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels
@@ -120,7 +120,7 @@ namespace Panoptes.ViewModels
             DisconnectCommand = new RelayCommand(() => _sessionService.IsSessionSubscribed = false, () => _sessionState != SessionState.Unsubscribed);
             OptionsCommand = new RelayCommand(() =>
             {
-                Debug.WriteLine("Show Options window.");
+                Log.Information("Show Options window.");
                 new Views.Windows.SettingsWindow().Show();
             });
 
@@ -280,7 +280,7 @@ namespace Panoptes.ViewModels
 
         private Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"TradesPanelViewModel.UpdateSettingsAsync: {type}.");
+            Log.Information("TradesPanelViewModel.UpdateSettingsAsync: {type}.", type);
 
             return Task.Run(() =>
             {

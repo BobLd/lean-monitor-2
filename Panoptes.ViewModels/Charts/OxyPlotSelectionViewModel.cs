@@ -1,4 +1,5 @@
-﻿using Microsoft.Toolkit.Mvvm.Input;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -14,7 +15,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -147,7 +147,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 if (cancelationToken.IsCancellationRequested)
                 {
-                    Debug.WriteLine("OxyPlotSelectionViewModel.AddTradesToPlot: Canceled.");
+                    Logger.LogInformation("OxyPlotSelectionViewModel.AddTradesToPlot: Canceled.");
                     return;
                 }
 
@@ -216,7 +216,7 @@ namespace Panoptes.ViewModels.Charts
             // https://github.com/CommunityToolkit/WindowsCommunityToolkit/blob/rel/7.1.0/UnitTests/UnitTests.Shared/Mvvm/Test_AsyncRelayCommand.cs
             if (PlotTrades.IsRunning)
             {
-                Debug.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Canceling ({PlotTrades.ExecutionTask.Id}, {PlotTrades.ExecutionTask.Status})...");
+                Logger.LogInformation("OxyPlotSelectionViewModel.ProcessPlotTrades: Canceling ({Id}, {Status})...", PlotTrades.ExecutionTask.Id, PlotTrades.ExecutionTask.Status);
                 PlotTrades.Cancel();
                 return Task.FromCanceled(cancelationToken); // or PlotTrades.ExecutionTask?
             }
@@ -224,7 +224,7 @@ namespace Panoptes.ViewModels.Charts
             return Task.Run(() =>
             {
                 // need try/catch + finally
-                Debug.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Start ({IsPlotTrades})...");
+                Logger.LogInformation("OxyPlotSelectionViewModel.ProcessPlotTrades: Start ({IsPlotTrades})...", IsPlotTrades);
                 DisplayLoading = true;
 
                 if (SelectedSeries == null) return;
@@ -247,13 +247,13 @@ namespace Panoptes.ViewModels.Charts
                     if (cancelationToken.IsCancellationRequested)
                     {
                         SelectedSeries.Annotations.Clear();
-                        Debug.WriteLine("OxyPlotSelectionViewModel.ProcessPlotTrades: Task was cancelled, annotations cleared.");
+                        Logger.LogInformation("OxyPlotSelectionViewModel.ProcessPlotTrades: Task was cancelled, annotations cleared.");
                     }
                 }
 
                 InvalidatePlotNoDataThreadUI();
 
-                Debug.WriteLine($"OxyPlotSelectionViewModel.ProcessPlotTrades: Done ({IsPlotTrades}).");
+                Logger.LogInformation("OxyPlotSelectionViewModel.ProcessPlotTrades: Done ({IsPlotTrades}).", IsPlotTrades);
                 DisplayLoading = false;
             }, cancelationToken);
         }
@@ -269,13 +269,13 @@ namespace Panoptes.ViewModels.Charts
 
             try
             {
-                Debug.WriteLine($"OxyPlotSelectionViewModel.OrderAnnotation_MouseDown({string.Join(",", annotation.OrderIds)}) | IsAltDown: {e.IsAltDown}, IsControlDown: {e.IsControlDown}, IsShiftDown: {e.IsShiftDown}");
-
+                Logger.LogInformation("OxyPlotSelectionViewModel.OrderAnnotation_MouseDown({OrderIds}) | IsAltDown: {IsAltDown}, IsControlDown: {IsControlDown}, IsShiftDown: {IsShiftDown}",
+                    annotation.OrderIds, e.IsAltDown, e.IsControlDown, e.IsShiftDown);
                 Messenger.Send(new TradeSelectedMessage(Name, annotation.OrderIds, e.IsControlDown));
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"OrderAnnotation_MouseDown: {ex}");
+                Logger.LogError(ex, "OrderAnnotation_MouseDown");
             }
             finally
             {
@@ -323,13 +323,13 @@ namespace Panoptes.ViewModels.Charts
             return Task.Run(() =>
             {
                 // need try/catch + finally
-                Debug.WriteLine($"OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period})...");
+                Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period})...", serieTypes, period);
                 DisplayLoading = true;
 
                 if (PlotSerieTypes == PlotSerieTypes.Candles && serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
-                    Debug.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Exit - Trying to set to 'All' while in Candle mode");
+                    Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Exit - Trying to set to 'All' while in Candle mode");
                     Period = _period;
                     return;
                 }
@@ -338,7 +338,7 @@ namespace Panoptes.ViewModels.Charts
                 if (serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
-                    Debug.WriteLine("OxyPlotSelectionViewModel.SetAndProcessPlot: Setting period to 1min bacause Candles");
+                    Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Setting period to 1min bacause Candles");
                     Period = Times.OneMinute;
                 }
                 else
@@ -359,7 +359,7 @@ namespace Panoptes.ViewModels.Charts
                 //}
 
                 InvalidatePlotThreadUI();
-                Debug.WriteLine($"OxyPlotSelectionViewModelSetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}).");
+                Logger.LogInformation("OxyPlotSelectionViewModelSetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}).", PlotSerieTypes, period, Period);
                 DisplayLoading = false;
             }, cancelationToken);
         }
@@ -432,8 +432,8 @@ namespace Panoptes.ViewModels.Charts
             */
         }
 
-        public OxyPlotSelectionViewModel(IMessenger messenger, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public OxyPlotSelectionViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<OxyPlotSelectionViewModel> logger)
+            : base(messenger, settingsManager, logger)
         {
             Name = "Charts";
             PlotAll = new AsyncRelayCommand(ProcessPlotAll, CanDoBarsAll);
@@ -509,7 +509,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 if (HighlightSelectOrderPoints(id) && _ordersDic.TryGetValue(id, out var ovm))
                 {
-                    Debug.WriteLine($"Plot: ProcessTradeSelected({ovm.Id})");
+                    Logger.LogInformation("Plot: ProcessTradeSelected({Id})", ovm.Id);
                 }
             }
 
@@ -518,7 +518,7 @@ namespace Panoptes.ViewModels.Charts
 
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"OxyPlotSelectionViewModelSetAndProcessPlot.UpdateSettingsAsync: {type}.");
+            Logger.LogDebug("OxyPlotSelectionViewModelSetAndProcessPlot.UpdateSettingsAsync: {type}.", type);
             return Task.CompletedTask;
         }
 

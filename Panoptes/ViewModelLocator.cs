@@ -2,7 +2,6 @@
 using Panoptes.ViewModels.Charts;
 using Panoptes.ViewModels.NewSession;
 using Panoptes.ViewModels.Panels;
-using System.Diagnostics;
 
 namespace Panoptes
 {
@@ -31,7 +30,6 @@ namespace Panoptes
 
         private static T GetViewModel<T>()
         {
-            Debug.WriteLine($"GetViewModel<{typeof(T)}>()");
             // Get all viewmodels as unique instances
             // return _container.GetInstance<T>();
             return (T)App.Current.Services.GetService(typeof(T));

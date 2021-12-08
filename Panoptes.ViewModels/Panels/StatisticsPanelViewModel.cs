@@ -1,4 +1,5 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
 using Panoptes.Model.Statistics;
@@ -7,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
@@ -79,8 +79,8 @@ namespace Panoptes.ViewModels.Panels
 
         private readonly BlockingCollection<Dictionary<string, string>> _statisticsQueue = new BlockingCollection<Dictionary<string, string>>();
 
-        public StatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public StatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter, ISettingsManager settingsManager, ILogger<StatisticsPanelViewModel> logger)
+            : base(messenger, settingsManager, logger)
         {
             Name = "Statistics";
             _statisticsFormatter = statisticsFormatter;
@@ -122,12 +122,12 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Debug.WriteLine("StatisticsPanelViewModel: Clear");
+                Logger.LogInformation("StatisticsPanelViewModel: Clear");
                 _statisticsBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"StatisticsPanelViewModel: ERROR\n{ex}");
+                Logger.LogError(ex, "StatisticsPanelViewModel");
                 throw;
             }
         }
@@ -164,24 +164,9 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        /*
-        private void ParseResult(Result result)
-        {
-            if (result.Statistics == null || result.Statistics.Count == 0) return;
-
-            // is it a one off? Only for backtest?
-            Statistics = new ObservableCollection<StatisticViewModel>(result.Statistics.Select(s => new StatisticViewModel
-            {
-                Name = s.Key,
-                Value = s.Value,
-                State = _statisticsFormatter.Format(s.Key, s.Value)
-            }));
-        }
-        */
-
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"StatisticsPanelViewModel.UpdateSettingsAsync: {type}.");
+            Logger.LogDebug("StatisticsPanelViewModel.UpdateSettingsAsync: {type}.", type);
             return Task.CompletedTask;
         }
     }

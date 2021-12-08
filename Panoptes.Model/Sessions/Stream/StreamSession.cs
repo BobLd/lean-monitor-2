@@ -1,4 +1,5 @@
-﻿using NetMQ;
+﻿using Microsoft.Extensions.Logging;
+using NetMQ;
 using NetMQ.Sockets;
 using Panoptes.Model.Serialization.Packets;
 using System;
@@ -10,8 +11,9 @@ namespace Panoptes.Model.Sessions.Stream
 {
     public sealed class StreamSession : BaseStreamSession
     {
-        public StreamSession(ISessionHandler sessionHandler, IResultConverter resultConverter, StreamSessionParameters parameters)
-           : base(sessionHandler, resultConverter, parameters)
+        public StreamSession(ISessionHandler sessionHandler, IResultConverter resultConverter,
+            StreamSessionParameters parameters, ILogger logger)
+           : base(sessionHandler, resultConverter, parameters, logger)
         { }
 
         private readonly TimeSpan timeOut = TimeSpan.FromMilliseconds(500);
