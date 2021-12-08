@@ -1,11 +1,11 @@
-﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.MongoDB.Sessions;
 using Panoptes.Model.Sessions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Security;
 using System.Threading;
@@ -15,6 +15,7 @@ namespace Panoptes.ViewModels.NewSession
 {
     public sealed class NewMongoSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
+        private readonly ILogger _logger;
         private readonly ISessionService _sessionService;
         private readonly MongoSessionParameters _sessionParameters = new MongoSessionParameters
         {
@@ -29,8 +30,9 @@ namespace Panoptes.ViewModels.NewSession
 
         public string Password { private get; set; }
 
-        public NewMongoSessionViewModel(ISessionService sessionService)
+        public NewMongoSessionViewModel(ISessionService sessionService, ILogger<NewMongoSessionViewModel> logger)
         {
+            _logger = logger;
             _sessionService = sessionService;
             OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
             OpenCommandAsync.PropertyChanged += OpenCommandAsync_PropertyChanged;
@@ -72,15 +74,17 @@ namespace Panoptes.ViewModels.NewSession
                 }
                 catch (OperationCanceledException ocEx)
                 {
-                    Debug.WriteLine($"NewMongoSessionViewModel.OpenAsync: Operation was canceled.\n{ocEx}");
+                    _logger.LogInformation("NewMongoSessionViewModel.OpenAsync: Operation was canceled.");
                     //Error = ocEx.ToString();
                 }
                 catch (TimeoutException toEx)
                 {
+                    _logger.LogError(toEx, "NewMongoSessionViewModel.OpenAsync");
                     Error = toEx.Message;
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "NewMongoSessionViewModel.OpenAsync");
                     if (ex.InnerException != null)
                     {
                         Error = ex.InnerException.ToString();

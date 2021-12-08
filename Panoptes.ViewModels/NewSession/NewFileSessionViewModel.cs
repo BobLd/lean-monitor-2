@@ -1,11 +1,11 @@
-﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,19 +15,19 @@ namespace Panoptes.ViewModels.NewSession
 {
     public sealed class NewFileSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
+        private readonly ILogger _logger;
         private readonly ISessionService _sessionService;
         private readonly FileSessionParameters _sessionParameters = new FileSessionParameters
         {
 #if DEBUG
             FileName = @"C:\Users\Bob\Desktop\bt\SableSMA_4_14\SableSMA_4_14.json",
-#else
-            FileName = "",
 #endif
             Watch = false
         };
 
-        public NewFileSessionViewModel(ISessionService sessionService)
+        public NewFileSessionViewModel(ISessionService sessionService, ILogger<NewFileSessionViewModel> logger)
         {
+            _logger = logger;
             _sessionService = sessionService;
             OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
             OpenCommandAsync.PropertyChanged += OpenCommandAsync_PropertyChanged;
@@ -55,11 +55,11 @@ namespace Panoptes.ViewModels.NewSession
             }
             catch (OperationCanceledException ocEx)
             {
-                Debug.WriteLine($"NewFileSessionViewModel.OpenAsync: Operation was canceled.\n{ocEx}");
-                //Error = ocEx.ToString();
+                _logger.LogInformation("NewFileSessionViewModel.OpenAsync: Operation was canceled.");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "NewFileSessionViewModel.OpenAsync");
                 Error = ex.ToString();
             }
         }

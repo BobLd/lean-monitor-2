@@ -9,6 +9,7 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.ViewModels;
 using Panoptes.Views.NewSession;
+using Serilog;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -61,8 +62,7 @@ namespace Panoptes
             }
             catch (Exception ex)
             {
-                // Need to log
-                Trace.WriteLine(ex);
+                Log.Error(ex, "MainWindow.OnClosing");
             }
         }
 
@@ -103,8 +103,7 @@ namespace Panoptes
             }
             catch (Exception e)
             {
-                // Need to log
-                Trace.WriteLine(e);
+                Log.Error(e, "MainWindow.OpenLink");
             }
         }
 

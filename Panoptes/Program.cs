@@ -1,4 +1,8 @@
 using Avalonia;
+using Panoptes.Model;
+using Serilog;
+using System;
+using System.IO;
 
 namespace Panoptes
 {
@@ -11,11 +15,26 @@ namespace Panoptes
         {
             try
             {
+                string logFilePath = Path.Combine(Global.ProcessDirectory, $"{DateTime.Today:ddMMyyyy}.log");
+                Log.Logger = new LoggerConfiguration().WriteTo.Async(a => a.File(logFilePath))
+#if DEBUG
+                .WriteTo.Async(a => a.Debug())
+                .MinimumLevel.Verbose()
+#endif
+                .CreateLogger();
+
+                Log.Information("Starting {AppName} v{AppVersion} on '{OSVersion}' with args: {args}.", Global.AppName, Global.AppVersion, Global.OSVersion, args);
+
                 BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                System.IO.File.WriteAllText("ERROR.txt", ex.ToString());
+                Log.Fatal(ex, "Program.Main({args})", args);
+            }
+            finally
+            {
+                Log.Information("Application closed.");
+                Log.CloseAndFlush();
             }
         }
 

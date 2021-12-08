@@ -1,11 +1,11 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
@@ -40,8 +40,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public LogPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public LogPanelViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<LogPanelViewModel> logger)
+            : base(messenger, settingsManager, logger)
         {
             Name = "Log";
             Messenger.Register<LogPanelViewModel, LogEntryReceivedMessage>(this, (r, m) => r._resultsQueue.Add(m));
@@ -76,7 +76,7 @@ namespace Panoptes.ViewModels.Panels
 
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"LogPanelViewModel.UpdateSettingsAsync: {type}");
+            Logger.LogDebug("LogPanelViewModel.UpdateSettingsAsync: {type}", type);
             return Task.CompletedTask;
         }
 
@@ -84,12 +84,12 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Debug.WriteLine("LogPanelViewModel: Clear");
+                Logger.LogInformation("LogPanelViewModel: Clear");
                 _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"LogPanelViewModel: ERROR\n{ex}");
+                Logger.LogError(ex, "LogPanelViewModel");
                 throw;
             }
         }

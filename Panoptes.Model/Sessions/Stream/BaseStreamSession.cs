@@ -1,9 +1,9 @@
-﻿using Panoptes.Model.Serialization;
+﻿using Microsoft.Extensions.Logging;
+using Panoptes.Model.Serialization;
 using Panoptes.Model.Serialization.Packets;
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +13,8 @@ namespace Panoptes.Model.Sessions.Stream
 {
     public abstract class BaseStreamSession : ISession
     {
+        protected readonly ILogger _logger;
+
         protected readonly ISessionHandler _sessionHandler;
         protected readonly IResultConverter _resultConverter;
 
@@ -34,8 +36,11 @@ namespace Panoptes.Model.Sessions.Stream
 
         public string Name => $"{_host}:{_port}";
 
-        public BaseStreamSession(ISessionHandler sessionHandler, IResultConverter resultConverter, StreamSessionParameters parameters)
+        public BaseStreamSession(ISessionHandler sessionHandler, IResultConverter resultConverter,
+            StreamSessionParameters parameters, ILogger logger)
         {
+            _logger = logger;
+
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
             // Allow proper decoding of orders.
@@ -91,12 +96,11 @@ namespace Panoptes.Model.Sessions.Stream
                     _queueReader.RunWorkerAsync();
 
                     State = SessionState.Subscribed;
-
-                    Debug.WriteLine("BaseStreamSession.Subscribe: New subscription.");
+                    _logger.LogInformation("BaseStreamSession.Subscribe: New subscription.");
                 }
                 else
                 {
-                    Debug.WriteLine("BaseStreamSession.Subscribe: Cannot subscribe because aslready subscribed.");
+                    _logger.LogInformation("BaseStreamSession.Subscribe: Cannot subscribe because aslready subscribed.");
                 }
             }
             catch (Exception e)
@@ -205,7 +209,7 @@ namespace Panoptes.Model.Sessions.Stream
                     break;
 
                 default:
-                    Debug.WriteLine(packet);
+                    _logger.LogWarning("BaseStreamSession.HandlePacketQueueReader: Unknown packet '{packet}'", packet);
                     return false;
             }
 
@@ -303,14 +307,14 @@ namespace Panoptes.Model.Sessions.Stream
                         break;
 
                     default:
-                        Debug.WriteLine($"BaseStreamSession.HandlePacketEventsListener: Unknown packet type '{packetType}'.");
+                        _logger.LogWarning("BaseStreamSession.HandlePacketEventsListener: Unknown packet type '{packetType}'.", packetType);
                         return false;
                 }
                 return true;
             }
             catch (ObjectDisposedException)
             {
-                Debug.WriteLine("BaseStreamSession.HandlePacketEventsListener: Queue is disposed.");
+                _logger.LogWarning("BaseStreamSession.HandlePacketEventsListener: Queue is disposed.");
                 return false;
             }
         }

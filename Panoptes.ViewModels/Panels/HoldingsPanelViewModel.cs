@@ -1,4 +1,5 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
 using QuantConnect;
@@ -7,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,7 +65,7 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (_search == value) return;
                 _search = value;
-                Debug.WriteLine($"HoldingsPanelViewModel: Searching {_search}...");
+                Logger.LogInformation("HoldingsPanelViewModel: Searching {_search}...", _search);
                 OnPropertyChanged();
                 if (_searchCts?.Token.CanBeCanceled == true && !_searchCts.Token.IsCancellationRequested)
                 {
@@ -102,7 +102,7 @@ namespace Panoptes.ViewModels.Panels
                 SetSelectedItem(value);
 
                 if (_selectedItem == null) return; // We might want to be able to send null id
-                Debug.WriteLine($"HoldingsPanelViewModel: Selected item #{_selectedItem.Symbol} and sending message.");
+                Logger.LogDebug("HoldingsPanelViewModel: Selected item '{Symbol}' and NOT (TODO?) sending message.", _selectedItem.Symbol);
                 //_messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
             }
         }
@@ -141,7 +141,7 @@ namespace Panoptes.ViewModels.Panels
             try
             {
                 DisplayLoading = true;
-                Debug.WriteLine($"HoldingsPanelViewModel: Start applying '{search}' filters...");
+                Logger.LogInformation("HoldingsPanelViewModel: Start applying '{search}' filters...", search);
 
 #if DEBUG
                 //await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
@@ -159,18 +159,17 @@ namespace Panoptes.ViewModels.Panels
                     _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingFinishUpdateAdd, add);
                 }
 
-                Debug.WriteLine($"HoldingsPanelViewModel: Done applying '{search}' filters!");
+                Logger.LogInformation("HoldingsPanelViewModel: Done applying '{search}' filters!", search);
                 DisplayLoading = false;
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"HoldingsPanelViewModel: Cancelled applying '{search}' filters.");
+                Logger.LogInformation("HoldingsPanelViewModel: Cancelled applying '{search}' filters.", search);
             }
             catch (Exception ex)
             {
-                // Need to log
                 DisplayLoading = false;
-                Trace.WriteLine(ex);
+                Logger.LogError(ex, "HoldingsPanelViewModel");
             }
         }
 
@@ -182,8 +181,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public HoldingsPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public HoldingsPanelViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<HoldingsPanelViewModel> logger)
+            : base(messenger, settingsManager, logger)
         {
             Name = "Holdings";
             Messenger.Register<HoldingsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -240,7 +239,7 @@ namespace Panoptes.ViewModels.Panels
 
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"HoldingsPanelViewModel.UpdateSettingsAsync: {type}.");
+            Logger.LogDebug("HoldingsPanelViewModel.UpdateSettingsAsync: {type}.", type);
             return Task.CompletedTask;
         }
 
@@ -263,11 +262,11 @@ namespace Panoptes.ViewModels.Panels
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
                     // - Clear 'Today' order (now yesterday's one)
-                    Debug.WriteLine($"HoldingsPanelViewModel: NewDay @ {timerMessage.DateTimeUtc:O}");
+                    Logger.LogDebug("HoldingsPanelViewModel: NewDay @ {DateTimeUtc:O}", timerMessage.DateTimeUtc);
                     break;
 
                 default:
-                    Debug.WriteLine($"HoldingsPanelViewModel: {timerMessage} @ {timerMessage.DateTimeUtc:O}");
+                    Logger.LogDebug("HoldingsPanelViewModel: {Value} @ {DateTimeUtc:O}", timerMessage.Value, timerMessage.DateTimeUtc);
                     break;
             }
         }
@@ -276,14 +275,14 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Debug.WriteLine("HoldingsPanelViewModel: Clear");
+                Logger.LogInformation("HoldingsPanelViewModel: Clear");
                 _holdingsDic.Clear();
                  // _resultsQueue ??
                 _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"HoldingsPanelViewModel: ERROR\n{ex}");
+                Logger.LogError(ex, "HoldingsPanelViewModel");
                 throw;
             }
         }

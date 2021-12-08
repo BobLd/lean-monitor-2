@@ -2,9 +2,9 @@
 using Avalonia.VisualTree;
 using OxyPlot;
 using OxyPlot.Avalonia;
+using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Series = OxyPlot.Series.Series;
 
@@ -168,7 +168,7 @@ namespace Panoptes.Views.Charts
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"MultiTrackerManipulator.GetSeriesFromPoint: Error - {ex.Message}");
+                Log.Warning(ex, "MultiTrackerManipulator.GetSeriesFromPoint");
                 return null;
             }
         }
@@ -292,7 +292,7 @@ namespace Panoptes.Views.Charts
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"MultiTrackerManipulator.GetNearestHit: Error - {ex.Message}");
+                Log.Warning(ex, "MultiTrackerManipulator.GetNearestHit");
                 return null;
             }
         }

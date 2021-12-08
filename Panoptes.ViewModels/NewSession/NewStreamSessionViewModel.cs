@@ -1,11 +1,11 @@
-﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.Stream;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +14,7 @@ namespace Panoptes.ViewModels.NewSession
 {
     public sealed class NewStreamSessionViewModel : ObservableRecipient, INewSessionViewModel, IDataErrorInfo
     {
+        private readonly ILogger _logger;
         private readonly ISessionService _sessionService;
         private readonly StreamSessionParameters _sessionParameters = new StreamSessionParameters
         {
@@ -21,8 +22,9 @@ namespace Panoptes.ViewModels.NewSession
             Port = "33333"
         };
 
-        public NewStreamSessionViewModel(ISessionService sessionService)
+        public NewStreamSessionViewModel(ISessionService sessionService, ILogger<NewStreamSessionViewModel> logger)
         {
+            _logger = logger;
             _sessionService = sessionService;
 
             OpenCommandAsync = new AsyncRelayCommand(OpenAsync, CanOpen);
@@ -44,7 +46,7 @@ namespace Panoptes.ViewModels.NewSession
             }
             catch (OperationCanceledException ocEx)
             {
-                Debug.WriteLine($"NewStreamSessionViewModel.OpenAsync: Operation was canceled.\n{ocEx}");
+                _logger.LogInformation("NewStreamSessionViewModel.OpenAsync");
             }
             catch (Exception ex)
             {

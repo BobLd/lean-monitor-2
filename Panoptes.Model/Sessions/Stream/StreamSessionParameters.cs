@@ -11,5 +11,7 @@
         /// When disabled, New packets will reset the session state.
         /// </summary>
         public bool CloseAfterCompleted { get; set; } = true;
+
+        public bool IsFromCmdLine { get; init; }
     }
 }

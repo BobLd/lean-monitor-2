@@ -1,4 +1,5 @@
 ﻿using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
@@ -31,6 +32,8 @@ namespace Panoptes
         private readonly ISettingsManager _settingsManager;
         //private readonly IApiClient _apiClient;
 
+        private  readonly ILogger _logger;
+
         private ISession _session;
 
         public Result LastResult { get; private set; }
@@ -38,8 +41,10 @@ namespace Panoptes
         public bool IsSessionActive => _session != null;
 
         public SessionService(IMessenger messenger, IResultConverter resultConverter,
-            IResultSerializer resultSerializer, IResultMutator resultMutator, ISettingsManager settingsManager)
+            IResultSerializer resultSerializer, IResultMutator resultMutator,
+            ISettingsManager settingsManager, ILogger<SessionService> logger)
         {
+            _logger = logger;
             _messenger = messenger;
             _resultConverter = resultConverter;
             _resultSerializer = resultSerializer;
@@ -60,7 +65,7 @@ namespace Panoptes
         private void OnMinute(object? state)
         {
 #if DEBUG
-            Debug.WriteLine($"GC.GetTotalMemory={GC.GetTotalMemory(false) / 1048576:0.0}MB");
+            _logger.LogDebug("OnMinute: GC.GetTotalMemory={0:0.0}MB", GC.GetTotalMemory(false) / 1048576);
 #endif
 
             var utcNow = DateTime.UtcNow;
@@ -178,7 +183,8 @@ namespace Panoptes
                     await OpenAsync(new FileSessionParameters
                     {
                         FileName = argument,
-                        Watch = false
+                        Watch = false,
+                        IsFromCmdLine = true
                     }, CancellationToken.None).ConfigureAwait(false);
                     return;
                 }
@@ -193,7 +199,8 @@ namespace Panoptes
                     await OpenAsync(new FileSessionParameters
                     {
                         FileName = argument,
-                        Watch = false
+                        Watch = false,
+                        IsFromCmdLine = true
                     }, CancellationToken.None).ConfigureAwait(false);
                     return;
                 }
@@ -248,7 +255,7 @@ namespace Panoptes
         {
             if (_session == null)
             {
-                Debug.WriteLine("SessionService.ShutdownSession: Cannot shutdown session. No session exists");
+                _logger.LogWarning("SessionService.ShutdownSession: Cannot shutdown session, no session exists.");
                 return;
             }
 
@@ -280,8 +287,11 @@ namespace Panoptes
                 ShutdownSession();
             }
 
-            // Save session parameters in settings
-            _settingsManager.UpdateSessionParameters(parameters);
+            if (!parameters.IsFromCmdLine)
+            {
+                // Save session parameters in settings
+                _settingsManager.UpdateSessionParameters(parameters);
+            }
 
             ISession session = null;
 
@@ -297,7 +307,7 @@ namespace Panoptes
                 }
 
                 // Open a new session and open it
-                await Dispatcher.UIThread.InvokeAsync(() => session = new MongoSession(this, _resultConverter, mongoParameters)).ConfigureAwait(false);
+                await Dispatcher.UIThread.InvokeAsync(() => session = new MongoSession(this, _resultConverter, mongoParameters, _logger)).ConfigureAwait(false);
             }
             else if (parameters is StreamSessionParameters streamParameters)
             {
@@ -311,7 +321,7 @@ namespace Panoptes
                 var mockMessageHandler = new Model.Mock.MockStreamingMessageHandler(streamParameters);
                 Task.Run(() => mockMessageHandler.Initialize(), cancellationToken);
 #endif
-                await Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters)).ConfigureAwait(false);
+                await Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters, _logger)).ConfigureAwait(false);
             }
             else if (parameters is FileSessionParameters fileParameters)
             {
@@ -349,9 +359,11 @@ namespace Panoptes
         {
             try
             {
+                _logger.LogInformation("SessionService.OpenSessionAsync: {session}.", session);
                 _session = session;
                 if (session is ISessionHistory sessionHistory)
                 {
+                    _logger.LogInformation("SessionService.OpenSessionAsync: LoadRecentDataAsync for {session}.", session);
                     await sessionHistory.LoadRecentDataAsync(cancellationToken).ConfigureAwait(false);
                 }
 
@@ -361,21 +373,21 @@ namespace Panoptes
             }
             catch (OperationCanceledException ocEx)
             {
-                Debug.WriteLine("SessionService.OpenSession: Operation canceled.");
+                _logger.LogDebug("SessionService.OpenSessionAsync: {session} was canceled.", session);
                 _messenger.Send(new SessionOpenedMessage(ocEx.ToString()));
                 ShutdownSession();
-                throw new OperationCanceledException("SessionService.OpenSession: Operation canceled while opening the session.", ocEx);
+                throw new OperationCanceledException("SessionService.OpenSessionAsync: Operation canceled while opening the session.", ocEx);
             }
             catch (TimeoutException toEx)
             {
-                Debug.WriteLine("SessionService.OpenSession: Operation timeout.");
+                _logger.LogError(toEx, "SessionService.OpenSessionAsync: TimeoutException with {session}", session);
                 _messenger.Send(new SessionOpenedMessage(toEx.ToString()));
                 ShutdownSession();
-                throw new TimeoutException("SessionService.OpenSession: Operation timeout while opening the session.", toEx);
+                throw new TimeoutException("SessionService.OpenSessionAsync: Operation timeout while opening the session.", toEx);
             }
             catch (JsonException jsonEx)
             {
-                Debug.WriteLine($"SessionService.OpenSession:\n{jsonEx}");
+                _logger.LogError(jsonEx, "SessionService.OpenSessionAsync: JsonException with {session}", session);
                 _messenger.Send(new SessionOpenedMessage(jsonEx.ToString()));
                 ShutdownSession();
                 // We don't throw here, it's supposed to be handled now...
@@ -384,7 +396,7 @@ namespace Panoptes
             catch (Exception e)
             {
                 // Need log
-                Debug.WriteLine($"SessionService.OpenSession:\n{e}");
+                _logger.LogError(e, "SessionService.OpenSessionAsync: Exception with {session}", session);
                 _messenger.Send(new SessionOpenedMessage(e.ToString()));
                 ShutdownSession();
                 throw new Exception("SessionService.OpenSession: Exception occured while opening the session.", e);

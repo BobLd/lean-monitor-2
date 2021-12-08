@@ -1,4 +1,5 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
@@ -8,7 +9,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,7 +66,7 @@ namespace Panoptes.ViewModels.Panels
             {
                 if (_search == value) return;
                 _search = value;
-                Debug.WriteLine($"CashBookPanelViewModel: Searching {_search}...");
+                Logger.LogInformation("CashBookPanelViewModel: Searching {_search}...", _search);
                 OnPropertyChanged();
                 if (_searchCts?.Token.CanBeCanceled == true && !_searchCts.Token.IsCancellationRequested)
                 {
@@ -137,7 +137,7 @@ namespace Panoptes.ViewModels.Panels
                 SetSelectedItem(value);
 
                 if (_selectedItem == null) return; // We might want to be able to send null id
-                Debug.WriteLine($"CashBookPanelViewModel: Selected item #{_selectedItem.Symbol} and sending message.");
+                Logger.LogDebug("CashBookPanelViewModel: Selected item '{Symbol}' and NOT (TODO?) sending message.", _selectedItem.Symbol);
                 //_messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
             }
         }
@@ -178,7 +178,7 @@ namespace Panoptes.ViewModels.Panels
             try
             {
                 DisplayLoading = true;
-                Debug.WriteLine($"CashBookPanelViewModel: Start applying '{search}' filters...");
+                Logger.LogInformation("CashBookPanelViewModel: Start applying '{search}' filters...", search);
 
 #if DEBUG
                 //await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
@@ -196,18 +196,17 @@ namespace Panoptes.ViewModels.Panels
                     _resultBgWorker.ReportProgress((int)ActionsThreadUI.CashAdd, add);
                 }
 
-                Debug.WriteLine($"CashBookPanelViewModel: Done applying '{search}' filters!");
+                Logger.LogInformation("CashBookPanelViewModel: Done applying '{search}' filters!", search);
                 DisplayLoading = false;
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"CashBookPanelViewModel: Cancelled applying '{search}' filters.");
+                Logger.LogInformation("CashBookPanelViewModel: Cancelled applying '{search}' filters.", search);
             }
             catch (Exception ex)
             {
-                // Need to log
                 DisplayLoading = false;
-                Trace.WriteLine(ex);
+                Logger.LogError(ex, "CashBookPanelViewModel: Error while applying '{search}' filters.", search);
             }
         }
 
@@ -219,8 +218,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public CashBookPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public CashBookPanelViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<CashBookPanelViewModel> logger)
+            : base(messenger, settingsManager, logger)
         {
             Name = "CashBook";
             Messenger.Register<CashBookPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -294,11 +293,11 @@ namespace Panoptes.ViewModels.Panels
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
                     // - Clear 'Today' order (now yesterday's one)
-                    Debug.WriteLine($"CashBookPanelViewModel: NewDay @ {timerMessage.DateTimeUtc:O}");
+                    Logger.LogDebug("CashBookPanelViewModel: NewDay @ {DateTimeUtc:O}", timerMessage.DateTimeUtc);
                     break;
 
                 default:
-                    Debug.WriteLine($"CashBookPanelViewModel: {timerMessage} @ {timerMessage.DateTimeUtc:O}");
+                    Logger.LogDebug("CashBookPanelViewModel: {Value} @ {DateTimeUtc:O}", timerMessage.Value, timerMessage.DateTimeUtc);
                     break;
             }
         }
@@ -307,13 +306,13 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Debug.WriteLine("CashBookPanelViewModel: Clear");
+                Logger.LogInformation("CashBookPanelViewModel: Clear");
                 _cashesDic.Clear();
                 _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"CashBookPanelViewModel: ERROR\n{ex}");
+                Logger.LogError(ex, "CashBookPanelViewModel");
                 throw;
             }
         }
@@ -351,7 +350,7 @@ namespace Panoptes.ViewModels.Panels
 
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"CashBookPanelViewModel.UpdateSettingsAsync: {type}.");
+            Logger.LogDebug("CashBookPanelViewModel.UpdateSettingsAsync: {type}.", type);
             return Task.CompletedTask;
         }
     }

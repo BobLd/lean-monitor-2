@@ -1,4 +1,5 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
 using System;
@@ -6,7 +7,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -45,8 +45,8 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        public ProfitLossPanelViewModel(IMessenger messenger, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public ProfitLossPanelViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<ProfitLossPanelViewModel> logger)
+            : base(messenger, settingsManager, logger)
         {
             Name = "Profit & Loss";
             Messenger.Register<ProfitLossPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -85,7 +85,7 @@ namespace Panoptes.ViewModels.Panels
 
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"ProfitLossPanelViewModel.UpdateSettingsAsync: {type}.");
+            Logger.LogDebug("ProfitLossPanelViewModel.UpdateSettingsAsync: {type}.", type);
             return Task.CompletedTask;
         }
 
@@ -93,12 +93,12 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Debug.WriteLine("ProfitLossPanelViewModel: Clear");
+                Logger.LogInformation("ProfitLossPanelViewModel: Clear");
                 _pnlBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"ProfitLossPanelViewModel: ERROR\n{ex}");
+                Logger.LogError(ex, "ProfitLossPanelViewModel");
                 throw;
             }
         }

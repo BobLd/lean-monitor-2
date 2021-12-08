@@ -5,10 +5,10 @@ using Avalonia.Markup.Xaml;
 using Panoptes.ViewModels.Panels;
 using Panoptes.Views.Controls;
 using Panoptes.Views.Windows;
+using Serilog;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -39,13 +39,13 @@ namespace Panoptes.Views.Panels
         {
             await LoadColumnsOrder().ConfigureAwait(false);
             //_dataGrid.Columns[0].Sort(System.ComponentModel.ListSortDirection.Descending);
-            Debug.WriteLine("TradesDataGridControl.Initialized");
+            Log.Information("TradesDataGridControl.Initialized");
         }
 
         private async Task _dataGrid_ColumnReordered(object? sender, DataGridColumnEventArgs e)
         {
             await SaveColumnsOrder().ConfigureAwait(false);
-            Debug.WriteLine($"TradesDataGridControl.ColumnReordered: {e.Column.Header}");
+            Log.Information("TradesDataGridControl.ColumnReordered: Reordered column '{Header}'", e.Column.Header);
         }
 
         #region IDataGridFromSettings
@@ -67,7 +67,7 @@ namespace Panoptes.Views.Panels
 
         public async Task SaveColumnsOrder()
         {
-            Debug.WriteLine("TradesDataGridControl.ColumnReordered: Saving columns order...");
+            Log.Information("TradesDataGridControl.ColumnReordered: Saving columns order...");
             await ViewModel.SettingsManager.UpdateGridAsync(this.GetSettingsKey(), _dataGrid.GetColumnsHeaderIndexPairs()).ConfigureAwait(false);
         }
         #endregion

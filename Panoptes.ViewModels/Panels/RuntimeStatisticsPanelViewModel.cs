@@ -1,4 +1,5 @@
-﻿using Microsoft.Toolkit.Mvvm.Messaging;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
 using Panoptes.Model.Statistics;
@@ -7,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels.Panels
@@ -47,8 +47,9 @@ namespace Panoptes.ViewModels.Panels
 
         private readonly Dictionary<string, StatisticViewModel> _statisticsDico = new Dictionary<string, StatisticViewModel>();
 
-        public RuntimeStatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter, ISettingsManager settingsManager)
-            : base(messenger, settingsManager)
+        public RuntimeStatisticsPanelViewModel(IMessenger messenger, IStatisticsFormatter statisticsFormatter,
+            ISettingsManager settingsManager, ILogger<RuntimeStatisticsPanelViewModel> logger)
+            : base(messenger, settingsManager, logger)
         {
             Name = "Runtime Statistics";
             _statisticsFormatter = statisticsFormatter;
@@ -101,20 +102,20 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Debug.WriteLine("RuntimeStatisticsPanelViewModel: Clear");
+                Logger.LogInformation("RuntimeStatisticsPanelViewModel: Clear");
                 // _resultsQueue ??
                 _statisticsBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"RuntimeStatisticsPanelViewModel: ERROR\n{ex}");
+                Logger.LogError(ex, "RuntimeStatisticsPanelViewModel");
                 throw;
             }
         }
 
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            Debug.WriteLine($"RuntimeStatisticsPanelViewModel.UpdateSettingsAsync: {type}.");
+            Logger.LogDebug("RuntimeStatisticsPanelViewModel.UpdateSettingsAsync: {type}.", type);
             return Task.CompletedTask;
         }
 

@@ -2,5 +2,6 @@
 {
     public interface ISessionParameters
     {
+        bool IsFromCmdLine { get; }
     }
 }

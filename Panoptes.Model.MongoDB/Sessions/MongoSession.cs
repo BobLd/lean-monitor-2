@@ -1,10 +1,10 @@
-﻿using MongoDB.Driver;
+﻿using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using Panoptes.Model.Serialization.Packets;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.Stream;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,8 +21,9 @@ namespace Panoptes.Model.MongoDB.Sessions
         public string DatabaseName { get; }
         public string CollectionName { get; }
 
-        public MongoSession(ISessionHandler sessionHandler, IResultConverter resultConverter, MongoSessionParameters parameters)
-            : base(sessionHandler, resultConverter, parameters)
+        public MongoSession(ISessionHandler sessionHandler, IResultConverter resultConverter,
+            MongoSessionParameters parameters, ILogger logger)
+            : base(sessionHandler, resultConverter, parameters, logger)
         {
             // This happen in UI thread, do not put blocking code in here
             _client = new MongoClient(new MongoClientSettings
@@ -49,7 +50,7 @@ namespace Panoptes.Model.MongoDB.Sessions
 
         public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            Debug.WriteLine($"MongoSession.InitializeAsync: {_client.Settings}, DB: {DatabaseName}, Collection: {CollectionName}");
+            _logger.LogInformation("MongoSession.InitializeAsync: {Settings}, DB: {DatabaseName}, Collection: {CollectionName}", _client.Settings, DatabaseName, CollectionName);
             _database = _client.GetDatabase(DatabaseName); // backtest or live
             _collection = _database.GetCollection<MongoDbPacket>(CollectionName); // algo name / id
 
@@ -67,7 +68,8 @@ namespace Panoptes.Model.MongoDB.Sessions
         {
             try
             {
-                Debug.WriteLine($"MongoSession.LoadRecentDataAsync: {_client.Settings}, DB: {DatabaseName}, Collection: {CollectionName}");
+                _logger.LogInformation("MongoSession.LoadRecentDataAsync: {Settings}, DB: {DatabaseName}, Collection: {CollectionName}", _client.Settings, DatabaseName, CollectionName);
+
                 var collection = _client.GetDatabase(DatabaseName).GetCollection<MongoDbPacket>(CollectionName); // backtest or live + algo name / id
                 var builder = Builders<MongoDbPacket>.Filter;
 
@@ -209,7 +211,7 @@ namespace Panoptes.Model.MongoDB.Sessions
             catch (TimeoutException toEx)
             {
                 Unsubscribe();
-                Debug.WriteLine($"MongoSession.EventsListener: Session timed out and proceeded with unsubscribing. {toEx}");
+                _logger.LogError(toEx, "MongoSession.EventsListener: Session timed out and proceeded with unsubscribing.");
             }
             catch (MongoAuthenticationException authEx)
             {
