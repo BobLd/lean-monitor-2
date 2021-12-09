@@ -1,0 +1,3 @@
+[submodule "ext/oxyplot-avalonia"]
+	path = ext/oxyplot-avalonia
+	url = https://github.com/oxyplot/oxyplot-avalonia.git
