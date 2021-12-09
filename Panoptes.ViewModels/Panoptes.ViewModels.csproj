@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LiveChartsCore" Version="2.0.0-beta.90" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.0-beta.90" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
     <PackageReference Include="OxyPlot.Core" Version="2.0.0" />
     <PackageReference Include="QuantConnect.Common" Version="2.5.13307" />

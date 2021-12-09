@@ -145,7 +145,8 @@ namespace Panoptes
             services.AddTransient<CashBookPanelViewModel>();
             services.AddTransient<ProfitLossPanelViewModel>();
             services.AddTransient<LogPanelViewModel>();
-            services.AddTransient<OxyPlotSelectionViewModel>();
+            //services.AddTransient<OxyPlotSelectionViewModel>();
+            services.AddTransient<LiveChartsSelectionViewModel>();
 
             //services.AddTransient<ToolPaneViewModel>(); // abstract
 

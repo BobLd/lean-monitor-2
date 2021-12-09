@@ -1,0 +1,81 @@
+<UserControl x:Class="Panoptes.Views.Charts.LiveChartsSelectionControl"
+			 xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
+			 xmlns:charts="clr-namespace:Panoptes.Views.Charts"
+             mc:Ignorable="d"
+			 d:DesignWidth="800" d:DesignHeight="450">
+	<!--https://github.com/beto-rodriguez/LiveCharts2/blob/master/docs/overview/1.2.install.md-->
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<StackPanel Margin="4" Orientation="Horizontal">
+			<Label Content="Series"></Label>
+			<ComboBox MinWidth="100" Items="{Binding PlotModels}" SelectedItem="{Binding SelectedSeries, Mode=TwoWay}" IsTextSearchEnabled="True"/>
+			<Label Width="10"/>
+			<ToggleButton Padding="0" IsThreeState="False" ClickMode="Release" IsChecked="{Binding IsCandlePlotChecked, Mode=OneWay}"
+						  Command="{Binding PlotCandles}" ToolTip.Tip="Candles chart">
+				<ToggleButton.Content>
+					<DrawingPresenter Drawing="{StaticResource TablerIcons.ChartCandle2}"/>
+				</ToggleButton.Content>
+			</ToggleButton>
+
+			<ToggleButton Padding="0" IsChecked="{Binding IsLinePlotChecked, Mode=OneWay}"
+						  Command="{Binding PlotLines}" ToolTip.Tip="Line chart">
+				<ToggleButton.Content>
+					<DrawingPresenter Drawing="{StaticResource TablerIcons.ChartDots}"/>
+				</ToggleButton.Content>
+			</ToggleButton>
+			<Label Width="10"/>
+
+			<!--Careful here making the difference between aggregation period and displayed
+				period (i.e. one year of data displayed)-->
+			<ToggleButton Content="All" IsChecked="{Binding IsPlotAllChecked, Mode=OneWay}"
+						  Command="{Binding PlotAll}" ToolTip.Tip="All data points"/>
+			<ToggleButton Content="1m" IsChecked="{Binding IsPlot1mChecked, Mode=OneWay}"
+						  Command="{Binding Plot1m}" ToolTip.Tip="1-minute"/>
+			<ToggleButton Content="5m" IsChecked="{Binding IsPlot5mChecked, Mode=OneWay}"
+						  Command="{Binding Plot5m}" ToolTip.Tip="5-minute"/>
+			<ToggleButton Content="1h" IsChecked="{Binding IsPlot1hChecked, Mode=OneWay}"
+						  Command="{Binding Plot1h}" ToolTip.Tip="1-hour"/>
+			<ToggleButton Content="1d" IsChecked="{Binding IsPlot1dChecked, Mode=OneWay}"
+						  Command="{Binding Plot1d}" ToolTip.Tip="1-day"/>
+
+			<ToggleButton Content="1w" ToolTip.Tip="1-week"/>
+			<ToggleButton Content="1M" ToolTip.Tip="1-month"/>
+			<ToggleButton Content="1y" ToolTip.Tip="1-year"/>
+
+			<Label Width="10"/>
+			<ToggleButton Content="Fit y-axis" IsChecked="{Binding IsAutoFitYAxis, Mode=OneWayToSource}"
+						  ToolTip.Tip="Automatically fit y-axis to data"/>
+
+			<Label Width="10"/>
+			<ToggleButton Content="Plot trades" IsChecked="{Binding IsPlotTrades, Mode=OneWayToSource}"
+						  Command="{Binding PlotTrades}" ToolTip.Tip="Plot trades"/>
+
+		</StackPanel>
+
+		<!--Logo-->
+		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+				Padding="50" MinWidth="80" MinHeight="80" Focusable="False" IsEnabled="False" Opacity="200">
+			<DrawingPresenter Drawing="{StaticResource Logo}" MinWidth="40" MinHeight="40"/>
+		</Border>
+
+		<lvc:CartesianChart Grid.Row="1" Series="{Binding SelectedSeries}"
+							HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+							Background="Transparent" Foreground="#323539"></lvc:CartesianChart>
+
+		<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1" Grid.RowSpan="2"/>
+
+		<Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+			  IsVisible="{Binding DisplayLoading}" IsEnabled="{Binding DisplayLoading}">
+			<ProgressBar HorizontalAlignment="Center" VerticalAlignment="Center" IsIndeterminate="{Binding DisplayLoading}"/>
+			<Label HorizontalAlignment="Center" VerticalAlignment="Center" Content="LOADING..."/>
+		</Grid>
+	</Grid>
+</UserControl>

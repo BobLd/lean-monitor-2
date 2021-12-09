@@ -45,7 +45,7 @@ namespace Panoptes.ViewModels
         public HoldingsPanelViewModel HoldingsPane { get; }
         public CashBookPanelViewModel CashBookPane { get; }
         public ProfitLossPanelViewModel ProfitLossPane { get; }
-        public OxyPlotSelectionViewModel OxyPlotSelectionPane { get; }
+        public LiveChartsSelectionViewModel OxyPlotSelectionPane { get; }
 
         public bool IsSessionActive => _sessionService.IsSessionActive;
 
@@ -80,7 +80,7 @@ namespace Panoptes.ViewModels
             SettingsViewModel settingsViewModel, LogPanelViewModel logPanelViewModel, StatisticsPanelViewModel statisticsPanelViewModel,
             RuntimeStatisticsPanelViewModel runtimeStatisticsPanelViewModel, ProfitLossPanelViewModel profitLossPanelViewModel,
             TradesPanelViewModel tradesPanelViewModel, HoldingsPanelViewModel holdingsPane, CashBookPanelViewModel cashBookPane,
-            OxyPlotSelectionViewModel oxyPlotSelectionViewModel)
+            LiveChartsSelectionViewModel oxyPlotSelectionViewModel)
             : base(messenger)
         {
             StatusViewModel = statusViewModel;
