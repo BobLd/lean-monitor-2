@@ -49,7 +49,7 @@ namespace Panoptes.Model
                 }
 
                 var fileSizeMb = new FileInfo(pathToResult).Length / 1_048_576;
-                _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening main backtest file '{pathToResult}' with size {fileSizeMb:0.0000}MB.", orderEventsPath, fileSizeMb);
+                _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening main backtest file '{pathToResult}' with size {fileSizeMb:0.0000}MB.", pathToResult, fileSizeMb);
                 sw.Restart();
                 using (var backtestResultStream = File.Open(pathToResult, FileMode.Open))
                 {
