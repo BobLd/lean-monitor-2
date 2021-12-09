@@ -66,15 +66,15 @@
 		</Border>
 
 		<!--https://github.com/oxyplot/oxyplot-avalonia/blob/master/Source/OxyPlot.Avalonia/Themes/Default.xaml-->
-		<oxy:PlotView Model="{Binding SelectedSeries}" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-					  Background="Transparent" Foreground="#323539">
+		<oxy:PlotView Model="{Binding SelectedSeries}" Grid.Row="1" HorizontalAlignment="Stretch"
+					  VerticalAlignment="Stretch" Background="Transparent" Foreground="White">
 			<oxy:PlotView.Controller>
 				<charts:PanoptesPlotController/>
 			</oxy:PlotView.Controller>
 
 			<oxy:PlotView.ZoomRectangleTemplate>
 				<ControlTemplate>
-					<Rectangle Fill="#40507B89" Stroke="White" />
+					<Rectangle Fill="{StaticResource ThemeAccentColor4}"/>
 				</ControlTemplate>
 			</oxy:PlotView.ZoomRectangleTemplate>
 

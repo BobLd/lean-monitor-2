@@ -326,7 +326,7 @@ namespace Panoptes.Views.Charts
             }
 
             Control parent = this;
-            while (!(parent is Canvas) && parent != null)
+            while (parent is not Canvas && parent != null)
             {
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 parent = parent.GetVisualParent() as Control;
@@ -440,14 +440,6 @@ namespace Panoptes.Views.Charts
             }
 
             margin = new Thickness(left, top, right, bottom);
-
-            /*
-            margin = new Thickness(
-                ha == HorizontalAlignment.Left ? m : 0,
-                va == VerticalAlignment.Top ? m : 0,
-                ha == HorizontalAlignment.Right ? m : 0,
-                va == VerticalAlignment.Bottom ? m : 0);
-            */
 
             return new RectangleGeometry(rect);
         }

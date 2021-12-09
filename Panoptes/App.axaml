@@ -23,8 +23,8 @@
 
 		<!--OxyPlot-->
 		<Style Selector="charts|AxisTrackerControl">
-			<Setter Property="Background" Value="#F2C6E6FF"/>
-			<Setter Property="LineStroke" Value="#B3C6E6FF"/>
+			<Setter Property="Background" Value="{StaticResource ThemeAccentColor2}"/>
+			<Setter Property="LineStroke" Value="{StaticResource ThemeAccentColor}"/>
 			<Setter Property="BorderBrush" Value="Black"/>
 			<Setter Property="BorderThickness" Value="1"/>
 			<Setter Property="HorizontalLineVisibility" Value="True"/>
@@ -35,11 +35,9 @@
 				<ControlTemplate TargetType="{x:Type charts:AxisTrackerControl}">
 					<Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 						<Line Name="PART_HorizontalLine" IsVisible="{TemplateBinding HorizontalLineVisibility}"
-								Stroke="{TemplateBinding LineStroke}"
-								StrokeDashArray="{TemplateBinding LineDashArray}"/>
+								Stroke="{TemplateBinding LineStroke}" StrokeDashArray="{TemplateBinding LineDashArray}"/>
 						<Line Name="PART_VerticalLine" IsVisible="{TemplateBinding VerticalLineVisibility}"
-								Stroke="{TemplateBinding LineStroke}"
-								StrokeDashArray="{TemplateBinding LineDashArray}"/>
+								Stroke="{TemplateBinding LineStroke}" StrokeDashArray="{TemplateBinding LineDashArray}"/>
 						<Panel Name="PART_ContentContainer">
 							<Path Name="PART_Path" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="0"/>
 							<ContentPresenter Name="PART_Content" Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
