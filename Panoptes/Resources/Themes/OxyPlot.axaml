@@ -1,0 +1,159 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:oxy="http://oxyplot.org/avalonia"
+		xmlns:charts="clr-namespace:Panoptes.Views.Charts"
+		xmlns:converters="clr-namespace:OxyPlot.Avalonia.Converters;assembly=OxyPlot.Avalonia">
+    <Design.PreviewWith>
+        <Border Height="200" Width="400" Padding="2">
+            <!-- Add Controls for Previewer Here -->
+			<oxy:Plot Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+					  Background="Transparent" Foreground="White">
+				<oxy:Plot.Axes>
+					<oxy:LinearAxis Position="Right" MajorGridlineStyle="Solid" MinorGridlineStyle="Solid" TickStyle="Outside"/>
+					<oxy:DateTimeAxis Position="Bottom" IntervalType="Auto" ExtraGridlineStyle="DashDot"/>
+				</oxy:Plot.Axes>
+			</oxy:Plot>
+		</Border>
+    </Design.PreviewWith>
+
+	
+    <!-- Add Styles Here -->
+	<Style Selector="oxy|TrackerControl">
+		<Setter Property="Background" Value="#E0FFFFA0" />
+		<Setter Property="BorderBrush" Value="Black" />
+		<Setter Property="BorderThickness" Value="1" />
+		<Setter Property="LineStroke" Value="#80000000" />
+		<Setter Property="HorizontalLineVisibility" Value="true" />
+		<Setter Property="VerticalLineVisibility" Value="true" />
+		<Setter Property="Distance" Value="7" />
+		<Setter Property="CornerRadius" Value="0" />
+		<Setter Property="ShowPointer" Value="true" />
+		<Setter Property="CanCenterHorizontally" Value="true" />
+		<Setter Property="CanCenterVertically" Value="true" />
+		<Setter Property="IsHitTestVisible" Value="false" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate>
+					<Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ClipToBounds="False">
+						<Line Name="PART_HorizontalLine" IsVisible="{TemplateBinding HorizontalLineVisibility}"
+							  Stroke="{TemplateBinding LineStroke}" StrokeDashArray="{TemplateBinding LineDashArray}" />
+						<Line Name="PART_VerticalLine" IsVisible="{TemplateBinding VerticalLineVisibility}"
+							  Stroke="{TemplateBinding LineStroke}" StrokeDashArray="{TemplateBinding LineDashArray}" />
+						<Panel Name="PART_ContentContainer" ClipToBounds="False">
+							<Path Name="PART_Path" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}"
+								  StrokeThickness="{TemplateBinding BorderThickness, Converter={x:Static converters:ThicknessConverter.Instance}}" />
+							<ContentPresenter Name="PART_Content" Content="{TemplateBinding Content}" HorizontalAlignment="Center" />
+						</Panel>
+					</Canvas>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	<Style Selector="oxy|PlotView">
+		<Setter Property="Background" Value="White"/>
+		<Setter Property="DefaultTrackerTemplate">
+			<Setter.Value>
+				<ControlTemplate>
+					<charts:AxisTrackerControl Position="{Binding Position}" IsVertical="True"
+											   LineExtents="{Binding PlotModel.PlotArea}"
+                                               ShowPointer="True" VerticalLineVisibility="False">
+						<charts:AxisTrackerControl.Content>
+							<TextBlock Text="{Binding DataPoint.Y, StringFormat='{}{0:0.0}'}"/>
+						</charts:AxisTrackerControl.Content>
+					</charts:AxisTrackerControl>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="Controller">
+			<Setter.Value>
+				<charts:PanoptesPlotController/>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="ZoomRectangleTemplate">
+			<Setter.Value>
+				<ControlTemplate>
+					<Rectangle Fill="{StaticResource ThemeAccentColor4}"
+							   Stroke="{StaticResource HighlightBrush}"
+							   StrokeThickness="1" StrokeDashArray="3,1"/>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate>
+					<Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}">
+						<Panel Name="PART_Panel"/>
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	<Style Selector="oxy|Plot">
+		<Setter Property="Background" Value="White"/>
+		<Setter Property="PlotAreaBorderColor" Value="{StaticResource ThemeBorderMidColor}"/>
+
+		<Setter Property="TextColor" Value="{StaticResource ThemeForegroundColor}"/>
+		<Setter Property="TitleColor" Value="{StaticResource ThemeForegroundColor}"/>
+		<Setter Property="SubtitleColor" Value="{StaticResource ThemeForegroundColor}"/>
+
+		<Setter Property="DefaultTrackerTemplate">
+			<Setter.Value>
+				<ControlTemplate>
+					<charts:AxisTrackerControl Position="{Binding Position}" IsVertical="True"
+											   LineExtents="{Binding PlotModel.PlotArea}"
+                                               ShowPointer="True" VerticalLineVisibility="False">
+						<charts:AxisTrackerControl.Content>
+							<TextBlock Text="{Binding DataPoint.Y, StringFormat='{}{0:0.0}'}"/>
+						</charts:AxisTrackerControl.Content>
+					</charts:AxisTrackerControl>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="ZoomRectangleTemplate">
+			<Setter.Value>
+				<ControlTemplate>
+					<Rectangle Fill="{StaticResource ThemeAccentColor4}"
+							   Stroke="{StaticResource HighlightBrush}"
+							   StrokeThickness="1" StrokeDashArray="3,1"/>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate>
+					<Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}">
+						<Panel Name="PART_Panel" />
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	<!--Below only worls with Plot (not PlotView)-->
+	<Style Selector="oxy|DateTimeAxis">
+		<Setter Property="ExtraGridlineStyle" Value="DashDot"/>
+		<Setter Property="AxislineColor" Value="{StaticResource ThemeBorderMidColor}"/>
+		<Setter Property="ExtraGridlineColor" Value="{StaticResource ThemeBorderLowColor}"/>
+		<Setter Property="TicklineColor" Value="{StaticResource ThemeBorderLowColor}"/>
+	</Style>
+
+	<Style Selector="oxy|LinearAxis">
+		<Setter Property="ExtraGridlineStyle" Value="DashDot"/>
+		<Setter Property="AxislineColor" Value="{StaticResource ThemeBorderMidColor}"/>
+		<Setter Property="ExtraGridlineColor" Value="{StaticResource ThemeBorderLowColor}"/>
+		<Setter Property="TicklineColor" Value="{StaticResource ThemeBorderLowColor}"/>
+		<Setter Property="MajorGridlineColor" Value="{StaticResource ThemeBorderMidColor}"/>
+		<Setter Property="MinorGridlineColor" Value="{StaticResource ThemeBorderLowColor}"/>
+		<!--<Setter Property="MinorTicklineColor" Value="{StaticResource ThemePanoptesColor}"/>-->
+
+		<Setter Property="TickStyle" Value="Outside"/>
+		<Setter Property="MajorGridlineStyle" Value="Solid"/>
+		<Setter Property="MinorGridlineStyle" Value="Solid"/>
+		<Setter Property="TextColor" Value="{StaticResource ThemeForegroundColor}"/>
+		<Setter Property="TitleColor" Value="{StaticResource ThemeForegroundColor}"/>
+	</Style>
+</Styles>

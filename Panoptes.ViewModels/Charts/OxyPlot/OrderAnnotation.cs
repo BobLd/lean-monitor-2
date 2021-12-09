@@ -161,7 +161,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             var clippingRectangle = GetClippingRect();
             foreach (var center in Centers)
             {
-                var screenPosition = Transform(center.X, center.Y);
+                var screenPosition = Transform(center);
                 // clip to the area defined by the axes
                 if (screenPosition.X + Size < clippingRectangle.Left || screenPosition.X - Size > clippingRectangle.Right ||
                     screenPosition.Y + Size < clippingRectangle.Top || screenPosition.Y - Size > clippingRectangle.Bottom)
@@ -175,13 +175,13 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             if (IsHighLighted)
             {
                 var x = Transform(Centers[0]).X;
-                rc.DrawLine(x, 0, x, 1000, OxyPen.Create(OxyColors.White, 1.0), false);
+                rc.DrawLine(x, 0, x, 1000, OxyPen.Create(OxyColors.White, 1.0), this.EdgeRenderingMode);
             }
 
             if (polygons.Count == 0) return;
 
             _screenPositions = positions.AsReadOnly();
-            rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness);
+            rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness, this.EdgeRenderingMode);
 
             //if (!string.IsNullOrEmpty(Text))
             //{

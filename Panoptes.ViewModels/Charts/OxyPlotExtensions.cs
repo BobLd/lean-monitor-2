@@ -1,4 +1,5 @@
 ﻿using OxyPlot;
+using OxyPlot.Axes;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -7,6 +8,26 @@ namespace Panoptes.ViewModels.Charts
 {
     public static class OxyPlotExtensions
     {
+        private const double epsilon = 1e-5;
+
+
+        #region Colors
+        internal readonly static OxyColor SciChartBackgroungOxy = OxyColor.FromArgb(255, 28, 28, 30);
+
+        internal readonly static OxyColor SciChartMajorGridLineOxy = OxyColor.FromArgb(255, 50, 53, 57);
+
+        internal readonly static OxyColor SciChartMinorGridLineOxy = OxyColor.FromArgb(255, 35, 36, 38);
+
+        internal readonly static OxyColor SciChartTextOxy = OxyColor.FromArgb(255, 166, 167, 172);
+
+        internal readonly static OxyColor SciChartCandleStickIncreasingOxy = OxyColor.FromArgb(255, 82, 204, 84);
+
+        internal readonly static OxyColor SciChartCandleStickDecreasingOxy = OxyColor.FromArgb(255, 226, 101, 101);
+
+        internal readonly static OxyColor SciChartLegendTextOxy = OxyColor.FromArgb(255, 198, 230, 235);
+        #endregion
+
+
         public static OxyColor ToOxyColor(this Color color)
         {
             return OxyColor.FromRgb(color.R, color.G, color.B);
@@ -19,7 +40,53 @@ namespace Panoptes.ViewModels.Charts
                                     (byte)(byte.MaxValue - color.B));
         }
 
-        private const double epsilon = 1e-5;
+        public static PlotModel CreateDefaultPlotModel(string title)
+        {
+            return new PlotModel()
+            {
+                Title = title,
+                TitleFontSize = 0,
+                TextColor = SciChartTextOxy,
+                PlotAreaBorderColor = SciChartMajorGridLineOxy,
+                TitleColor = SciChartTextOxy,
+                SubtitleColor = SciChartTextOxy
+            };
+        }
+
+        public static DateTimeAxis CreateDefaultDateTimeAxis(AxisPosition axisPosition)
+        {
+            return new DateTimeAxis
+            {
+                Position = axisPosition,
+                Selectable = false,
+                IntervalType = DateTimeIntervalType.Auto,
+                AxisDistance = 30,
+                ExtraGridlineStyle = LineStyle.DashDot,
+                AxislineColor = SciChartMajorGridLineOxy,
+                ExtraGridlineColor = SciChartMajorGridLineOxy,
+                TicklineColor = SciChartTextOxy
+            };
+        }
+
+        public static LinearAxis CreateDefaultLinearAxis(AxisPosition position, string unit)
+        {
+            return new LinearAxis
+            {
+                Position = position,
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Solid,
+                TickStyle = TickStyle.Outside,
+                AxislineColor = SciChartMajorGridLineOxy,
+                ExtraGridlineColor = SciChartMajorGridLineOxy,
+                MajorGridlineColor = SciChartMajorGridLineOxy,
+                TicklineColor = SciChartMajorGridLineOxy,
+                MinorGridlineColor = SciChartMinorGridLineOxy,
+                MinorTicklineColor = SciChartMinorGridLineOxy,
+                TextColor = SciChartTextOxy,
+                TitleColor = SciChartTextOxy,
+                Unit = unit
+            };
+        }
 
         /// <summary>
         /// Gets the y coordinate of the point with the x coordinate that seats on the line, with interpolation.

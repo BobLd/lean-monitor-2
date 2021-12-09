@@ -62,34 +62,43 @@
 		<!--Logo-->
 		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
 				Padding="50" MinWidth="80" MinHeight="80" Focusable="False" IsEnabled="False" Opacity="200">
-			<DrawingPresenter Drawing="{StaticResource Logo}" MinWidth="40" MinHeight="40"/>
+			<DrawingPresenter Drawing="{StaticResource Logo}" MinWidth="40" MinHeight="40" IsEnabled="False"/>
 		</Border>
 
 		<!--https://github.com/oxyplot/oxyplot-avalonia/blob/master/Source/OxyPlot.Avalonia/Themes/Default.xaml-->
+		<!--
+		<oxy:Plot Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+				  Background="Transparent" Foreground="White">
+			<oxy:Plot.TrackerDefinitions>
+				<oxy:TrackerDefinition TrackerKey="TrackerHorizontal">
+					<oxy:TrackerDefinition.TrackerTemplate>
+						<ControlTemplate>
+							<charts:AxisTrackerControl Position="{Binding Position}" IsVertical="False"
+													   LineExtents="{Binding PlotModel.PlotArea}"
+													   ShowPointer="False" HorizontalLineVisibility="False">
+								<charts:AxisTrackerControl.Content>
+									<TextBlock Text="{Binding DataPoint.X, Converter={StaticResource DateConverter}}" Margin="1"/>
+								</charts:AxisTrackerControl.Content>
+							</charts:AxisTrackerControl>
+						</ControlTemplate>
+					</oxy:TrackerDefinition.TrackerTemplate>
+				</oxy:TrackerDefinition>
+			</oxy:Plot.TrackerDefinitions>
+			
+			<oxy:Plot.Axes>
+				<oxy:LinearAxis Position="Right" MajorGridlineStyle="Solid" MinorGridlineStyle="Solid" TickStyle="Outside"/>
+				<oxy:DateTimeAxis Position="Bottom" IntervalType="Auto" ExtraGridlineStyle="DashDot"/>
+			</oxy:Plot.Axes>
+
+			<oxy:Plot.Series>
+				
+			</oxy:Plot.Series>
+		</oxy:Plot>
+		-->
+
 		<oxy:PlotView Model="{Binding SelectedSeries}" Grid.Row="1" HorizontalAlignment="Stretch"
-					  VerticalAlignment="Stretch" Background="Transparent" Foreground="White">
-			<oxy:PlotView.Controller>
-				<charts:PanoptesPlotController/>
-			</oxy:PlotView.Controller>
-
-			<oxy:PlotView.ZoomRectangleTemplate>
-				<ControlTemplate>
-					<Rectangle Fill="{StaticResource ThemeAccentColor4}"/>
-				</ControlTemplate>
-			</oxy:PlotView.ZoomRectangleTemplate>
-
-			<oxy:PlotView.DefaultTrackerTemplate>
-				<ControlTemplate>
-					<charts:AxisTrackerControl Position="{Binding Position}" IsVertical="True"
-											   LineExtents="{Binding PlotModel.PlotArea}"
-                                               ShowPointer="True" VerticalLineVisibility="False">
-						<charts:AxisTrackerControl.Content>
-							<TextBlock Text="{Binding DataPoint.Y, StringFormat='{}{0:0.0}'}"/>
-						</charts:AxisTrackerControl.Content>
-					</charts:AxisTrackerControl>
-				</ControlTemplate>
-			</oxy:PlotView.DefaultTrackerTemplate>
-
+					  VerticalAlignment="Stretch" Background="Transparent" Foreground="White"
+					  DisconnectCanvasWhileUpdating="True">
 			<oxy:PlotView.TrackerDefinitions>
 				<oxy:TrackerDefinition TrackerKey="TrackerHorizontal">
 					<oxy:TrackerDefinition.TrackerTemplate>
