@@ -120,7 +120,7 @@ namespace Panoptes.ViewModels.Charts
             SerieType = PlotSerieTypes.Candles;
             MinimumSegmentLength = 2.0;
 
-            Color = OxyPlotSelectionViewModel.SciChartMajorGridLineOxy;
+            Color = OxyPlotExtensions.SciChartMajorGridLineOxy;
             DataFieldX = "Time";
             DataFieldHigh = "High";
             DataFieldLow = "Low";
@@ -128,8 +128,8 @@ namespace Panoptes.ViewModels.Charts
             DataFieldClose = "Close";
             Title = "Candles";
 
-            IncreasingColor = OxyPlotSelectionViewModel.SciChartCandleStickIncreasingOxy;
-            DecreasingColor = OxyPlotSelectionViewModel.SciChartCandleStickDecreasingOxy;
+            IncreasingColor = OxyPlotExtensions.SciChartCandleStickIncreasingOxy;
+            DecreasingColor = OxyPlotExtensions.SciChartCandleStickDecreasingOxy;
             LineColor = OxyColors.White;
             CandleWidth = 0;
         }

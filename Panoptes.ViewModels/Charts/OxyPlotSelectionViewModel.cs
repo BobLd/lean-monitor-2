@@ -27,22 +27,6 @@ namespace Panoptes.ViewModels.Charts
 {
     public sealed class OxyPlotSelectionViewModel : ToolPaneViewModel
     {
-        #region Colors (Should not be here, let's try to put it in xaml) 
-        internal readonly static OxyColor SciChartBackgroungOxy = OxyColor.FromArgb(255, 28, 28, 30);
-
-        internal readonly static OxyColor SciChartMajorGridLineOxy = OxyColor.FromArgb(255, 50, 53, 57);
-
-        internal readonly static OxyColor SciChartMinorGridLineOxy = OxyColor.FromArgb(255, 35, 36, 38);
-
-        internal readonly static OxyColor SciChartTextOxy = OxyColor.FromArgb(255, 166, 167, 172);
-
-        internal readonly static OxyColor SciChartCandleStickIncreasingOxy = OxyColor.FromArgb(255, 82, 204, 84);
-
-        internal readonly static OxyColor SciChartCandleStickDecreasingOxy = OxyColor.FromArgb(255, 226, 101, 101);
-
-        internal readonly static OxyColor SciChartLegendTextOxy = OxyColor.FromArgb(255, 198, 230, 235);
-        #endregion
-
         private readonly BackgroundWorker _resultBgWorker;
 
         private readonly BlockingCollection<Result> _resultsQueue = new BlockingCollection<Result>();
@@ -460,14 +444,15 @@ namespace Panoptes.ViewModels.Charts
                 switch (e.ProgressPercentage)
                 {
                     case 0:
-                        //lock (PlotModels)
-                        //{
-                        PlotModels.Add((PlotModel)e.UserState);
-                        if (PlotModels.Count == 1)
+                        var plot = (PlotModel)e.UserState;
+                        lock (PlotModels)
                         {
-                            SelectedSeries = PlotModels.FirstOrDefault();
+                            PlotModels.Add(plot);
+                            if (PlotModels.Count == 1)
+                            {
+                                SelectedSeries = PlotModels.FirstOrDefault();
+                            }
                         }
-                        //}
                         break;
 
                     case 1:
@@ -573,47 +558,14 @@ namespace Panoptes.ViewModels.Charts
                 if (!_plotModelsDict.TryGetValue(chart.Key, out var plot))
                 {
                     // Create Plot
-                    plot = new PlotModel()
-                    {
-                        Title = chart.Key,
-                        TitleFontSize = 0,
-                        TextColor = SciChartTextOxy,
-                        PlotAreaBorderColor = SciChartMajorGridLineOxy,
-                        TitleColor = SciChartTextOxy,
-                        SubtitleColor = SciChartTextOxy
-                    };
+                    plot = OxyPlotExtensions.CreateDefaultPlotModel(chart.Key);
 
                     // Keep axis simple for the moment
-                    var timeSpanAxis1 = new DateTimeAxis
-                    {
-                        Position = AxisPosition.Bottom,
-                        Selectable = false,
-                        IntervalType = DateTimeIntervalType.Auto,
-                        AxisDistance = 30,
-                        ExtraGridlineStyle = LineStyle.DashDot,
-                        AxislineColor = SciChartMajorGridLineOxy,
-                        ExtraGridlineColor = SciChartMajorGridLineOxy,
-                        TicklineColor = SciChartTextOxy
-                    };
+                    var timeSpanAxis1 = OxyPlotExtensions.CreateDefaultDateTimeAxis(AxisPosition.Bottom);
                     timeSpanAxis1.AxisChanged += TimeSpanAxis1_AxisChanged;
-
                     plot.Axes.Add(timeSpanAxis1);
-                    var linearAxis1 = new LinearAxis
-                    {
-                        Position = AxisPosition.Right,
-                        MajorGridlineStyle = LineStyle.Solid,
-                        MinorGridlineStyle = LineStyle.Solid,
-                        TickStyle = TickStyle.Outside,
-                        AxislineColor = SciChartMajorGridLineOxy,
-                        ExtraGridlineColor = SciChartMajorGridLineOxy,
-                        MajorGridlineColor = SciChartMajorGridLineOxy,
-                        TicklineColor = SciChartMajorGridLineOxy,
-                        MinorGridlineColor = SciChartMinorGridLineOxy,
-                        MinorTicklineColor = SciChartMinorGridLineOxy,
-                        TextColor = SciChartTextOxy,
-                        TitleColor = SciChartTextOxy,
-                        Unit = GetUnit(chart.Value)
-                    };
+
+                    var linearAxis1 = OxyPlotExtensions.CreateDefaultLinearAxis(AxisPosition.Right, GetUnit(chart.Value));
                     plot.Axes.Add(linearAxis1);
 
                     _plotModelsDict[chart.Key] = plot;
