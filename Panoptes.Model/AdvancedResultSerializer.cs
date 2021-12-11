@@ -5,12 +5,14 @@ using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Panoptes.Model
 {
+    // TODO: check https://devblogs.microsoft.com/dotnet/try-the-new-system-text-json-source-generator/
     public sealed class AdvancedResultSerializer : IResultSerializer
     {
         private readonly IResultConverter _resultConverter;
@@ -37,7 +39,7 @@ namespace Panoptes.Model
                 string orderEventsPath = GetOrderEvents(pathToResult);
                 if (File.Exists(orderEventsPath))
                 {
-                    var orderFileSizeMb = new FileInfo(orderEventsPath).Length / 1_048_576;
+                    var orderFileSizeMb = Global.GetFileSize(orderEventsPath);
                     _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening Order events file '{orderEventsPath}' with size {fileSizeMb:0.0000}MB.", orderEventsPath, orderFileSizeMb);
                     sw.Start();
                     using (var orderEventsStream = File.Open(orderEventsPath, FileMode.Open))
@@ -48,7 +50,7 @@ namespace Panoptes.Model
                     _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening Order events file done in {ElapsedMilliseconds}ms.", sw.ElapsedMilliseconds);
                 }
 
-                var fileSizeMb = new FileInfo(pathToResult).Length / 1_048_576;
+                var fileSizeMb = Global.GetFileSize(pathToResult);
                 _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening main backtest file '{pathToResult}' with size {fileSizeMb:0.0000}MB.", pathToResult, fileSizeMb);
                 sw.Restart();
                 using (var backtestResultStream = File.Open(pathToResult, FileMode.Open))
@@ -97,10 +99,59 @@ namespace Panoptes.Model
             throw new NotImplementedException("AdvancedResultSerializer.SerializeAsync()");
         }
 
+        public async IAsyncEnumerable<(DateTime, string)> GetBacktestLogs(string pathToResult, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            // https://oleh-zheleznyak.blogspot.com/2020/07/enumeratorcancellation.html
+            string logPath = GetLogs(pathToResult);
+            if (File.Exists(logPath))
+            {
+                var logsFileSizeMb = Global.GetFileSize(logPath);
+                _logger.LogInformation("AdvancedResultSerializer.TryGetBacktestLogs: Opening logs file '{logPath}' with size {fileSizeMb:0.0000}MB.", logPath, logsFileSizeMb);
+
+                string previousLine = null;
+                DateTime previousDate = default;
+
+                foreach (var line in await File.ReadAllLinesAsync(logPath, cancellationToken).ConfigureAwait(false))
+                {
+                    if (cancellationToken.IsCancellationRequested) yield break;
+
+                    if (line.Length > 19 && DateTime.TryParse(line.AsSpan(0, 19), out var currentDate))
+                    {
+                        currentDate = DateTime.SpecifyKind(currentDate, DateTimeKind.Utc);
+                        // Line starts with a date, this is a new log
+                        if (!string.IsNullOrEmpty(previousLine))
+                        {
+                            yield return (previousDate, previousLine);
+                            previousLine = null;
+                            previousDate = default;
+                        }
+                        previousLine = line;
+                        previousDate = currentDate;
+                    }
+                    else
+                    {
+                        // Not a new log, the log continues
+                        previousLine += "\n" + line;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(previousLine))
+                {
+                    yield return (previousDate, previousLine);
+                }
+            }
+        }
+
         private static string GetOrderEvents(string pathToResult)
         {
             return Path.Combine(Path.GetDirectoryName(pathToResult),
                                 Path.ChangeExtension($"{Path.GetFileNameWithoutExtension(pathToResult)}-order-events", Path.GetExtension(pathToResult)));
+        }
+
+        private static string GetLogs(string pathToResult)
+        {
+            return Path.Combine(Path.GetDirectoryName(pathToResult),
+                    Path.ChangeExtension($"{Path.GetFileNameWithoutExtension(pathToResult)}-log", Path.GetExtension(pathToResult)));
         }
     }
 }

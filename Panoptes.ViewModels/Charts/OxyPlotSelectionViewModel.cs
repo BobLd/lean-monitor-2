@@ -27,6 +27,8 @@ namespace Panoptes.ViewModels.Charts
 {
     public sealed class OxyPlotSelectionViewModel : ToolPaneViewModel
     {
+        private int _limitInvalidatePlotMilliseconds;
+
         private readonly BackgroundWorker _resultBgWorker;
 
         private readonly BlockingCollection<Result> _resultsQueue = new BlockingCollection<Result>();
@@ -56,6 +58,9 @@ namespace Panoptes.ViewModels.Charts
         public AsyncRelayCommand Plot1d { get; }
         public AsyncRelayCommand PlotLines { get; }
         public AsyncRelayCommand PlotCandles { get; }
+
+        public readonly AsyncRelayCommand[] _plotCommands;
+
         public AsyncRelayCommand PlotTrades { get; }
 
         private PlotSerieTypes _plotSerieTypes { get; set; }
@@ -122,12 +127,13 @@ namespace Panoptes.ViewModels.Charts
         {
             if (SelectedSeries == null) return;
 
+            var localOrders = orders.ToList(); // TODO: check if it avoids 'Collection was modified' exception
             var series = SelectedSeries.Series.ToList();
 
             // Do not use SelectedSeries.SyncRoot
             // This will prevent async
 
-            foreach (var orderAsOf in orders.GroupBy(o => o.Value.Time))
+            foreach (var orderAsOf in localOrders.GroupBy(o => o.Value.Time))
             {
                 if (cancelationToken.IsCancellationRequested)
                 {
@@ -304,46 +310,92 @@ namespace Panoptes.ViewModels.Charts
 
         private Task SetAndProcessPlot(PlotSerieTypes serieTypes, TimeSpan period, CancellationToken cancelationToken)
         {
+            if (_plotCommands.Any(c => c.IsRunning))
+            {
+                foreach (var running in _plotCommands.Where(c=>c.IsRunning))
+                {
+                    var state = running.ExecutionTask.AsyncState;
+                    Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Canceling ({Id}, {Status})...", running.ExecutionTask.Id, running.ExecutionTask.Status);
+                    running.Cancel();
+                }
+            }
+
             return Task.Run(() =>
             {
-                // need try/catch + finally
-                Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period})...", serieTypes, period);
                 DisplayLoading = true;
+                // Check if any change already requested
+                if (PlotSerieTypes == serieTypes && Period == period)
+                {
+                    Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: No change requested, arleady ({serieTypes}, {period}, {Id}).", serieTypes, period, Environment.CurrentManagedThreadId);
 
-                if (PlotSerieTypes == PlotSerieTypes.Candles && serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
+                    // Check that nothing changed
+                    foreach (var serie in SelectedSeries.Series)
+                    {
+                        // Cancel disabled
+
+                        if (serie is LineCandleStickSeries candleStickSeries)
+                        {
+                            if (candleStickSeries.SerieType != serieTypes)
+                            {
+                                Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: No change requested but series {series} was modified to {period} ({Id}).",
+                                    candleStickSeries.Tag, candleStickSeries.SerieType, Environment.CurrentManagedThreadId);
+                                candleStickSeries.SerieType = serieTypes;
+                            }
+
+                            if (candleStickSeries.Period != period)
+                            {
+                                Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: No change requested but series {series} was modified to {period} ({Id}).",
+                                    candleStickSeries.Tag, candleStickSeries.Period, Environment.CurrentManagedThreadId);
+                                candleStickSeries.SetPeriod(period, CancellationToken.None);
+                            }
+                        }
+                    }
+
+                    PlotSerieTypes = serieTypes;
+                    Period = period;
+                    DisplayLoading = false;
+                    return;
+                }
+                else if (PlotSerieTypes == PlotSerieTypes.Candles && serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
-                    Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Exit - Trying to set to 'All' while in Candle mode");
+                    Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Exit - Trying to set to 'All' while in Candle mode ({Id})", Environment.CurrentManagedThreadId);
                     Period = _period;
+                    DisplayLoading = false;
                     return;
                 }
 
-                PlotSerieTypes = serieTypes;
+                // need try/catch + finally
+                Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Start({serieTypes}, {period}, {Id})...", serieTypes, period, Environment.CurrentManagedThreadId);
+
+                //PlotSerieTypes = serieTypes;
                 if (serieTypes == PlotSerieTypes.Candles && period == Times.Zero)
                 {
                     // Not a correct way to do that
-                    Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Setting period to 1min bacause Candles");
-                    Period = Times.OneMinute;
-                }
-                else
-                {
-                    Period = period;
+                    Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Setting period to 1min bacause Candles ({Id})", Environment.CurrentManagedThreadId);
+                    period = Times.OneMinute;
                 }
 
-                //lock (SelectedSeries.SyncRoot)
-                //{
                 foreach (var serie in SelectedSeries.Series)
                 {
+                    if (cancelationToken.IsCancellationRequested)
+                    {
+                        Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Canceled({serieTypes}, {period}, {Id}).", serieTypes, period, Environment.CurrentManagedThreadId);
+                        DisplayLoading = _plotCommands.Any(c => c.IsRunning);
+                        return;
+                    }
+
                     if (serie is LineCandleStickSeries candleStickSeries)
                     {
-                        candleStickSeries.SerieType = PlotSerieTypes;
-                        candleStickSeries.SetPeriod(Period);
+                        candleStickSeries.SerieType = serieTypes;
+                        candleStickSeries.SetPeriod(period, cancelationToken);
                     }
                 }
-                //}
 
+                PlotSerieTypes = serieTypes;
+                Period = period;
                 InvalidatePlotThreadUI();
-                Logger.LogInformation("OxyPlotSelectionViewModelSetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}).", PlotSerieTypes, period, Period);
+                Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}, {Id}).", PlotSerieTypes, period, Period, Environment.CurrentManagedThreadId);
                 DisplayLoading = false;
             }, cancelationToken);
         }
@@ -420,6 +472,7 @@ namespace Panoptes.ViewModels.Charts
             : base(messenger, settingsManager, logger)
         {
             Name = "Charts";
+            _limitInvalidatePlotMilliseconds = SettingsManager.GetPlotRefreshLimitMilliseconds();
             PlotAll = new AsyncRelayCommand(ProcessPlotAll, CanDoBarsAll);
             Plot1m = new AsyncRelayCommand(ProcessPlot1min, CanDoBars1m);
             Plot5m = new AsyncRelayCommand(ProcessPlot5min, CanDoBars5min);
@@ -427,6 +480,14 @@ namespace Panoptes.ViewModels.Charts
             Plot1d = new AsyncRelayCommand(ProcessPlot1day, CanDoBars1d);
             PlotLines = new AsyncRelayCommand(ProcessPlotLines, () => true);
             PlotCandles = new AsyncRelayCommand(ProcessPlotCandles, () => true);
+
+            _plotCommands = new AsyncRelayCommand[]
+            {
+                PlotAll, Plot1m, Plot5m,
+                Plot1h, Plot1d, PlotLines,
+                PlotCandles,
+            };
+
             PlotTrades = new AsyncRelayCommand(ProcessPlotTrades, () => true);
 
             Messenger.Register<OxyPlotSelectionViewModel, SessionUpdateMessage>(this, (r, m) =>
@@ -785,7 +846,7 @@ namespace Panoptes.ViewModels.Charts
             ////_resultBgWorker.ReportProgress(1);
 
             var now = DateTime.UtcNow;
-            if ((now - _lastInvalidatePlot).TotalMilliseconds > 250)
+            if ((now - _lastInvalidatePlot).TotalMilliseconds > _limitInvalidatePlotMilliseconds)
             {
                 _lastInvalidatePlot = now;
                 _resultBgWorker.ReportProgress(1);

@@ -63,7 +63,7 @@ namespace Panoptes.Model
         {
             if (double.IsNaN(value) || value < OxyplotMinDayValue || value > OxyplotMaxDayValue)
             {
-                return new DateTime();
+                return default;
             }
 
             return OxyplotTimeOrigin.AddDays(value - 1);

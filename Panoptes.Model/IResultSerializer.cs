@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Panoptes.Model
@@ -12,5 +14,7 @@ namespace Panoptes.Model
         string Serialize(Result result);
 
         Task<string> SerializeAsync(Result result, CancellationToken cancellationToken);
+
+        IAsyncEnumerable<(DateTime, string)> GetBacktestLogs(string pathToResult, CancellationToken cancellationToken);
     }
 }

@@ -36,17 +36,24 @@
 					</Grid>
 				</Border>
 			</TabItem>
-			<TabItem Header="Sounds">
+			<TabItem Header="Theme">
 				<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1">
 					<Grid>
-						<CheckBox Content="Sound activated" IsThreeState="False" IsChecked="{Binding SoundsActivated}"/>
+						<Label Content="TODO: Dark / Light"/>
 					</Grid>
 				</Border>
 			</TabItem>
-			<TabItem Header="Colors">
+			<TabItem Header="Charts">
 				<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1">
 					<Grid>
-
+						<Label Content="TODO: refresh rate"/>
+					</Grid>
+				</Border>
+			</TabItem>
+			<TabItem Header="Sounds">
+				<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1">
+					<Grid>
+						<CheckBox Content="Sound activated" IsThreeState="False" IsChecked="{Binding SoundsActivated}" VerticalAlignment="Top"/>
 					</Grid>
 				</Border>
 			</TabItem>

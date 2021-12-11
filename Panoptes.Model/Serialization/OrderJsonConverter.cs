@@ -154,14 +154,14 @@ namespace Panoptes.Model.Serialization
                 {
                     if (s.TryGetProperty("ID", out var i))
                     {
-                        var sid = SecurityIdentifier.Parse(i.GetString()); //jObject.SelectTokens("Symbol.ID").Single().Value<string>());
-                        var ticker = s.GetProperty("Value").GetString(); //jObject.SelectTokens("Symbol.Value").Single().Value<string>();
+                        var sid = SecurityIdentifier.Parse(i.GetString());
+                        var ticker = s.GetProperty("Value").GetString();
                         order.Symbol = new Symbol(sid, ticker).ID.ToString();
                     }
                     else if (s.TryGetProperty("Value", out var v))
                     {
                         // provide for backwards compatibility
-                        var ticker = v.GetString(); //jObject.SelectTokens("Symbol.Value").Single().Value<string>();
+                        var ticker = v.GetString();
 
                         if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(ticker, securityType, out market))
                         {
@@ -172,8 +172,7 @@ namespace Panoptes.Model.Serialization
                 }
                 else
                 {
-                    var tickerstring = s.GetString(); //jObject["Symbol"].Value<string>();
-
+                    var tickerstring = s.GetString();
                     if (market == null && !SymbolPropertiesDatabase.FromDataFolder().TryGetMarket(tickerstring, securityType, out market))
                     {
                         market = DefaultBrokerageModel.DefaultMarketMap[securityType];
@@ -211,25 +210,33 @@ namespace Panoptes.Model.Serialization
                     break;
 
                 case OrderType.Limit:
-                    serializedOrder = new SerializedOrder(new LimitOrder(), "");
-                    serializedOrder.LimitPrice = GetPropery("LimitPrice");
+                    serializedOrder = new SerializedOrder(new LimitOrder(), "")
+                    {
+                        LimitPrice = GetPropery("LimitPrice")
+                    };
                     break;
 
                 case OrderType.StopMarket:
-                    serializedOrder = new SerializedOrder(new StopMarketOrder(), "");
-                    serializedOrder.StopPrice = GetPropery("StopPrice");
+                    serializedOrder = new SerializedOrder(new StopMarketOrder(), "")
+                    {
+                        StopPrice = GetPropery("StopPrice")
+                    };
                     break;
 
                 case OrderType.StopLimit:
-                    serializedOrder = new SerializedOrder(new StopLimitOrder(), "");
-                    serializedOrder.StopPrice = GetPropery("StopPrice");
-                    serializedOrder.LimitPrice = GetPropery("LimitPrice");
+                    serializedOrder = new SerializedOrder(new StopLimitOrder(), "")
+                    {
+                        StopPrice = GetPropery("StopPrice"),
+                        LimitPrice = GetPropery("LimitPrice")
+                    };
                     break;
 
                 case OrderType.LimitIfTouched:
-                    serializedOrder = new SerializedOrder(new LimitIfTouchedOrder(), "");
-                    serializedOrder.LimitPrice = GetPropery("LimitPrice");
-                    serializedOrder.TriggerPrice = GetPropery("TriggerPrice");
+                    serializedOrder = new SerializedOrder(new LimitIfTouchedOrder(), "")
+                    {
+                        LimitPrice = GetPropery("LimitPrice"),
+                        TriggerPrice = GetPropery("TriggerPrice")
+                    };
                     break;
 
                 case OrderType.MarketOnOpen:

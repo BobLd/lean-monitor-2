@@ -16,6 +16,8 @@ namespace Panoptes.Model.Settings
 
         public IDictionary<string, string> SessionParameters { get; set; }
 
+        public int PlotRefreshLimitMilliseconds { get; set; }
+
         public class DefaultUserSettings : UserSettings
         {
             public DefaultUserSettings()
@@ -24,6 +26,7 @@ namespace Panoptes.Model.Settings
                 GridsColumns = new ConcurrentDictionary<string, IReadOnlyList<Tuple<string, int>>>();
                 SoundsActivated = true;
                 Version = Global.AppVersion;
+                PlotRefreshLimitMilliseconds = 100;
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
+using Panoptes.Model;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
 using System;
@@ -102,7 +103,7 @@ namespace Panoptes.ViewModels.NewSession
                 {
                     return $"{FileName} (N/A MB)";
                 }
-                return $"{FileName} ({new FileInfo(FileName).Length / 1_048_576:0.#} MB)";
+                return $"{FileName} ({Global.GetFileSize(FileName):0.#} MB)";
             }
         }
 

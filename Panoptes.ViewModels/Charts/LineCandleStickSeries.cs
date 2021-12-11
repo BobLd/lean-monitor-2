@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace Panoptes.ViewModels.Charts
 {
@@ -54,7 +55,7 @@ namespace Panoptes.ViewModels.Charts
 
         public TimeSpan Period { get; set; }
 
-        public void SetPeriod(TimeSpan ts)
+        public void SetPeriod(TimeSpan ts, CancellationToken cancellationToken)
         {
             if (Period.Equals(ts))
             {
@@ -68,8 +69,8 @@ namespace Panoptes.ViewModels.Charts
 
             Period = ts;
 
-            UpdateLine(RawPoints, true);
-            UpdateCandles(RawPoints, true);
+            UpdateLine(RawPoints, true, cancellationToken);
+            UpdateCandles(RawPoints, true, cancellationToken);
         }
 
         public bool CanDoTimeSpan(TimeSpan ts)
@@ -270,46 +271,61 @@ namespace Panoptes.ViewModels.Charts
             }
 
             // Update the line
-            UpdateLine(newPoints, false);
+            UpdateLine(newPoints, false, CancellationToken.None);
 
             // Udpate the candles
-            UpdateCandles(newPoints, false);
+            UpdateCandles(newPoints, false, CancellationToken.None);
         }
 
         /// <summary>
         /// Update Candles
         /// </summary>
         /// <param name="newPoints">Must be distinct</param>
-        private void UpdateCandles(IReadOnlyList<DataPoint> newPoints, bool reset)
+        private void UpdateCandles(IReadOnlyList<DataPoint> newPoints, bool reset, CancellationToken cancellationToken)
         {
             lock (Items)
             {
-                if (reset)
+                var copy = Items.ToList();
+                try
                 {
-                    Items.Clear();
-                }
-                else if (Items.Count > 0)
-                {
-                    // Check if last candle needs update
-                    var last = Items.Last();
-                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)).ToList();
-                    if (update.Count > 0)
+                    if (reset)
                     {
-                        newPoints = newPoints.Except(update).ToList();
-                        last.Close = update.Last().Y;
-                        last.Low = Math.Min(last.Low, update.Min(x => x.Y));
-                        last.High = Math.Max(last.Low, update.Max(x => x.Y));
-                        if (newPoints.Count == 0) return;
+                        Items.Clear();
+                    }
+                    else if (Items.Count > 0)
+                    {
+                        // Check if last candle needs update
+                        var last = Items.Last();
+                        var update = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken)
+                            .Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X));
+                        if (update.Any())
+                        {
+                            newPoints = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken).Except(update).ToList();
+                            last.Close = update.Last().Y;
+                            last.Low = Math.Min(last.Low, update.Min(x => x.Y));
+                            last.High = Math.Max(last.Low, update.Max(x => x.Y));
+                            if (newPoints.Count == 0) return;
+                        }
+                    }
+
+                    // Add new candles
+                    // need to check if there's more than 1 datapoint in each group...
+                    var grp = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken)
+                        .GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
+                        .Select(g => new HighLowItem(g.Key,
+                                                     g.Max(p => p.Y), g.Min(p => p.Y),
+                                                     g.First().Y, g.Last().Y)).ToList();
+                    cancellationToken.ThrowIfCancellationRequested();
+                    Items.AddRange(grp);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    Debug.WriteLine($"LineCandleStickSeries.UpdateCandles:\n{ex}");
+                    if (reset)
+                    {
+                        Items.AddRange(copy);
                     }
                 }
-
-                // Add new candles
-                // need to check if there's more than 1 datapoint in each group...
-                var grp = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
-                                   .Select(g => new HighLowItem(g.Key,
-                                                                g.Max(p => p.Y), g.Min(p => p.Y),
-                                                                g.First().Y, g.Last().Y)).ToList();
-                Items.AddRange(grp);
             }
         }
 
@@ -506,30 +522,48 @@ namespace Panoptes.ViewModels.Charts
         /// Update Candles
         /// </summary>
         /// <param name="newPoints">Must be distinct</param>
-        private void UpdateLine(IReadOnlyList<DataPoint> newPoints, bool reset)
+        private void UpdateLine(IReadOnlyList<DataPoint> newPoints, bool reset, CancellationToken cancellationToken)
         {
             lock (_points)
             {
-                if (reset)
+                var copy = _points.ToList();
+                try
                 {
-                    _points.Clear();
-                }
-                else if (_points.Count > 0)
-                {
-                    // Check if last point needs update
-                    var last = _points[_points.Count - 1];
-                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); // Need to do particular case for Period=0 (All)
-                    if (update.Any())
+                    // TODO: need to hae a copy of original points if cancelled
+                    if (reset)
                     {
-                        newPoints = newPoints.Except(update).ToList();
-                        _points[_points.Count - 1] = new DataPoint(last.X, update.Last().Y);
-                        if (newPoints.Count == 0) return;
+                        _points.Clear();
+                    }
+                    else if (_points.Count > 0)
+                    {
+                        // Check if last point needs update
+                        var last = _points[_points.Count - 1];
+                        var update = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken)
+                            .Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); // Need to do particular case for Period=0 (All)
+                        if (update.Any())
+                        {
+                            newPoints = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken).Except(update).ToList();
+                            _points[_points.Count - 1] = new DataPoint(last.X, update.Last().Y);
+                            if (newPoints.Count == 0) return;
+                        }
+                    }
+
+                    // Add new point
+                    // need to check if there's more than 1 datapoint in each group...
+                    var grouped = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken)
+                        .GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y));
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    _points.AddRange(grouped); // Need to do particular case for Period=0 (All)
+                }
+                catch (OperationCanceledException ex)
+                {
+                    Debug.WriteLine($"LineCandleStickSeries.UpdateLine:\n{ex}");
+                    if (reset)
+                    {
+                        _points.AddRange(copy);
                     }
                 }
-
-                // Add new point
-                // need to check if there's more than 1 datapoint in each group...
-                _points.AddRange(newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y))); // Need to do particular case for Period=0 (All)
             }
         }
         #endregion

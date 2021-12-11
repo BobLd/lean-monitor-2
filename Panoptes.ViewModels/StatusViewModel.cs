@@ -164,7 +164,11 @@ namespace Panoptes.ViewModels
                 {
                     IsProgressIndeterminate = false;
                     AlgorithmStatus = null;
-                    ServerStatistics = $"⚠ Live session timed out at UTC {DateTime.UtcNow}.";
+                    var utcNow = DateTime.UtcNow;
+                    var message = $"⚠ Live session timed out at UTC {utcNow}.";
+                    ServerStatistics = message;
+                    // TODO: Message should not be sent from view model, need to handle that in the model
+                    Messenger.Send(new LogEntryReceivedMessage(utcNow, message, LogItemType.Monitor));
                 }
 
                 OnPropertyChanged();

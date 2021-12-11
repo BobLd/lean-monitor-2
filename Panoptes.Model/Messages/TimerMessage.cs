@@ -25,6 +25,10 @@ namespace Panoptes.Model.Messages
         /// <param name="value"></param>
         public TimerMessage(TimerEventType value, DateTime dateTimeUtc) : base(value)
         {
+            if (dateTimeUtc.Kind != DateTimeKind.Utc)
+            {
+                throw new ArgumentOutOfRangeException(nameof(dateTimeUtc), $"LogEntryReceivedMessage: Should be provided with UTC date, received {dateTimeUtc.Kind}.");
+            }
             DateTimeUtc = dateTimeUtc;
         }
 

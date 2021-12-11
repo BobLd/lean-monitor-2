@@ -16,6 +16,11 @@ namespace Panoptes.Model.Messages
                 throw new ArgumentNullException(nameof(message));
             }
 
+            if (dateTime.Kind != DateTimeKind.Utc)
+            {
+                throw new ArgumentOutOfRangeException(nameof(dateTime), $"LogEntryReceivedMessage: Should be provided with UTC date, received {dateTime.Kind}.");
+            }
+
             DateTime = dateTime;
             Message = message;
             EntryType = entryType;
