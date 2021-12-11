@@ -346,7 +346,7 @@ namespace Panoptes.ViewModels.Charts
                             {
                                 Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: No change requested but series {series} was modified to {period} ({Id}).",
                                     candleStickSeries.Tag, candleStickSeries.Period, Environment.CurrentManagedThreadId);
-                                candleStickSeries.SetPeriod(period, CancellationToken.None);
+                                candleStickSeries.SetPeriod(period);
                             }
                         }
                     }
@@ -388,7 +388,7 @@ namespace Panoptes.ViewModels.Charts
                     if (serie is LineCandleStickSeries candleStickSeries)
                     {
                         candleStickSeries.SerieType = serieTypes;
-                        candleStickSeries.SetPeriod(period, cancelationToken);
+                        candleStickSeries.SetPeriod(period);
                     }
                 }
 

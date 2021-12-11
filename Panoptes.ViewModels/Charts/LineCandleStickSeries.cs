@@ -55,22 +55,23 @@ namespace Panoptes.ViewModels.Charts
 
         public TimeSpan Period { get; set; }
 
-        public void SetPeriod(TimeSpan ts, CancellationToken cancellationToken)
+        public void SetPeriod(TimeSpan ts)
         {
             if (Period.Equals(ts))
             {
+                Debug.WriteLine($"LineCandleStickSeries.SetPeriod({Tag}): Period is already {ts}.");
                 return;
             }
 
             if (ts.Ticks < 0)
             {
-                throw new ArgumentException("TimeSpan must be positive.", nameof(ts));
+                throw new ArgumentException($"LineCandleStickSeries.SetPeriod({Tag}):TimeSpan must be positive.", nameof(ts));
             }
 
             Period = ts;
 
-            UpdateLine(RawPoints, true, cancellationToken);
-            UpdateCandles(RawPoints, true, cancellationToken);
+            UpdateLine(RawPoints, true);
+            UpdateCandles(RawPoints, true);
         }
 
         public bool CanDoTimeSpan(TimeSpan ts)
@@ -271,61 +272,46 @@ namespace Panoptes.ViewModels.Charts
             }
 
             // Update the line
-            UpdateLine(newPoints, false, CancellationToken.None);
+            UpdateLine(newPoints, false);
 
             // Udpate the candles
-            UpdateCandles(newPoints, false, CancellationToken.None);
+            UpdateCandles(newPoints, false);
         }
 
         /// <summary>
         /// Update Candles
         /// </summary>
         /// <param name="newPoints">Must be distinct</param>
-        private void UpdateCandles(IReadOnlyList<DataPoint> newPoints, bool reset, CancellationToken cancellationToken)
+        private void UpdateCandles(IReadOnlyList<DataPoint> newPoints, bool reset)
         {
             lock (Items)
             {
-                var copy = Items.ToList();
-                try
+                if (reset)
                 {
-                    if (reset)
+                    Items.Clear();
+                }
+                else if (Items.Count > 0)
+                {
+                    // Check if last candle needs update
+                    var last = Items.Last();
+                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X));
+                    if (update.Any())
                     {
-                        Items.Clear();
+                        newPoints = newPoints.Except(update).ToList();
+                        last.Close = update.Last().Y;
+                        last.Low = Math.Min(last.Low, update.Min(x => x.Y));
+                        last.High = Math.Max(last.Low, update.Max(x => x.Y));
+                        if (newPoints.Count == 0) return;
                     }
-                    else if (Items.Count > 0)
-                    {
-                        // Check if last candle needs update
-                        var last = Items.Last();
-                        var update = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken)
-                            .Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X));
-                        if (update.Any())
-                        {
-                            newPoints = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken).Except(update).ToList();
-                            last.Close = update.Last().Y;
-                            last.Low = Math.Min(last.Low, update.Min(x => x.Y));
-                            last.High = Math.Max(last.Low, update.Max(x => x.Y));
-                            if (newPoints.Count == 0) return;
-                        }
-                    }
+                }
 
-                    // Add new candles
-                    // need to check if there's more than 1 datapoint in each group...
-                    var grp = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken)
-                        .GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
-                        .Select(g => new HighLowItem(g.Key,
-                                                     g.Max(p => p.Y), g.Min(p => p.Y),
-                                                     g.First().Y, g.Last().Y)).ToList();
-                    cancellationToken.ThrowIfCancellationRequested();
-                    Items.AddRange(grp);
-                }
-                catch (OperationCanceledException ex)
-                {
-                    Debug.WriteLine($"LineCandleStickSeries.UpdateCandles:\n{ex}");
-                    if (reset)
-                    {
-                        Items.AddRange(copy);
-                    }
-                }
+                // Add new candles
+                // need to check if there's more than 1 datapoint in each group...
+                var grp = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
+                                    .Select(g => new HighLowItem(g.Key,
+                                                                 g.Max(p => p.Y), g.Min(p => p.Y),
+                                                                 g.First().Y, g.Last().Y)).ToList();
+                Items.AddRange(grp);
             }
         }
 
@@ -349,13 +335,13 @@ namespace Panoptes.ViewModels.Charts
 
             if (XAxis == null)
             {
-                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - XAxis is null.");
+                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.");
                 return;
             }
 
             if (YAxis == null)
             {
-                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - YAxis is null.");
+                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.");
                 return;
             }
 
@@ -522,48 +508,32 @@ namespace Panoptes.ViewModels.Charts
         /// Update Candles
         /// </summary>
         /// <param name="newPoints">Must be distinct</param>
-        private void UpdateLine(IReadOnlyList<DataPoint> newPoints, bool reset, CancellationToken cancellationToken)
+        private void UpdateLine(IReadOnlyList<DataPoint> newPoints, bool reset)
         {
             lock (_points)
             {
-                var copy = _points.ToList();
-                try
+                // TODO: need to hae a copy of original points if cancelled
+                if (reset)
                 {
-                    // TODO: need to hae a copy of original points if cancelled
-                    if (reset)
-                    {
-                        _points.Clear();
-                    }
-                    else if (_points.Count > 0)
-                    {
-                        // Check if last point needs update
-                        var last = _points[_points.Count - 1];
-                        var update = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken)
-                            .Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); // Need to do particular case for Period=0 (All)
-                        if (update.Any())
-                        {
-                            newPoints = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken).Except(update).ToList();
-                            _points[_points.Count - 1] = new DataPoint(last.X, update.Last().Y);
-                            if (newPoints.Count == 0) return;
-                        }
-                    }
-
-                    // Add new point
-                    // need to check if there's more than 1 datapoint in each group...
-                    var grouped = newPoints.AsParallel().AsOrdered().WithDegreeOfParallelism(1).WithCancellation(cancellationToken)
-                        .GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y));
-
-                    cancellationToken.ThrowIfCancellationRequested();
-                    _points.AddRange(grouped); // Need to do particular case for Period=0 (All)
+                    _points.Clear();
                 }
-                catch (OperationCanceledException ex)
+                else if (_points.Count > 0)
                 {
-                    Debug.WriteLine($"LineCandleStickSeries.UpdateLine:\n{ex}");
-                    if (reset)
+                    // Check if last point needs update
+                    var last = _points[_points.Count - 1];
+                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); // Need to do particular case for Period=0 (All)
+                    if (update.Any())
                     {
-                        _points.AddRange(copy);
+                        newPoints = newPoints.Except(update).ToList();
+                        _points[_points.Count - 1] = new DataPoint(last.X, update.Last().Y);
+                        if (newPoints.Count == 0) return;
                     }
                 }
+
+                // Add new point
+                // need to check if there's more than 1 datapoint in each group...
+                var grouped = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y));
+                _points.AddRange(grouped); // Need to do particular case for Period=0 (All)
             }
         }
         #endregion
@@ -574,6 +544,9 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         private void RenderCandlesSerie(IRenderContext rc)
         {
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
+
             List<HighLowItem> items;
 
             lock (Items)
@@ -590,13 +563,13 @@ namespace Panoptes.ViewModels.Charts
 
             if (XAxis == null)
             {
-                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - XAxis is null.");
+                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.");
                 return;
             }
 
             if (YAxis == null)
             {
-                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - YAxis is null.");
+                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.");
                 return;
             }
 
@@ -621,6 +594,8 @@ namespace Panoptes.ViewModels.Charts
 
             for (int i = WindowStartIndex; i < nitems; i++)
             {
+                cts.Token.ThrowIfCancellationRequested();
+
                 var bar = items[i];
 
                 // if item beyond visible range, done
@@ -746,6 +721,7 @@ namespace Panoptes.ViewModels.Charts
                     }
                 }
             }
+            cts.Dispose();
         }
 
         /// <summary>
@@ -778,13 +754,13 @@ namespace Panoptes.ViewModels.Charts
 
                 if (XAxis == null)
                 {
-                    Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - XAxis is null.");
+                    Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - XAxis is null.");
                     return;
                 }
 
                 if (YAxis == null)
                 {
-                    Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - YAxis is null.");
+                    Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - YAxis is null.");
                     return;
                 }
 
@@ -809,7 +785,7 @@ namespace Panoptes.ViewModels.Charts
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"LineCandleStickSeries.RenderLegend: Error - {ex}.");
+                Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - {ex}.");
             }
         }
 
