@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Panoptes.Model.Settings.Json
 {
+    // TODO: check https://devblogs.microsoft.com/dotnet/try-the-new-system-text-json-source-generator/
     public sealed class JsonSettingsManager : BaseSettingsManager
     {
         private const string UserSettingsFileName = "settings";

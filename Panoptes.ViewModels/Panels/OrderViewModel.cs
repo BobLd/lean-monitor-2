@@ -309,10 +309,22 @@ namespace Panoptes.ViewModels.Panels
         /// </summary>
         public string PriceCurrency { get; }
 
+        private DateTime _createdTime;
         /// <summary>
         /// Gets the utc time this order was created. Alias for <see cref="Time"/>
         /// </summary>
-        public DateTime CreatedTime { get; }
+        public DateTime CreatedTime
+        {
+            get { return _createdTime; }
+            init
+            {
+                if (value.Kind != DateTimeKind.Utc)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), $"Should be provided with UTC date, received {value.Kind}.");
+                }
+                _createdTime = value;
+            }
+        }
 
         public DateTime? CreatedTimeLocal
         {
@@ -333,6 +345,10 @@ namespace Panoptes.ViewModels.Panels
             private set
             {
                 if (_lastFillTime == value) return;
+                if (value.HasValue && value.Value.Kind != DateTimeKind.Utc)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), $"Should be provided with UTC date, received {value.Value.Kind}.");
+                }
                 _lastFillTime = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(LastFillTimeLocal));
@@ -359,6 +375,10 @@ namespace Panoptes.ViewModels.Panels
             private set
             {
                 if (_lastUpdateTime == value) return;
+                if (value.HasValue && value.Value.Kind != DateTimeKind.Utc)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), $"Should be provided with UTC date, received {value.Value.Kind}.");
+                }
                 _lastUpdateTime = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(LastUpdateTimeLocal));
@@ -385,6 +405,10 @@ namespace Panoptes.ViewModels.Panels
             private set
             {
                 if (_canceledTime == value) return;
+                if (value.HasValue && value.Value.Kind != DateTimeKind.Utc)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), $"Should be provided with UTC date, received {value.Value.Kind}.");
+                }
                 _canceledTime = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CanceledTimeLocal));
@@ -493,6 +517,10 @@ namespace Panoptes.ViewModels.Panels
             private set
             {
                 if (_expiry == value) return;
+                if (value.HasValue && value.Value.Kind != DateTimeKind.Utc)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), $"Should be provided with UTC date, received {value.Value.Kind}.");
+                }
                 _expiry = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(ExpiryLocal));

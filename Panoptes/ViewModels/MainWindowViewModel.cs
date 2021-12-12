@@ -206,6 +206,10 @@ namespace Panoptes.ViewModels
             private set
             {
                 if (_currentDateTimeUtc == value) return;
+                if (value.Kind != DateTimeKind.Utc)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), $"Should be provided with UTC date, received {value.Kind}.");
+                }
                 _currentDateTimeUtc = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CurrentDateTimeLocal));

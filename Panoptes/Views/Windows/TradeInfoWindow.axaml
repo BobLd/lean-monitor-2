@@ -117,7 +117,7 @@
 
 
 				<Label Content="Quantity" Grid.Row="3" Grid.Column="0" ToolTip.Tip="Number of shares to execute"/>
-				<TextBox Text="{Binding Quantity, Mode=OneWay}" Grid.Row="4" Grid.Column="1" ToolTip.Tip="Number of shares to execute"/>
+				<TextBox Text="{Binding Quantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Row="4" Grid.Column="1" ToolTip.Tip="Number of shares to execute"/>
 
 				<Label Content="Exchange" Grid.Row="3" Grid.Column="2"/>
 				<TextBox Text="{Binding Properties.Exchange, Mode=OneWay}" Grid.Row="4" Grid.Column="3"/>
@@ -149,21 +149,21 @@
 
 
 				<Label Content="Filled" Grid.Column="0" Grid.Row="1"/>
-				<TextBox Text="{Binding FilledQuantity, Mode=OneWay}" Grid.Column="1" Grid.Row="1"/>
+				<TextBox Text="{Binding FilledQuantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1" Grid.Row="1"/>
 
 				<Label Content="Open" Grid.Column="2" Grid.Row="1"/>
-				<TextBox Text="{Binding OpenQuantity, Mode=OneWay}" Grid.Column="3" Grid.Row="1"/>
+				<TextBox Text="{Binding OpenQuantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="3" Grid.Row="1"/>
 
 
 				<Label Content="Price" Grid.Row="2" Grid.Column="0" ToolTip.Tip="Price of the order"/>
-				<TextBox Text="{Binding Price, Mode=OneWay}" Grid.Row="2" Grid.Column="1" ToolTip.Tip="Price of the order"/>
+				<TextBox Text="{Binding Price, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Row="2" Grid.Column="1" ToolTip.Tip="Price of the order"/>
 
 				<Label Content="Value" Grid.Row="2" Grid.Column="2"/>
-				<TextBox Text="{Binding Value, Mode=OneWay}" Grid.Row="2" Grid.Column="3"/>
+				<TextBox Text="{Binding Value, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Row="2" Grid.Column="3"/>
 
 
 				<Label Content="Fees" Grid.Column="0" Grid.Row="3"/>
-				<TextBox Text="{Binding Fees, Mode=OneWay}" Grid.Column="1" Grid.Row="3"/>
+				<TextBox Text="{Binding Fees, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1" Grid.Row="3"/>
 
 				<Label Content="Fees Ccy" Grid.Column="2" Grid.Row="3"/>
 				<TextBox Text="{Binding FeesCurrency, Mode=OneWay}" Grid.Column="3" Grid.Row="3"/>
@@ -197,13 +197,13 @@
 					</Grid.RowDefinitions>
 
 					<Label Content="Bid" Grid.Column="0" Grid.Row="0" ToolTip.Tip="The bid price at order submission time"/>
-					<TextBox Text="{Binding BidPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="0" ToolTip.Tip="The bid price at order submission time"/>
+					<TextBox Text="{Binding BidPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1" Grid.Row="0" ToolTip.Tip="The bid price at order submission time"/>
 
 					<Label Content="Ask" Grid.Column="0" Grid.Row="1" ToolTip.Tip="The ask price at order submission time"/>
-					<TextBox Text="{Binding AskPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="1" ToolTip.Tip="The ask price at order submission time"/>
+					<TextBox Text="{Binding AskPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1" Grid.Row="1" ToolTip.Tip="The ask price at order submission time"/>
 
 					<Label Content="Last" Grid.Column="0" Grid.Row="2" ToolTip.Tip="The current price at order submission time"/>
-					<TextBox Text="{Binding LastPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="2" ToolTip.Tip="The current price at order submission time"/>
+					<TextBox Text="{Binding LastPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1" Grid.Row="2" ToolTip.Tip="The current price at order submission time"/>
 
 					<Label Content="Change %" Grid.Column="0" Grid.Row="3" ToolTip.Tip="Change in % from last price at order submission time to order price"/>
 					<TextBox Text="{Binding PriceChangePct, Mode=OneWay, StringFormat='{}{0:0.#%}'}" Grid.Column="1" Grid.Row="3" ToolTip.Tip="Change in % from last price at order submission time to order price"/>
@@ -232,13 +232,13 @@
 					</Grid.RowDefinitions>
 
 					<Label Content="Limit" Grid.Column="0"/>
-					<TextBox Text="{Binding LimitPrice, Mode=OneWay}" Grid.Column="1"/>
+					<TextBox Text="{Binding LimitPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1"/>
 
 					<Label Content="Stop" Grid.Column="0" Grid.Row="1"/>
-					<TextBox Text="{Binding StopPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="1"/>
+					<TextBox Text="{Binding StopPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1" Grid.Row="1"/>
 
 					<Label Content="Trigger" Grid.Column="0" Grid.Row="2" ToolTip.Tip="The price which, when touched, will trigger the setting of a limit order at limit price"/>
-					<TextBox Text="{Binding TriggerPrice, Mode=OneWay}" Grid.Column="1" Grid.Row="2" ToolTip.Tip="The price which, when touched, will trigger the setting of a limit order at limit price"/>
+					<TextBox Text="{Binding TriggerPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1" Grid.Row="2" ToolTip.Tip="The price which, when touched, will trigger the setting of a limit order at limit price"/>
 
 					<Label Content="Marketable" Grid.Column="0" Grid.Row="3" ToolTip.Tip="True if market order or limit order with:&#x0a;- Buy and Limit price &gt;= Ask price or &#x0a;- Sell and Limit price &lt;= Bid price"/>
 					<TextBox Text="{Binding IsMarketable, Mode=OneWay}" Grid.Column="1" Grid.Row="3" ToolTip.Tip="True if market order or limit order with:&#x0a;- Buy and Limit price &gt;= Ask price or &#x0a;- Sell and Limit price &lt;= Bid price"/>
@@ -285,11 +285,11 @@
 					<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}"/>
 					<DataGridTextColumn Header="Time (UTC)" Binding="{Binding UtcTime, Mode=OneWay}"/>
 					<DataGridTextColumn Header="Status" Binding="{Binding Status, Mode=OneWay}"/>
-					<DataGridTextColumn Header="Fee" Binding="{Binding OrderFee.Value.Amount, Mode=OneWay}"/>
+					<DataGridTextColumn Header="Fee" Binding="{Binding OrderFee.Value.Amount, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 					<DataGridTextColumn Header="Fee Ccy" Binding="{Binding OrderFee.Value.Currency, Mode=OneWay}"/>
-					<DataGridTextColumn Header="FillPrice" Binding="{Binding FillPrice, Mode=OneWay}"/>
+					<DataGridTextColumn Header="FillPrice" Binding="{Binding FillPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 					<DataGridTextColumn Header="FillPriceCurrency" Binding="{Binding FillPriceCurrency, Mode=OneWay}"/>
-					<DataGridTextColumn Header="FillQuantity" Binding="{Binding FillQuantity, Mode=OneWay}"/>
+					<DataGridTextColumn Header="FillQuantity" Binding="{Binding FillQuantity, StringFormat={}\{0:0.0######\}, Mode=OneWay}"/>
 					<DataGridCheckBoxColumn Header="IsAssignment" Binding="{Binding IsAssignment, Mode=OneWay}"/>
 					<DataGridTemplateColumn Header="Message" SortMemberPath="Message" MaxWidth="300">
 						<DataGridTemplateColumn.CellTemplate>
@@ -298,9 +298,9 @@
 							</DataTemplate>
 						</DataGridTemplateColumn.CellTemplate>
 					</DataGridTemplateColumn>
-					<DataGridTextColumn Header="LimitPrice" Binding="{Binding LimitPrice, Mode=OneWay}" />
-					<DataGridTextColumn Header="StopPrice" Binding="{Binding StopPrice, Mode=OneWay}" />
-					<DataGridTextColumn Header="TriggerPrice" Binding="{Binding TriggerPrice, Mode=OneWay}" />
+					<DataGridTextColumn Header="LimitPrice" Binding="{Binding LimitPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" />
+					<DataGridTextColumn Header="StopPrice" Binding="{Binding StopPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" />
+					<DataGridTextColumn Header="TriggerPrice" Binding="{Binding TriggerPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" />
 				</DataGrid.Columns>
 			</DataGrid>
 		</Border>

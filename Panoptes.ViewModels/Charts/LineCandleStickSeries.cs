@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace Panoptes.ViewModels.Charts
 {
@@ -58,12 +59,13 @@ namespace Panoptes.ViewModels.Charts
         {
             if (Period.Equals(ts))
             {
+                Debug.WriteLine($"LineCandleStickSeries.SetPeriod({Tag}): Period is already {ts}.");
                 return;
             }
 
             if (ts.Ticks < 0)
             {
-                throw new ArgumentException("TimeSpan must be positive.", nameof(ts));
+                throw new ArgumentException($"LineCandleStickSeries.SetPeriod({Tag}):TimeSpan must be positive.", nameof(ts));
             }
 
             Period = ts;
@@ -292,8 +294,8 @@ namespace Panoptes.ViewModels.Charts
                 {
                     // Check if last candle needs update
                     var last = Items.Last();
-                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)).ToList();
-                    if (update.Count > 0)
+                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X));
+                    if (update.Any())
                     {
                         newPoints = newPoints.Except(update).ToList();
                         last.Close = update.Last().Y;
@@ -306,9 +308,9 @@ namespace Panoptes.ViewModels.Charts
                 // Add new candles
                 // need to check if there's more than 1 datapoint in each group...
                 var grp = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
-                                   .Select(g => new HighLowItem(g.Key,
-                                                                g.Max(p => p.Y), g.Min(p => p.Y),
-                                                                g.First().Y, g.Last().Y)).ToList();
+                                    .Select(g => new HighLowItem(g.Key,
+                                                                 g.Max(p => p.Y), g.Min(p => p.Y),
+                                                                 g.First().Y, g.Last().Y)).ToList();
                 Items.AddRange(grp);
             }
         }
@@ -333,13 +335,13 @@ namespace Panoptes.ViewModels.Charts
 
             if (XAxis == null)
             {
-                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - XAxis is null.");
+                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.");
                 return;
             }
 
             if (YAxis == null)
             {
-                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - YAxis is null.");
+                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.");
                 return;
             }
 
@@ -519,6 +521,7 @@ namespace Panoptes.ViewModels.Charts
         {
             lock (_points)
             {
+                // TODO: need to hae a copy of original points if cancelled
                 if (reset)
                 {
                     _points.Clear();
@@ -538,7 +541,8 @@ namespace Panoptes.ViewModels.Charts
 
                 // Add new point
                 // need to check if there's more than 1 datapoint in each group...
-                _points.AddRange(newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y))); // Need to do particular case for Period=0 (All)
+                var grouped = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y));
+                _points.AddRange(grouped); // Need to do particular case for Period=0 (All)
             }
         }
         #endregion
@@ -549,69 +553,75 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         private void RenderCandlesSerie(IRenderContext rc)
         {
-            List<HighLowItem> items;
-
-            lock (Items)
+            try
             {
-                items = Items.ToList();
-            }
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
-            var nitems = items.Count;
+                List<HighLowItem> items;
 
-            if (nitems == 0 || StrokeThickness <= 0 || LineStyle == LineStyle.None)
-            {
-                return;
-            }
+                lock (Items)
+                {
+                    items = Items.ToList();
+                }
 
-            if (XAxis == null)
-            {
-                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - XAxis is null.");
-                return;
-            }
+                var nitems = items.Count;
 
-            if (YAxis == null)
-            {
-                Debug.WriteLine("LineCandleStickSeries.RenderCandlesSerie: Error - YAxis is null.");
-                return;
-            }
-
-            VerifyAxes(); // this is prevented by the checks above
-
-            var dashArray = LineStyle.GetDashArray();
-
-            var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
-            var first = items[0];
-            var candlewidth = XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X);
-
-            // colors
-            var fillUp = GetSelectableFillColor(IncreasingColor);
-            var fillDown = GetSelectableFillColor(DecreasingColor);
-            var lineUp = GetSelectableColor(IncreasingColor.ChangeIntensity(0.70));
-            var lineDown = GetSelectableColor(DecreasingColor.ChangeIntensity(0.70));
-
-            // determine render range
-            var xmin = XAxis.ActualMinimum;
-            var xmax = XAxis.ActualMaximum;
-            WindowStartIndex = UpdateWindowStartIndex(items, item => item.X, xmin, WindowStartIndex);
-
-            for (int i = WindowStartIndex; i < nitems; i++)
-            {
-                var bar = items[i];
-
-                // if item beyond visible range, done
-                if (bar.X > xmax)
+                if (nitems == 0 || StrokeThickness <= 0 || LineStyle == LineStyle.None)
                 {
                     return;
                 }
 
-                // check to see whether is valid
-                if (!IsValidItem(bar, XAxis, YAxis))
+                if (XAxis == null)
                 {
-                    continue;
+                    Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.");
+                    return;
                 }
 
-                var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
-                var lineColor = bar.Close > bar.Open ? lineUp : lineDown;
+                if (YAxis == null)
+                {
+                    Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.");
+                    return;
+                }
+
+                VerifyAxes(); // this is prevented by the checks above
+
+                var dashArray = LineStyle.GetDashArray();
+
+                var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
+                var first = items[0];
+                var candlewidth = XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X);
+
+                // colors
+                var fillUp = GetSelectableFillColor(IncreasingColor);
+                var fillDown = GetSelectableFillColor(DecreasingColor);
+                var lineUp = GetSelectableColor(IncreasingColor.ChangeIntensity(0.70));
+                var lineDown = GetSelectableColor(DecreasingColor.ChangeIntensity(0.70));
+
+                // determine render range
+                var xmin = XAxis.ActualMinimum;
+                var xmax = XAxis.ActualMaximum;
+                WindowStartIndex = UpdateWindowStartIndex(items, item => item.X, xmin, WindowStartIndex);
+
+                for (int i = WindowStartIndex; i < nitems; i++)
+                {
+                    cts.Token.ThrowIfCancellationRequested();
+
+                    var bar = items[i];
+
+                    // if item beyond visible range, done
+                    if (bar.X > xmax)
+                    {
+                        return;
+                    }
+
+                    // check to see whether is valid
+                    if (!IsValidItem(bar, XAxis, YAxis))
+                    {
+                        continue;
+                    }
+
+                    var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
+                    var lineColor = bar.Close > bar.Open ? lineUp : lineDown;
 
                 var high = this.Transform(bar.X, bar.High);
                 var low = this.Transform(bar.X, bar.Low);
@@ -680,8 +690,8 @@ namespace Panoptes.ViewModels.Charts
                     var open = this.Transform(bar.X, bar.Open);
                     var close = this.Transform(bar.X, bar.Close);
 
-                    var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
-                    var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
+                        var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
+                        var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
 
                     // Upper extent
                     rc.DrawLine(
@@ -701,8 +711,8 @@ namespace Panoptes.ViewModels.Charts
                         dashArray,
                         LineJoin);
 
-                    // Body
-                    var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
+                        // Body
+                        var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
 
                     if (max.Y - min.Y < 1.0)
                     {
@@ -753,13 +763,13 @@ namespace Panoptes.ViewModels.Charts
 
                 if (XAxis == null)
                 {
-                    Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - XAxis is null.");
+                    Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - XAxis is null.");
                     return;
                 }
 
                 if (YAxis == null)
                 {
-                    Debug.WriteLine("LineCandleStickSeries.RenderLegend: Error - YAxis is null.");
+                    Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - YAxis is null.");
                     return;
                 }
 
@@ -785,7 +795,7 @@ namespace Panoptes.ViewModels.Charts
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"LineCandleStickSeries.RenderLegend: Error - {ex}.");
+                Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - {ex}.");
             }
         }
 

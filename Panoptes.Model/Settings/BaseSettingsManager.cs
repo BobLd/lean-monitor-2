@@ -114,7 +114,7 @@ namespace Panoptes.Model.Settings
             if (dateTime == default) return default;
             if (dateTime.Kind != DateTimeKind.Utc)
             {
-                throw new InvalidOperationException();
+                throw new ArgumentOutOfRangeException(nameof(dateTime), $"ConvertToSelectedTimezone: Should be provided with UTC date, received {dateTime.Kind}.");
             }
 
             return TimeZoneInfo.ConvertTime(dateTime, SelectedTimeZone);
@@ -156,6 +156,11 @@ namespace Panoptes.Model.Settings
                 UserSettings.Version = Global.AppVersion;
                 _logger.LogInformation("BaseSettingsManager.CheckVersion: Warning - Settings version is unknown and was set to {AppVersion} This might create unexpected behaviour.", Global.AppVersion);
             }
+        }
+
+        public int GetPlotRefreshLimitMilliseconds()
+        {
+            return UserSettings.PlotRefreshLimitMilliseconds;
         }
     }
 }

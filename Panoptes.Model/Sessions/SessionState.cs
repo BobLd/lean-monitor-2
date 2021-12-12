@@ -3,6 +3,7 @@
     public enum SessionState
     {
         Subscribed,
-        Unsubscribed
+        Unsubscribed,
+        // TimedOut???
     }
 }

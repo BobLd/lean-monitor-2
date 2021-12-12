@@ -82,6 +82,11 @@ namespace Panoptes.Model.Sessions.File
                 throw new FileNotFoundException($"File '{Name}' does not exist");
             }
 
+            await foreach (var logItem in _resultSerializer.GetBacktestLogs(Name, cancellationToken).ConfigureAwait(false))
+            {
+                _syncContext.Send(_ => _sessionHandler.HandleLogMessage(logItem.Item1, logItem.Item2, LogItemType.Monitor), null);
+            }
+
             var result = await _resultSerializer.DeserializeAsync(Name, cancellationToken).ConfigureAwait(false);
 
             var context = new ResultContext

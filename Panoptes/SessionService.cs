@@ -130,13 +130,15 @@ namespace Panoptes
             _messenger.Send(new SessionUpdateMessage(resultContext));
         }
 
-        public void HandleLogMessage(string message, LogItemType type)
+        public void HandleLogMessage(DateTime utcTime, string message, LogItemType type)
         {
-            // Live log message, use current DateTime
-
             Debug.Assert(!string.IsNullOrEmpty(message));
+            if (utcTime.Kind != DateTimeKind.Utc)
+            {
+                throw new ArgumentOutOfRangeException(nameof(utcTime), $"The provided time should be in UTC time, received '{utcTime.Kind}'.");
+            }
 
-            _messenger.Send(new LogEntryReceivedMessage(DateTime.UtcNow, message, type));
+            _messenger.Send(new LogEntryReceivedMessage(utcTime, message, type));
         }
 
         public void HandleStateChanged(SessionState state)
@@ -190,10 +192,9 @@ namespace Panoptes
                 }
                 else if (argument.EndsWith(".qcb") && File.Exists(argument))
                 {
-                    var info = new FileInfo(argument);
                     new Views.Windows.OpenBacktestWindow()
                     {
-                        FilePath = $"{argument} ({info.Length / 1_048_576:0.#} MB)",
+                        FilePath = $"{argument} ({Global.GetFileSize(argument):0.#} MB)",
                     }.Show();
 
                     await OpenAsync(new FileSessionParameters

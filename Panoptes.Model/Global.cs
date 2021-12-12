@@ -91,5 +91,17 @@ namespace Panoptes.Model
                 throw new ArgumentException();
             }
         }
+
+        /// <summary>
+        /// Get the file size in MB. Returns <c>-1</c> if the file is not found.
+        /// </summary>
+        public static long GetFileSize(string path)
+        {
+            if (File.Exists(path))
+            {
+                return new FileInfo(path).Length / 1_048_576;
+            }
+            return -1;
+        }
     }
 }

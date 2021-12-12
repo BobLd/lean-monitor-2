@@ -193,15 +193,15 @@ namespace Panoptes.Model.Sessions.Stream
                     break;
 
                 case PacketType.Log:
-                    _syncContext.Send(_ => _sessionHandler.HandleLogMessage(((LogPacket)packet).Message, LogItemType.Log), null);
+                    _syncContext.Send(_ => _sessionHandler.HandleLogMessage(DateTime.UtcNow, ((LogPacket)packet).Message, LogItemType.Log), null);
                     break;
 
                 case PacketType.Debug:
-                    _syncContext.Send(_ => _sessionHandler.HandleLogMessage(((DebugPacket)packet).Message, LogItemType.Debug), null);
+                    _syncContext.Send(_ => _sessionHandler.HandleLogMessage(DateTime.UtcNow, ((DebugPacket)packet).Message, LogItemType.Debug), null);
                     break;
 
                 case PacketType.HandledError:
-                    _syncContext.Send(_ => _sessionHandler.HandleLogMessage(((HandledErrorPacket)packet).Message, LogItemType.Error), null);
+                    _syncContext.Send(_ => _sessionHandler.HandleLogMessage(DateTime.UtcNow, ((HandledErrorPacket)packet).Message, LogItemType.Error), null);
                     break;
 
                 case PacketType.OrderEvent:
@@ -266,6 +266,7 @@ namespace Panoptes.Model.Sessions.Stream
         /// <returns>Returns true if the packet was handled, otherwise false.</returns>
         protected bool HandlePacketEventsListener(string payload, PacketType packetType)
         {
+            // TODO: check https://devblogs.microsoft.com/dotnet/try-the-new-system-text-json-source-generator/
             try
             {
                 switch (packetType)

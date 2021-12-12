@@ -1,4 +1,5 @@
 ﻿using Panoptes.Model.Serialization.Packets;
+using System;
 
 namespace Panoptes.Model.Sessions
 {
@@ -8,7 +9,7 @@ namespace Panoptes.Model.Sessions
 
         void HandleResult(ResultContext resultContext);
 
-        void HandleLogMessage(string message, LogItemType type);
+        void HandleLogMessage(DateTime utcTime, string message, LogItemType type);
 
         void HandleOrderEvent(OrderEventPacket orderEvent);
 

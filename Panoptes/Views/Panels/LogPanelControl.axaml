@@ -18,15 +18,15 @@
 				<DataGridTemplateColumn Header="Type" SortMemberPath="EntryType" MaxWidth="100">
 					<DataGridTemplateColumn.CellTemplate>
 						<DataTemplate>
-							<StackPanel Orientation="Horizontal">
-								<DrawingPresenter Margin="1" Classes="logoType" VerticalAlignment="Center"/>
+							<StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+								<DrawingPresenter Margin="1" Classes="logoType" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
 								<Label Content="{Binding EntryType, Mode=OneWay}" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
 							</StackPanel>
 						</DataTemplate>
 					</DataGridTemplateColumn.CellTemplate>
 				</DataGridTemplateColumn>
 				<DataGridTextColumn Header="Date" Binding="{Binding DateTime, Mode=OneWay}" Width="140"/>
-				<DataGridTemplateColumn Header="Message" SortMemberPath="Message" MaxWidth="400">
+				<DataGridTemplateColumn Header="Message" SortMemberPath="Message" MaxWidth="600">
 					<DataGridTemplateColumn.CellTemplate>
 						<DataTemplate>
 							<TextBlock Text="{Binding Message, Mode=OneWay}" TextWrapping="WrapWithOverflow" TextTrimming="CharacterEllipsis"/>

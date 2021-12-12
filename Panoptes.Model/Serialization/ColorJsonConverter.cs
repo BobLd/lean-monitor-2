@@ -31,7 +31,7 @@ namespace Panoptes.Model.Serialization
         /// </summary>
         /// <param name="value">The deserialized value that needs to be converted to T</param>
         /// <returns>The converted value</returns>
-        protected Color Convert(string value)
+        public Color Convert(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -44,9 +44,9 @@ namespace Panoptes.Model.Serialization
                 throw new FormatException(message);
             }
 
-            var red = HexToInt(value.Substring(1, 2));
-            var green = HexToInt(value.Substring(3, 2));
-            var blue = HexToInt(value.Substring(5, 2));
+            var red = HexToInt(value.AsSpan(1, 2));
+            var green = HexToInt(value.AsSpan(3, 2));
+            var blue = HexToInt(value.AsSpan(5, 2));
             return Color.FromArgb(red, green, blue);
         }
 
@@ -55,7 +55,7 @@ namespace Panoptes.Model.Serialization
         /// </summary>
         /// <param name="hexValue">Hexadecimal number</param>
         /// <returns>Integer representation of the hexadecimal</returns>
-        private int HexToInt(string hexValue)
+        private static int HexToInt(ReadOnlySpan<char> hexValue)
         {
             if (hexValue.Length != 2)
             {
@@ -64,7 +64,7 @@ namespace Panoptes.Model.Serialization
             }
 
             int result;
-            if (!int.TryParse(hexValue, NumberStyles.HexNumber, null, out result))
+            if (!int.TryParse( hexValue, NumberStyles.HexNumber, null, out result))
             {
                 throw new FormatException($"Invalid hex number: {hexValue}");
             }

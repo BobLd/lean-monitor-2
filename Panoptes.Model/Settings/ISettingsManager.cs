@@ -42,6 +42,12 @@ namespace Panoptes.Model.Settings
         DateTime ConvertToSelectedTimezone(DateTime dateTime);
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        int GetPlotRefreshLimitMilliseconds();
+
+        /// <summary>
         /// Checks the settings version against the app version.
         /// </summary>
         void CheckVersion();
