@@ -544,83 +544,96 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         private void RenderCandlesSerie(IRenderContext rc)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(5));
-
-            List<HighLowItem> items;
-
-            lock (Items)
+            try
             {
-                items = Items.ToList();
-            }
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
-            var nitems = items.Count;
+                List<HighLowItem> items;
 
-            if (nitems == 0 || StrokeThickness <= 0 || LineStyle == LineStyle.None)
-            {
-                return;
-            }
+                lock (Items)
+                {
+                    items = Items.ToList();
+                }
 
-            if (XAxis == null)
-            {
-                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.");
-                return;
-            }
+                var nitems = items.Count;
 
-            if (YAxis == null)
-            {
-                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.");
-                return;
-            }
-
-            VerifyAxes(); // this is prevented by the checks above
-
-            var dashArray = LineStyle.GetDashArray();
-
-            var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
-            var first = items[0];
-            var candlewidth = XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X);
-
-            // colors
-            var fillUp = GetSelectableFillColor(IncreasingColor);
-            var fillDown = GetSelectableFillColor(DecreasingColor);
-            var lineUp = GetSelectableColor(IncreasingColor.ChangeIntensity(0.70));
-            var lineDown = GetSelectableColor(DecreasingColor.ChangeIntensity(0.70));
-
-            // determine render range
-            var xmin = XAxis.ActualMinimum;
-            var xmax = XAxis.ActualMaximum;
-            WindowStartIndex = UpdateWindowStartIndex(items, item => item.X, xmin, WindowStartIndex);
-
-            for (int i = WindowStartIndex; i < nitems; i++)
-            {
-                cts.Token.ThrowIfCancellationRequested();
-
-                var bar = items[i];
-
-                // if item beyond visible range, done
-                if (bar.X > xmax)
+                if (nitems == 0 || StrokeThickness <= 0 || LineStyle == LineStyle.None)
                 {
                     return;
                 }
 
-                // check to see whether is valid
-                if (!IsValidItem(bar, XAxis, YAxis))
+                if (XAxis == null)
                 {
-                    continue;
+                    Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.");
+                    return;
                 }
 
-                var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
-                var lineColor = bar.Close > bar.Open ? lineUp : lineDown;
-
-                var high = Transform(bar.X, bar.High);
-                var low = Transform(bar.X, bar.Low);
-
-                if (candlewidth < 0.4)
+                if (YAxis == null)
                 {
-                    //Body
-                    if (i % 2 == 0)
+                    Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.");
+                    return;
+                }
+
+                VerifyAxes(); // this is prevented by the checks above
+
+                var dashArray = LineStyle.GetDashArray();
+
+                var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
+                var first = items[0];
+                var candlewidth = XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X);
+
+                // colors
+                var fillUp = GetSelectableFillColor(IncreasingColor);
+                var fillDown = GetSelectableFillColor(DecreasingColor);
+                var lineUp = GetSelectableColor(IncreasingColor.ChangeIntensity(0.70));
+                var lineDown = GetSelectableColor(DecreasingColor.ChangeIntensity(0.70));
+
+                // determine render range
+                var xmin = XAxis.ActualMinimum;
+                var xmax = XAxis.ActualMaximum;
+                WindowStartIndex = UpdateWindowStartIndex(items, item => item.X, xmin, WindowStartIndex);
+
+                for (int i = WindowStartIndex; i < nitems; i++)
+                {
+                    cts.Token.ThrowIfCancellationRequested();
+
+                    var bar = items[i];
+
+                    // if item beyond visible range, done
+                    if (bar.X > xmax)
                     {
+                        return;
+                    }
+
+                    // check to see whether is valid
+                    if (!IsValidItem(bar, XAxis, YAxis))
+                    {
+                        continue;
+                    }
+
+                    var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
+                    var lineColor = bar.Close > bar.Open ? lineUp : lineDown;
+
+                    var high = Transform(bar.X, bar.High);
+                    var low = Transform(bar.X, bar.Low);
+
+                    if (candlewidth < 0.4)
+                    {
+                        //Body
+                        if (i % 2 == 0)
+                        {
+                            rc.DrawLine(
+                                new[] { high, low },
+                                lineColor,
+                                StrokeThickness,
+                                dashArray,
+                                LineJoin,
+                                true);
+                        }
+                    }
+                    else if (candlewidth < 1.75)
+                    {
+                        // Body
                         rc.DrawLine(
                             new[] { high, low },
                             lineColor,
@@ -629,99 +642,93 @@ namespace Panoptes.ViewModels.Charts
                             LineJoin,
                             true);
                     }
-                }
-                else if (candlewidth < 1.75)
-                {
-                    // Body
-                    rc.DrawLine(
-                        new[] { high, low },
-                        lineColor,
-                        StrokeThickness,
-                        dashArray,
-                        LineJoin,
-                        true);
-                }
-                else if (candlewidth < 3.5)
-                {
-                    // Body
-                    rc.DrawLine(
-                        new[] { high, low },
-                        lineColor,
-                        StrokeThickness,
-                        dashArray,
-                        LineJoin,
-                        true);
-
-                    var open = Transform(bar.X, bar.Open);
-                    var close = Transform(bar.X, bar.Close);
-
-                    // Open
-                    var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-                    rc.DrawLine(
-                        new[] { openLeft, new ScreenPoint(open.X, open.Y) },
-                        lineColor,
-                        StrokeThickness,
-                        dashArray,
-                        LineJoin,
-                        true);
-
-                    // Close
-                    var closeRight = close + new ScreenVector(candlewidth * 0.5, 0);
-                    rc.DrawLine(
-                        new[] { closeRight, new ScreenPoint(open.X, close.Y) },
-                        lineColor,
-                        StrokeThickness,
-                        dashArray,
-                        LineJoin,
-                        true);
-                }
-                else
-                {
-                    var open = Transform(bar.X, bar.Open);
-                    var close = Transform(bar.X, bar.Close);
-
-                    var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
-                    var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
-
-                    // Upper extent
-                    rc.DrawLine(
-                        new[] { high, min },
-                        lineColor,
-                        StrokeThickness,
-                        dashArray,
-                        LineJoin,
-                        true);
-
-                    // Lower extent
-                    rc.DrawLine(
-                        new[] { max, low },
-                        lineColor,
-                        StrokeThickness,
-                        dashArray,
-                        LineJoin,
-                        true);
-
-                    // Body
-                    var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-
-                    if (max.Y - min.Y < 1.0)
+                    else if (candlewidth < 3.5)
                     {
-                        var leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, min.Y);
-                        var rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, min.Y);
-                        rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, null, LineJoin.Miter, true);
+                        // Body
+                        rc.DrawLine(
+                            new[] { high, low },
+                            lineColor,
+                            StrokeThickness,
+                            dashArray,
+                            LineJoin,
+                            true);
 
-                        leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, max.Y);
-                        rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, max.Y);
-                        rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, null, LineJoin.Miter, true);
+                        var open = Transform(bar.X, bar.Open);
+                        var close = Transform(bar.X, bar.Close);
+
+                        // Open
+                        var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
+                        rc.DrawLine(
+                            new[] { openLeft, new ScreenPoint(open.X, open.Y) },
+                            lineColor,
+                            StrokeThickness,
+                            dashArray,
+                            LineJoin,
+                            true);
+
+                        // Close
+                        var closeRight = close + new ScreenVector(candlewidth * 0.5, 0);
+                        rc.DrawLine(
+                            new[] { closeRight, new ScreenPoint(open.X, close.Y) },
+                            lineColor,
+                            StrokeThickness,
+                            dashArray,
+                            LineJoin,
+                            true);
                     }
                     else
                     {
-                        var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                        rc.DrawRectangle(rect, fillColor, OxyColors.Transparent, 0);
+                        var open = Transform(bar.X, bar.Open);
+                        var close = Transform(bar.X, bar.Close);
+
+                        var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
+                        var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
+
+                        // Upper extent
+                        rc.DrawLine(
+                            new[] { high, min },
+                            lineColor,
+                            StrokeThickness,
+                            dashArray,
+                            LineJoin,
+                            true);
+
+                        // Lower extent
+                        rc.DrawLine(
+                            new[] { max, low },
+                            lineColor,
+                            StrokeThickness,
+                            dashArray,
+                            LineJoin,
+                            true);
+
+                        // Body
+                        var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
+
+                        if (max.Y - min.Y < 1.0)
+                        {
+                            var leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, min.Y);
+                            var rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, min.Y);
+                            rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, null, LineJoin.Miter, true);
+
+                            leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, max.Y);
+                            rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, max.Y);
+                            rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, null, LineJoin.Miter, true);
+                        }
+                        else
+                        {
+                            var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
+                            rc.DrawRectangle(rect, fillColor, OxyColors.Transparent, 0);
+                        }
                     }
                 }
+                cts.Dispose();
             }
-            cts.Dispose();
+            catch (OperationCanceledException ex)
+            {
+                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.\n{ex}.");
+                throw new TimeoutException("LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.", ex);
+            }
         }
 
         /// <summary>
