@@ -623,14 +623,26 @@ namespace Panoptes.ViewModels.Charts
                     var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
                     var lineColor = bar.Close > bar.Open ? lineUp : lineDown;
 
-                var high = this.Transform(bar.X, bar.High);
-                var low = this.Transform(bar.X, bar.Low);
+                    var high = this.Transform(bar.X, bar.High);
+                    var low = this.Transform(bar.X, bar.Low);
 
-                if (candlewidth < 0.4)
-                {
-                    //Body
-                    if (i % 2 == 0)
+                    if (candlewidth < 0.4)
                     {
+                        //Body
+                        if (i % 2 == 0)
+                        {
+                            rc.DrawLine(
+                                new[] { high, low },
+                                lineColor,
+                                StrokeThickness,
+                                this.EdgeRenderingMode,
+                                dashArray,
+                                LineJoin);
+                        }
+                    }
+                    else if (candlewidth < 1.75)
+                    {
+                        // Body
                         rc.DrawLine(
                             new[] { high, low },
                             lineColor,
@@ -639,97 +651,91 @@ namespace Panoptes.ViewModels.Charts
                             dashArray,
                             LineJoin);
                     }
-                }
-                else if (candlewidth < 1.75)
-                {
-                    // Body
-                    rc.DrawLine(
-                        new[] { high, low },
-                        lineColor,
-                        StrokeThickness,
-                        this.EdgeRenderingMode,
-                        dashArray,
-                        LineJoin);
-                }
-                else if (candlewidth < 3.5)
-                {
-                    // Body
-                    rc.DrawLine(
-                        new[] { high, low },
-                        lineColor,
-                        StrokeThickness,
-                        this.EdgeRenderingMode,
-                        dashArray,
-                        LineJoin);
+                    else if (candlewidth < 3.5)
+                    {
+                        // Body
+                        rc.DrawLine(
+                            new[] { high, low },
+                            lineColor,
+                            StrokeThickness,
+                            this.EdgeRenderingMode,
+                            dashArray,
+                            LineJoin);
 
-                    var open = this.Transform(bar.X, bar.Open);
-                    var close = this.Transform(bar.X, bar.Close);
+                        var open = this.Transform(bar.X, bar.Open);
+                        var close = this.Transform(bar.X, bar.Close);
 
-                    // Open
-                    var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-                    rc.DrawLine(
-                        new[] { openLeft, new ScreenPoint(open.X, open.Y) },
-                        lineColor,
-                        StrokeThickness,
-                        this.EdgeRenderingMode,
-                        dashArray,
-                        LineJoin);
+                        // Open
+                        var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
+                        rc.DrawLine(
+                            new[] { openLeft, new ScreenPoint(open.X, open.Y) },
+                            lineColor,
+                            StrokeThickness,
+                            this.EdgeRenderingMode,
+                            dashArray,
+                            LineJoin);
 
-                    // Close
-                    var closeRight = close + new ScreenVector(candlewidth * 0.5, 0);
-                    rc.DrawLine(
-                        new[] { closeRight, new ScreenPoint(open.X, close.Y) },
-                        lineColor,
-                        StrokeThickness,
-                        this.EdgeRenderingMode,
-                        dashArray,
-                        LineJoin);
-                }
-                else
-                {
-                    var open = this.Transform(bar.X, bar.Open);
-                    var close = this.Transform(bar.X, bar.Close);
+                        // Close
+                        var closeRight = close + new ScreenVector(candlewidth * 0.5, 0);
+                        rc.DrawLine(
+                            new[] { closeRight, new ScreenPoint(open.X, close.Y) },
+                            lineColor,
+                            StrokeThickness,
+                            this.EdgeRenderingMode,
+                            dashArray,
+                            LineJoin);
+                    }
+                    else
+                    {
+                        var open = this.Transform(bar.X, bar.Open);
+                        var close = this.Transform(bar.X, bar.Close);
 
                         var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
                         var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
 
-                    // Upper extent
-                    rc.DrawLine(
-                        new[] { high, min },
-                        lineColor,
-                        StrokeThickness,
-                        this.EdgeRenderingMode,
-                        dashArray,
-                        LineJoin);
+                        // Upper extent
+                        rc.DrawLine(
+                            new[] { high, min },
+                            lineColor,
+                            StrokeThickness,
+                            this.EdgeRenderingMode,
+                            dashArray,
+                            LineJoin);
 
-                    // Lower extent
-                    rc.DrawLine(
-                        new[] { max, low },
-                        lineColor,
-                        StrokeThickness,
-                        this.EdgeRenderingMode,
-                        dashArray,
-                        LineJoin);
+                        // Lower extent
+                        rc.DrawLine(
+                            new[] { max, low },
+                            lineColor,
+                            StrokeThickness,
+                            this.EdgeRenderingMode,
+                            dashArray,
+                            LineJoin);
 
                         // Body
                         var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
 
-                    if (max.Y - min.Y < 1.0)
-                    {
-                        var leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, min.Y);
-                        var rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, min.Y);
-                        rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, this.EdgeRenderingMode, null, LineJoin.Miter);
+                        if (max.Y - min.Y < 1.0)
+                        {
+                            var leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, min.Y);
+                            var rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, min.Y);
+                            rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, this.EdgeRenderingMode, null, LineJoin.Miter);
 
-                        leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, max.Y);
-                        rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, max.Y);
-                        rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, this.EdgeRenderingMode, null, LineJoin.Miter);
-                    }
-                    else
-                    {
-                        var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                        rc.DrawRectangle(rect, fillColor, OxyColors.Transparent, 0, this.EdgeRenderingMode);
+                            leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, max.Y);
+                            rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, max.Y);
+                            rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, this.EdgeRenderingMode, null, LineJoin.Miter);
+                        }
+                        else
+                        {
+                            var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
+                            rc.DrawRectangle(rect, fillColor, OxyColors.Transparent, 0, this.EdgeRenderingMode);
+                        }
                     }
                 }
+            }
+            catch (OperationCanceledException ex)
+            {
+                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.\n{ex}.");
+                throw new TimeoutException("LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.", ex);
             }
         }
 
