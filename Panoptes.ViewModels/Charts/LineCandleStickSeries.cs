@@ -1,9 +1,9 @@
 ﻿using OxyPlot;
 using OxyPlot.Series;
 using Panoptes.Model;
+using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -59,7 +59,7 @@ namespace Panoptes.ViewModels.Charts
         {
             if (Period.Equals(ts))
             {
-                Debug.WriteLine($"LineCandleStickSeries.SetPeriod({Tag}): Period is already {ts}.");
+                Log.Debug("LineCandleStickSeries.SetPeriod({Tag}): Period is already {ts}.", Tag, ts);
                 return;
             }
 
@@ -122,7 +122,7 @@ namespace Panoptes.ViewModels.Charts
             SerieType = PlotSerieTypes.Candles;
             MinimumSegmentLength = 2.0;
 
-            Color = OxyPlotExtensions.SciChartMajorGridLineOxy;
+            Color = OxyPlotExtensions.ThemeBorderMidColor;
             DataFieldX = "Time";
             DataFieldHigh = "High";
             DataFieldLow = "Low";
@@ -300,7 +300,7 @@ namespace Panoptes.ViewModels.Charts
                         newPoints = newPoints.Except(update).ToList();
                         last.Close = update.Last().Y;
                         last.Low = Math.Min(last.Low, update.Min(x => x.Y));
-                        last.High = Math.Max(last.Low, update.Max(x => x.Y));
+                        last.High = Math.Max(last.High, update.Max(x => x.Y));
                         if (newPoints.Count == 0) return;
                     }
                 }
@@ -308,7 +308,7 @@ namespace Panoptes.ViewModels.Charts
                 // Add new candles
                 // need to check if there's more than 1 datapoint in each group...
                 var grp = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
-                                    .Select(g => new HighLowItem(g.Key,
+                                   .Select(g => new HighLowItem(g.Key,
                                                                  g.Max(p => p.Y), g.Min(p => p.Y),
                                                                  g.First().Y, g.Last().Y)).ToList();
                 Items.AddRange(grp);
@@ -335,13 +335,13 @@ namespace Panoptes.ViewModels.Charts
 
             if (XAxis == null)
             {
-                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.");
+                Log.Debug("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.", Tag);
                 return;
             }
 
             if (YAxis == null)
             {
-                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.");
+                Log.Debug("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.", Tag);
                 return;
             }
 
@@ -512,7 +512,6 @@ namespace Panoptes.ViewModels.Charts
         {
             lock (_points)
             {
-                // TODO: need to hae a copy of original points if cancelled
                 if (reset)
                 {
                     _points.Clear();
@@ -564,17 +563,20 @@ namespace Panoptes.ViewModels.Charts
 
                 if (XAxis == null)
                 {
-                    Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.");
+                    Log.Warning("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.", Tag);
                     return;
                 }
 
                 if (YAxis == null)
                 {
-                    Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.");
+                    Log.Warning("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.", Tag);
                     return;
                 }
 
                 VerifyAxes(); // this is prevented by the checks above
+
+                var clippingRect = GetClippingRect();
+                rc.SetClip(clippingRect);
 
                 var dashArray = LineStyle.GetDashArray();
 
@@ -583,14 +585,16 @@ namespace Panoptes.ViewModels.Charts
                 var candlewidth = XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X);
 
                 // colors
-                var fillUp = GetSelectableFillColor(IncreasingColor);
-                var fillDown = GetSelectableFillColor(DecreasingColor);
-                var lineUp = GetSelectableColor(IncreasingColor.ChangeIntensity(0.70));
-                var lineDown = GetSelectableColor(DecreasingColor.ChangeIntensity(0.70));
+                var lineColor = GetSelectableColor(LineColor.ChangeIntensity(0.70));
+                var fillUp = GetSelectableFillColor(LineColor);
+                var fillDown = GetSelectableFillColor(OxyColors.Transparent);
 
                 // determine render range
                 var xmin = XAxis.ActualMinimum;
                 var xmax = XAxis.ActualMaximum;
+
+                var ymin = YAxis.ActualMinimum;
+                var ymax = YAxis.ActualMaximum;
                 WindowStartIndex = UpdateWindowStartIndex(items, item => item.X, xmin, WindowStartIndex);
 
                 for (int i = WindowStartIndex; i < nitems; i++)
@@ -599,20 +603,30 @@ namespace Panoptes.ViewModels.Charts
 
                     var bar = items[i];
 
-                    // if item beyond visible range, done
-                    if (bar.X > xmax)
-                    {
-                        return;
-                    }
-
                     // check to see whether is valid
                     if (!IsValidItem(bar, XAxis, YAxis))
                     {
                         continue;
                     }
 
+                    // if item beyond visible range, done
+                    if (bar.X - (datacandlewidth * 0.5) > xmax)
+                    {
+                        return;
+                    }
+
+                    if (bar.X + (datacandlewidth * 0.5) < xmin)
+                    {
+                        continue;
+                    }
+
+                    // Out of y-axis range
+                    if (bar.Low > ymax || bar.High < ymin)
+                    {
+                        continue;
+                    }
+
                     var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
-                    var lineColor = bar.Close > bar.Open ? lineUp : lineDown;
 
                     var high = Transform(bar.X, bar.High);
                     var low = Transform(bar.X, bar.Low);
@@ -622,59 +636,30 @@ namespace Panoptes.ViewModels.Charts
                         //Body
                         if (i % 2 == 0)
                         {
-                            rc.DrawLine(
-                                new[] { high, low },
-                                lineColor,
-                                StrokeThickness,
-                                dashArray,
-                                LineJoin,
-                                true);
+                            rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
                         }
                     }
                     else if (candlewidth < 1.75)
                     {
                         // Body
-                        rc.DrawLine(
-                            new[] { high, low },
-                            lineColor,
-                            StrokeThickness,
-                            dashArray,
-                            LineJoin,
-                            true);
+                        rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
                     }
                     else if (candlewidth < 3.5)
                     {
                         // Body
-                        rc.DrawLine(
-                            new[] { high, low },
-                            lineColor,
-                            StrokeThickness,
-                            dashArray,
-                            LineJoin,
-                            true);
+                        rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
 
                         var open = Transform(bar.X, bar.Open);
                         var close = Transform(bar.X, bar.Close);
 
                         // Open
                         var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-                        rc.DrawLine(
-                            new[] { openLeft, new ScreenPoint(open.X, open.Y) },
-                            lineColor,
-                            StrokeThickness,
-                            dashArray,
-                            LineJoin,
-                            true);
+
+                        rc.DrawClippedLine(clippingRect, new[] { openLeft, new ScreenPoint(open.X, open.Y) }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
 
                         // Close
                         var closeRight = close + new ScreenVector(candlewidth * 0.5, 0);
-                        rc.DrawLine(
-                            new[] { closeRight, new ScreenPoint(open.X, close.Y) },
-                            lineColor,
-                            StrokeThickness,
-                            dashArray,
-                            LineJoin,
-                            true);
+                        rc.DrawClippedLine(clippingRect, new[] { closeRight, new ScreenPoint(open.X, close.Y) }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
                     }
                     else
                     {
@@ -685,22 +670,10 @@ namespace Panoptes.ViewModels.Charts
                         var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
 
                         // Upper extent
-                        rc.DrawLine(
-                            new[] { high, min },
-                            lineColor,
-                            StrokeThickness,
-                            dashArray,
-                            LineJoin,
-                            true);
+                        rc.DrawClippedLine(clippingRect, new[] { high, min }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
 
                         // Lower extent
-                        rc.DrawLine(
-                            new[] { max, low },
-                            lineColor,
-                            StrokeThickness,
-                            dashArray,
-                            LineJoin,
-                            true);
+                        rc.DrawClippedLine(clippingRect, new[] { max, low }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
 
                         // Body
                         var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
@@ -709,24 +682,25 @@ namespace Panoptes.ViewModels.Charts
                         {
                             var leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, min.Y);
                             var rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, min.Y);
-                            rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, null, LineJoin.Miter, true);
+                            rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, 1, lineColor, StrokeThickness, null, LineJoin.Miter, false);
 
                             leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, max.Y);
                             rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, max.Y);
-                            rc.DrawLine(new[] { leftPoint, rightPoint }, lineColor, StrokeThickness, null, LineJoin.Miter, true);
+                            rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, 1, lineColor, StrokeThickness, null, LineJoin.Miter, false);
                         }
                         else
                         {
                             var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                            rc.DrawRectangle(rect, fillColor, OxyColors.Transparent, 0);
+                            rc.DrawClippedRectangle(clippingRect, rect, fillColor, lineColor, StrokeThickness);
                         }
                     }
                 }
+                rc.ResetClip();
                 cts.Dispose();
             }
             catch (OperationCanceledException ex)
             {
-                Debug.WriteLine($"LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.\n{ex}.");
+                Log.Warning(ex, "LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.", Tag);
                 throw new TimeoutException("LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.", ex);
             }
         }
@@ -740,59 +714,14 @@ namespace Panoptes.ViewModels.Charts
         {
             try
             {
-                List<HighLowItem> items;
-
-                lock (Items)
-                {
-                    items = Items?.ToList();
-                }
-
-                if (items == null || items.Count == 0)
-                {
-                    return;
-                }
-
-                double xmid = (legendBox.Left + legendBox.Right) / 2;
-                double yopen = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.7);
-                double yclose = legendBox.Top + ((legendBox.Bottom - legendBox.Top) * 0.3);
-                double[] dashArray = LineStyle.GetDashArray();
-
-                var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
-
-                if (XAxis == null)
-                {
-                    Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - XAxis is null.");
-                    return;
-                }
-
-                if (YAxis == null)
-                {
-                    Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - YAxis is null.");
-                    return;
-                }
-
-                var first = items[0];
-                var candlewidth = Math.Min(
-                    legendBox.Width,
-                    XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X));
-
-                rc.DrawLine(
-                    new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
-                    GetSelectableColor(ActualColor),
-                    StrokeThickness,
-                    dashArray,
-                    LineJoin.Miter,
-                    true);
-
-                rc.DrawRectangleAsPolygon(
-                    new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
-                    GetSelectableFillColor(IncreasingColor),
-                    GetSelectableColor(ActualColor),
-                    StrokeThickness);
+                double xmid = (legendBox.Left + legendBox.Right) / 2.0;
+                double ymid = (legendBox.Top + legendBox.Bottom) / 2.0;
+                var pts = new[] { new ScreenPoint(legendBox.Left, ymid), new ScreenPoint(legendBox.Right, ymid) };
+                rc.DrawLine(pts, GetSelectableColor(LineColor), StrokeThickness, LineStyle.GetDashArray());
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"LineCandleStickSeries.RenderLegend({Tag}): Error - {ex}.");
+                Log.Error(ex, "LineCandleStickSeries.RenderLegend({Tag}): Error", Tag);
             }
         }
 

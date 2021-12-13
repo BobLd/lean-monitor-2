@@ -10,23 +10,14 @@ namespace Panoptes.ViewModels.Charts
     {
         private const double epsilon = 1e-5;
 
-
         #region Colors
-        internal readonly static OxyColor SciChartBackgroungOxy = OxyColor.FromArgb(255, 28, 28, 30);
-
-        internal readonly static OxyColor SciChartMajorGridLineOxy = OxyColor.FromArgb(255, 50, 53, 57);
-
-        internal readonly static OxyColor SciChartMinorGridLineOxy = OxyColor.FromArgb(255, 35, 36, 38);
-
-        internal readonly static OxyColor SciChartTextOxy = OxyColor.FromArgb(255, 166, 167, 172);
+        internal readonly static OxyColor ThemeBorderMidColor = OxyColor.FromArgb(255, 128, 128, 128);  // #FF808080
+        internal readonly static OxyColor ThemeForegroundColor = OxyColor.FromArgb(255, 222, 222, 222); // #FFDEDEDE
+        internal readonly static OxyColor ThemeBorderLowColor = OxyColor.FromArgb(255, 80, 80, 80);     // #FF505050
 
         internal readonly static OxyColor SciChartCandleStickIncreasingOxy = OxyColor.FromArgb(255, 82, 204, 84);
-
         internal readonly static OxyColor SciChartCandleStickDecreasingOxy = OxyColor.FromArgb(255, 226, 101, 101);
-
-        internal readonly static OxyColor SciChartLegendTextOxy = OxyColor.FromArgb(255, 198, 230, 235);
         #endregion
-
 
         public static OxyColor ToOxyColor(this Color color)
         {
@@ -46,10 +37,10 @@ namespace Panoptes.ViewModels.Charts
             {
                 Title = title,
                 TitleFontSize = 0,
-                TextColor = SciChartTextOxy,
-                PlotAreaBorderColor = SciChartMajorGridLineOxy,
-                TitleColor = SciChartTextOxy,
-                SubtitleColor = SciChartTextOxy
+                TextColor = ThemeForegroundColor,
+                PlotAreaBorderColor = ThemeBorderMidColor,
+                TitleColor = ThemeForegroundColor,
+                SubtitleColor = ThemeForegroundColor
             };
         }
 
@@ -62,9 +53,9 @@ namespace Panoptes.ViewModels.Charts
                 IntervalType = DateTimeIntervalType.Auto,
                 AxisDistance = 30,
                 ExtraGridlineStyle = LineStyle.DashDot,
-                AxislineColor = SciChartMajorGridLineOxy,
-                ExtraGridlineColor = SciChartMajorGridLineOxy,
-                TicklineColor = SciChartTextOxy
+                AxislineColor = ThemeBorderMidColor,
+                ExtraGridlineColor = ThemeBorderLowColor,
+                TicklineColor = ThemeBorderLowColor
             };
         }
 
@@ -76,14 +67,14 @@ namespace Panoptes.ViewModels.Charts
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Solid,
                 TickStyle = TickStyle.Outside,
-                AxislineColor = SciChartMajorGridLineOxy,
-                ExtraGridlineColor = SciChartMajorGridLineOxy,
-                MajorGridlineColor = SciChartMajorGridLineOxy,
-                TicklineColor = SciChartMajorGridLineOxy,
-                MinorGridlineColor = SciChartMinorGridLineOxy,
-                MinorTicklineColor = SciChartMinorGridLineOxy,
-                TextColor = SciChartTextOxy,
-                TitleColor = SciChartTextOxy,
+                AxislineColor = ThemeBorderMidColor,
+                ExtraGridlineColor = ThemeBorderLowColor,
+                MajorGridlineColor = ThemeBorderMidColor,
+                TicklineColor = ThemeBorderMidColor,
+                MinorGridlineColor = ThemeBorderLowColor,
+                MinorTicklineColor = ThemeBorderLowColor,  // ThemePanoptesColor
+                TextColor = ThemeForegroundColor,
+                TitleColor = ThemeForegroundColor,
                 Unit = unit
             };
         }

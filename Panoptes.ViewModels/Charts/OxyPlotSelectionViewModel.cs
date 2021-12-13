@@ -10,11 +10,13 @@ using Panoptes.Model.Messages;
 using Panoptes.Model.Settings;
 using Panoptes.ViewModels.Charts.OxyPlot;
 using QuantConnect.Orders;
+using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -27,7 +29,8 @@ namespace Panoptes.ViewModels.Charts
 {
     public sealed class OxyPlotSelectionViewModel : ToolPaneViewModel
     {
-        private int _limitInvalidatePlotMilliseconds;
+        private int _limitRefreshMs;
+        private readonly int _limitRefreshMsSettings;
 
         private readonly BackgroundWorker _resultBgWorker;
 
@@ -472,7 +475,8 @@ namespace Panoptes.ViewModels.Charts
             : base(messenger, settingsManager, logger)
         {
             Name = "Charts";
-            _limitInvalidatePlotMilliseconds = SettingsManager.GetPlotRefreshLimitMilliseconds();
+            _limitRefreshMs = SettingsManager.GetPlotRefreshLimitMilliseconds();
+            _limitRefreshMsSettings = _limitRefreshMs;
             PlotAll = new AsyncRelayCommand(ProcessPlotAll, CanDoBarsAll);
             Plot1m = new AsyncRelayCommand(ProcessPlot1min, CanDoBars1m);
             Plot5m = new AsyncRelayCommand(ProcessPlot5min, CanDoBars5min);
@@ -517,11 +521,11 @@ namespace Panoptes.ViewModels.Charts
                         break;
 
                     case 1:
-                        SelectedSeries?.InvalidatePlot(true);
+                        InvalidatePlotWithTiming(true);
                         break;
 
                     case 2:
-                        SelectedSeries?.InvalidatePlot(false);
+                        InvalidatePlotWithTiming(false);
                         break;
 
                     default:
@@ -531,6 +535,28 @@ namespace Panoptes.ViewModels.Charts
 
             _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _resultBgWorker.RunWorkerAsync();
+        }
+
+        private ConcurrentDictionary<string, double> _invalidatePlotTiming = new ConcurrentDictionary<string, double>();
+        private const double w = 2.0 / (100.0 + 1.0);
+        private void InvalidatePlotWithTiming(bool updateData)
+        {
+            if (SelectedSeries == null) return;
+            var sw = new Stopwatch();
+            sw.Start();
+            SelectedSeries.InvalidatePlot(updateData);
+            sw.Stop();
+
+            if (!_invalidatePlotTiming.TryGetValue(SelectedSeries.Title, out var previous))
+            {
+                previous = 0;
+            }
+
+            var current = sw.ElapsedTicks / (double)TimeSpan.TicksPerMillisecond * w + previous * (1.0 - w);
+            _invalidatePlotTiming[SelectedSeries.Title] = current;
+
+            _limitRefreshMs = Math.Max(_limitRefreshMsSettings, (int)(current * 500.0)); // 500 times the time in ms it took to render
+            Log.Debug("It took {current:0.000000}ms to refresh, refresh limit set to {Time}ms for {Title}.", current, _limitRefreshMs, SelectedSeries.Title);
         }
 
         private void ResultQueueReader(object sender, DoWorkEventArgs e)
@@ -718,8 +744,11 @@ namespace Panoptes.ViewModels.Charts
                     {
                         case SeriesType.Candle:
                         case SeriesType.Line:
-                            ((LineCandleStickSeries)s).AddRange(serie.Value.Values.Select(p =>
-                                        DateTimeAxis.CreateDataPoint(p.X.UtcDateTime, (double)p.Y)));
+                            var data = serie.Value.Values.Select(p => DateTimeAxis.CreateDataPoint(p.X.UtcDateTime, (double)p.Y));
+                            lock (plot.SyncRoot)
+                            {
+                                ((LineCandleStickSeries)s).AddRange(data);
+                            }
                             break;
 
                         case SeriesType.Bar:
@@ -729,7 +758,10 @@ namespace Panoptes.ViewModels.Charts
                             var currentLineBar = lineSeriesBar.Points;
                             var filteredLineBar = newLinePointsBar.Except(currentLineBar).ToList();
                             if (filteredLineBar.Count == 0) break;
-                            lineSeriesBar.Points.AddRange(filteredLineBar);
+                            lock (plot.SyncRoot)
+                            {
+                                lineSeriesBar.Points.AddRange(filteredLineBar);
+                            }
                             break;
 
                         case SeriesType.Scatter:
@@ -738,7 +770,10 @@ namespace Panoptes.ViewModels.Charts
                             var currentScatter = scatterSeries.Points;
                             var filteredScatter = newScatterSeries.Except(currentScatter, ScatterPointComparer).ToList();
                             if (filteredScatter.Count == 0) break;
-                            scatterSeries.Points.AddRange(filteredScatter);
+                            lock (plot.SyncRoot)
+                            {
+                                scatterSeries.Points.AddRange(filteredScatter);
+                            }
                             break;
                         /*
                     case SeriesType.Bar:
@@ -843,10 +878,8 @@ namespace Panoptes.ViewModels.Charts
         private DateTime _lastInvalidatePlot = DateTime.MinValue;
         private void InvalidatePlotThreadUI()
         {
-            ////_resultBgWorker.ReportProgress(1);
-
             var now = DateTime.UtcNow;
-            if ((now - _lastInvalidatePlot).TotalMilliseconds > _limitInvalidatePlotMilliseconds)
+            if ((now - _lastInvalidatePlot).TotalMilliseconds > _limitRefreshMs)
             {
                 _lastInvalidatePlot = now;
                 _resultBgWorker.ReportProgress(1);

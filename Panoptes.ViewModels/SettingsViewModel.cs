@@ -2,9 +2,9 @@
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Settings;
+using Serilog;
 using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Panoptes.ViewModels
@@ -95,7 +95,7 @@ namespace Panoptes.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"SettingsViewModel.SaveChanges: Something wrong happened.\n{ex}");
+                Log.Error(ex, "SettingsViewModel.SaveChanges: Something wrong happened.");
                 _hasChanged = true;
             }
             finally

@@ -3,9 +3,9 @@ using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using QuantConnect.Orders;
+using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Panoptes.ViewModels.Charts.OxyPlot
@@ -146,13 +146,13 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
 
             if (XAxis == null)
             {
-                Debug.WriteLine("OrderAnnotation.Render: Error - XAxis is null.");
+                Log.Warning("OrderAnnotation.Render: Error - XAxis is null.");
                 return;
             }
 
             if (YAxis == null)
             {
-                Debug.WriteLine("OrderAnnotation.Render: Error - YAxis is null.");
+                Log.Warning("OrderAnnotation.Render: Error - YAxis is null.");
                 return;
             }
 
