@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:local="clr-namespace:Panoptes.Views.Panels"
              xmlns:panels="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
+			 IsVisible="{Binding IsVisible}"
              mc:Ignorable="d"
 			 d:DesignWidth="800" d:DesignHeight="450">
 	

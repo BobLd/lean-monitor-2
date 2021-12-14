@@ -45,17 +45,17 @@
 					<Separator/>
 					<MenuItem Header="E_xit" Command="{Binding ExitCommand}"/> <!--HotKey="Alt+F4"-->
 				</MenuItem>
-				<!--
 				<MenuItem Header="_View">
-					<MenuItem Header="_Statistics" IsChecked="{Binding StatisticsPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
-					<MenuItem Header="_Runtime Statistics" IsChecked="{Binding RuntimeStatisticsPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+					<CheckBox Content="_Statistics" IsChecked="{Binding StatisticsPane.IsVisible, Mode=TwoWay}"/>
+					<CheckBox Content="_Runtime Statistics" IsChecked="{Binding RuntimeStatisticsPane.IsVisible, Mode=TwoWay}"/>
 					<Separator/>
-					<MenuItem Header="_Profit &amp; Loss" IsChecked="{Binding ProfitLossPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
-					<MenuItem Header="_Trades" IsChecked="{Binding TradesPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+					<CheckBox Content="_Log" IsChecked="{Binding LogPane.IsVisible, Mode=TwoWay}"/>
 					<Separator/>
-					<MenuItem Header="_Log" IsChecked="{Binding LogPane.IsVisible, Mode=TwoWay}" IsCheckable="True"/>
+					<CheckBox Content="_Profit &amp; Loss" IsChecked="{Binding ProfitLossPane.IsVisible, Mode=TwoWay}"/>
+					<CheckBox Content="_Orders" IsChecked="{Binding TradesPane.IsVisible, Mode=TwoWay}"/>
+					<CheckBox Content="_Holdings" IsChecked="{Binding HoldingsPane.IsVisible, Mode=TwoWay}"/>
+					<CheckBox Content="_Cash" IsChecked="{Binding CashBookPane.IsVisible, Mode=TwoWay}"/>		
 				</MenuItem>
-				-->
 				<MenuItem Header="_Session" IsEnabled="{Binding IsSessionActive}">
 					<MenuItem Header="_Connect" Command="{Binding ConnectCommand}"/>
 					<MenuItem Header="_Disconnect" Command="{Binding DisconnectCommand}"/>
@@ -91,11 +91,11 @@
 			<Grid.RowDefinitions>
 				<RowDefinition Height="149*"/>
 				<RowDefinition Height="113*"/>
-				<RowDefinition Height="123*"/>
+				<RowDefinition Height="120*"/>
 			</Grid.RowDefinitions>
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="184*"/>
-				<ColumnDefinition Width="279*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
 				<ColumnDefinition Width="337*"/>
 			</Grid.ColumnDefinitions>
 
@@ -104,13 +104,13 @@
 			<panels:StatisticsPanelControl DataContext="{Binding StatisticsPane}" Grid.Row="1" Grid.RowSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
 			<TabControl Padding="0" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" TabStripPlacement="Bottom">
-				<TabItem Name="_ordersTab" Header="Orders">
+				<TabItem Name="_ordersTab" Header="Orders" IsVisible="{Binding TradesPane.IsVisible, Mode=OneWay}">
 					<panels:TradesPanelControl DataContext="{Binding TradesPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
-				<TabItem Name="_holdingsTab" Header="Holdings">
+				<TabItem Name="_holdingsTab" Header="Holdings" IsVisible="{Binding HoldingsPane.IsVisible, Mode=OneWay}">
 					<panels:HoldingsPanelControl DataContext="{Binding HoldingsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
-				<TabItem Name="_cashTab" Header="Cash">
+				<TabItem Name="_cashTab" Header="Cash" IsVisible="{Binding CashBookPane.IsVisible, Mode=OneWay}">
 					<panels:CashBookPanelControl DataContext="{Binding CashBookPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 				</TabItem>
 			</TabControl>
@@ -119,8 +119,7 @@
 
 			<panels:LogPanelControl DataContext="{Binding LogPane}" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-			<charts1:OxyPlotSelectionControl DataContext="{Binding OxyPlotSelectionPane}" Grid.ColumnSpan="2" Grid.Column="1" />
-
+			<charts1:OxyPlotSelectionControl DataContext="{Binding OxyPlotSelectionPane}" Grid.ColumnSpan="2" Grid.Column="1"/>
 		</Grid>
 		<!--StatusBar-->
 		<Border BorderThickness="{StaticResource ThemeBorderThickness}" BorderBrush="{StaticResource ThemeBorderLowBrush}" Grid.Row="2" Margin="0,3,0,0">

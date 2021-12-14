@@ -53,14 +53,11 @@ namespace Panoptes.ViewModels
 
     public abstract class ToolPaneViewModel : PaneViewModel
     {
-        private bool _isVisible = true;
-
-        private string _name;
-
         public ToolPaneViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<ToolPaneViewModel> logger)
             : base(messenger, settingsManager, logger)
         { }
 
+        private string _name;
         public string Name
         {
             get { return _name; }
@@ -72,6 +69,7 @@ namespace Panoptes.ViewModels
             }
         }
 
+        private bool _isVisible = true;
         public bool IsVisible
         {
             get { return _isVisible; }
@@ -89,9 +87,6 @@ namespace Panoptes.ViewModels
     /// </summary>
     public abstract class PaneViewModel : ObservableRecipient
     {
-        private bool _isSelected;
-        private bool _isActive;
-
         public ISettingsManager SettingsManager { get; }
 
         public ILogger Logger { get; }
@@ -106,6 +101,7 @@ namespace Panoptes.ViewModels
 
         protected abstract Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type);
 
+        private bool _isSelected;
         public bool IsSelected
         {
             get { return _isSelected; }
@@ -118,6 +114,7 @@ namespace Panoptes.ViewModels
             }
         }
 
+        private bool _isActive;
         public bool IsActive
         {
             get { return _isActive; }
