@@ -137,69 +137,65 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         /// <param name="rc">The render context.</param>
         public override void Render(IRenderContext rc)
         {
-            base.Render(rc);
-
-            if (Centers == null || Centers.Count == 0)
+            try
             {
-                return;
-            }
+                base.Render(rc);
 
-            if (XAxis == null)
-            {
-                Log.Warning("OrderAnnotation.Render: Error - XAxis is null.");
-                return;
-            }
-
-            if (YAxis == null)
-            {
-                Log.Warning("OrderAnnotation.Render: Error - YAxis is null.");
-                return;
-            }
-
-            var polygons = new List<IList<ScreenPoint>>();
-            var positions = new List<ScreenPoint>();
-            var clippingRectangle = GetClippingRect();
-            foreach (var center in Centers)
-            {
-                var screenPosition = Transform(center.X, center.Y);
-                // clip to the area defined by the axes
-                if (screenPosition.X + Size < clippingRectangle.Left || screenPosition.X - Size > clippingRectangle.Right ||
-                    screenPosition.Y + Size < clippingRectangle.Top || screenPosition.Y - Size > clippingRectangle.Bottom)
+                if (Centers == null || Centers.Count == 0)
                 {
-                    continue;
+                    return;
                 }
-                positions.Add(screenPosition);
-                polygons.Add(GetShape(Direction, screenPosition, Size));
-            }
 
-            if (IsHighLighted)
+                if (XAxis == null)
+                {
+                    Log.Warning("OrderAnnotation.Render: Error - XAxis is null.");
+                    return;
+                }
+
+                if (YAxis == null)
+                {
+                    Log.Warning("OrderAnnotation.Render: Error - YAxis is null.");
+                    return;
+                }
+
+                var polygons = new List<IList<ScreenPoint>>();
+                var positions = new List<ScreenPoint>();
+                var clippingRectangle = GetClippingRect();
+                rc.SetClip(clippingRectangle);
+
+                foreach (var center in Centers)
+                {
+                    var screenPosition = Transform(center.X, center.Y);
+                    // clip to the area defined by the axes
+                    if (screenPosition.X + Size < clippingRectangle.Left || screenPosition.X - Size > clippingRectangle.Right ||
+                        screenPosition.Y + Size < clippingRectangle.Top || screenPosition.Y - Size > clippingRectangle.Bottom)
+                    {
+                        continue;
+                    }
+                    positions.Add(screenPosition);
+                    polygons.Add(GetShape(Direction, screenPosition, Size));
+                }
+
+                if (IsHighLighted)
+                {
+                    var x = Transform(Centers[0]).X;
+                    rc.DrawLine(x, 0, x, 1000, OxyPen.Create(OxyColors.White, 1.0), false);
+                }
+
+                if (polygons.Count == 0) return;
+
+                _screenPositions = positions.AsReadOnly();
+                rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness);
+            }
+            catch (Exception ex)
             {
-                var x = Transform(Centers[0]).X;
-                rc.DrawLine(x, 0, x, 1000, OxyPen.Create(OxyColors.White, 1.0), false);
+                Log.Warning(ex, "OrderAnnotation.Render(): Something wrong happened.");
+                throw;
             }
-
-            if (polygons.Count == 0) return;
-
-            _screenPositions = positions.AsReadOnly();
-            rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness);
-
-            //if (!string.IsNullOrEmpty(Text))
-            //{
-            //    var dx = -(int)TextHorizontalAlignment * (Size + TextMargin);
-            //    var dy = -(int)TextVerticalAlignment * (Size + TextMargin);
-            //    var textPosition = screenPosition + new ScreenVector(dx, dy);
-            //    rc.DrawClippedText(
-            //        clippingRectangle,
-            //        textPosition,
-            //        Text,
-            //        ActualTextColor,
-            //        ActualFont,
-            //        ActualFontSize,
-            //        ActualFontWeight,
-            //        TextRotation,
-            //        TextHorizontalAlignment,
-            //        TextVerticalAlignment);
-            //}
+            finally
+            {
+                rc.ResetClip();
+            }
         }
 
         /// <summary>
@@ -268,7 +264,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         /// </summary>
         private static readonly double M3 = Math.Tan(Math.PI / 4);
 
-        private ScreenPoint[] GetShape(OrderDirection? direction, ScreenPoint p, double size)
+        private static ScreenPoint[] GetShape(OrderDirection? direction, ScreenPoint p, double size)
         {
             if (!direction.HasValue)
             {

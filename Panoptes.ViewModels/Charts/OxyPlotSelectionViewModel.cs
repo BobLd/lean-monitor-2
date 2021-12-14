@@ -659,8 +659,6 @@ namespace Panoptes.ViewModels.Charts
                     AddPlotThreadUI(plot);
                 }
 
-                //lock (plot.SyncRoot)
-                //{
                 foreach (var serie in chart.Value.Series.OrderBy(x => x.Key))
                 {
                     if (serie.Value.Values.Count == 0) continue;
@@ -669,7 +667,6 @@ namespace Panoptes.ViewModels.Charts
                     // Create Series
                     if (s == null)
                     {
-                        //serie.Value.Unit
                         switch (serie.Value.SeriesType)
                         {
                             // Handle candle and line series the same way, choice is done in UI
@@ -682,7 +679,10 @@ namespace Panoptes.ViewModels.Charts
                                     SerieType = PlotSerieTypes.Line, // Default to line
                                     Period = Times.Zero
                                 };
-                                plot.Series.Add(s);
+                                lock (plot.SyncRoot)
+                                {
+                                    plot.Series.Add(s);
+                                }
                                 break;
 
                             case SeriesType.Line:
@@ -694,7 +694,10 @@ namespace Panoptes.ViewModels.Charts
                                     SerieType = PlotSerieTypes.Line,
                                     Period = Times.Zero
                                 };
-                                plot.Series.Add(s);
+                                lock (plot.SyncRoot)
+                                {
+                                    plot.Series.Add(s);
+                                }
                                 break;
 
                             case SeriesType.Bar:
@@ -706,10 +709,12 @@ namespace Panoptes.ViewModels.Charts
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
                                     CanTrackerInterpolatePoints = false
                                 };
-                                plot.Series.Add(s);
+                                lock (plot.SyncRoot)
+                                {
+                                    plot.Series.Add(s);
+                                }
                                 break;
 
-                            case SeriesType.Treemap: // todo
                             case SeriesType.Scatter:
                                 s = new ScatterSeries()
                                 {
@@ -719,24 +724,15 @@ namespace Panoptes.ViewModels.Charts
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
                                     MarkerOutline = null,
                                 };
-                                plot.Series.Add(s);
-                                break;
-
-                            /*
-                            case SeriesType.Bar:
-                                s = new RectangleSeries()
+                                lock (plot.SyncRoot)
                                 {
-                                    Tag = serie.Value.Name,
-                                    Title = serie.Value.Name
-                                };
-                                plot.Series.Add(s);
+                                    plot.Series.Add(s);
+                                }
                                 break;
-                            */
 
                             default:
-#pragma warning disable RCS1079 // Throwing of new NotImplementedException.
-                                throw new NotImplementedException($"Chart type '{serie.Value.SeriesType}' is not implemented.");
-#pragma warning restore RCS1079 // Throwing of new NotImplementedException.
+                                Log.Debug("ParseResult: Skipping creation series of type '{Type}' with name '{Name}'.", serie.Value.SeriesType, serie.Value.Name);
+                                break;
                         }
                     }
 
@@ -775,28 +771,12 @@ namespace Panoptes.ViewModels.Charts
                                 scatterSeries.Points.AddRange(filteredScatter);
                             }
                             break;
-                        /*
-                    case SeriesType.Bar:
-                        var barSeries = (RectangleSeries)s;
-                        var newBarSeries = serie.Value.Values.Select(p =>
-                            new RectangleItem(DateTimeAxis.ToDouble(p.X.ToDateTimeUtc()),
-                                              DateTimeAxis.ToDouble(p.X.ToDateTimeUtc().AddDays(1)),
-                                              (double)p.Y, (double)p.Y, (double)p.Y));
-                        var currentBar = barSeries.Items;
-                        var filteredBar = newBarSeries.Except(currentBar).ToList();
-                        if (filteredBar.Count == 0) break;
-                        barSeries.Items.AddRange(filteredBar);
-                        break;
-                        */
 
-                        case SeriesType.Pie:
-                        case SeriesType.StackedArea:
                         default:
-                            continue; // TODO
-                                      //throw new NotImplementedException();
+                            Log.Debug("ParseResult: Skipping handling of series of type '{Type}' with name '{Name}'.", serie.Value.SeriesType, serie.Value.Name);
+                            continue;
                     }
                 }
-                //}
             }
 
             if (IsPlotTrades)
@@ -810,21 +790,11 @@ namespace Panoptes.ViewModels.Charts
             }
 
             InvalidatePlotThreadUI();
-
-            //}
-            /*
-            ProfitLoss = new ObservableCollection<ProfitLossItemViewModel>(result.ProfitLoss.OrderBy(o => o.Key).Select(p => new ProfitLossItemViewModel
-            {
-                DateTime = p.Key,
-                Profit = p.Value,
-                IsNegative = p.Value < 0
-            }));
-            */
         }
 
         private void TimeSpanAxis1_AxisChanged(object sender, AxisChangedEventArgs e)
         {
-            if (!IsAutoFitYAxis || sender is not Axis axis)
+            if (!IsAutoFitYAxis || sender is not Axis axis || SelectedSeries == null)
             {
                 return;
             }
@@ -861,13 +831,6 @@ namespace Panoptes.ViewModels.Charts
             }
 
             SelectedSeries.DefaultYAxis.Zoom(min, max);
-
-            /*
-            foreach (var vert in SelectedSeries.Axes.Where(s => s.IsVertical()))
-            {
-                vert.Zoom(min, max);
-            }
-            */
         }
 
         private void AddPlotThreadUI(PlotModel plot)

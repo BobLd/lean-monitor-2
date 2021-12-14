@@ -198,7 +198,7 @@ namespace Panoptes.ViewModels.Charts
 
                     InternalUpdateMaxMin(items,
                         i => i.X - (Period.TotalDays / 2.0),
-                        i => i.X + (Period.TotalDays * 5), // / 2.0),
+                        i => i.X + (Period.TotalDays * 5),
                         i => Min(i.Low, i.Open, i.Close, i.High),
                         i => Max(i.High, i.Open, i.Close, i.Low));
                     break;
@@ -335,13 +335,13 @@ namespace Panoptes.ViewModels.Charts
 
             if (XAxis == null)
             {
-                Log.Debug("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.", Tag);
+                Log.Debug("LineCandleStickSeries.RenderLineSerie({Tag}): Error - XAxis is null.", Tag);
                 return;
             }
 
             if (YAxis == null)
             {
-                Log.Debug("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.", Tag);
+                Log.Debug("LineCandleStickSeries.RenderLineSerie({Tag}): Error - YAxis is null.", Tag);
                 return;
             }
 
@@ -351,12 +351,6 @@ namespace Panoptes.ViewModels.Charts
             rc.SetClip(clippingRect);
 
             RenderPoints(rc, clippingRect, actualPoints);
-
-            //if (this.LabelFormatString != null)
-            //{
-            //    // render point labels (not optimized for performance)
-            //    this.RenderPointLabels(rc, clippingRect);
-            //}
 
             rc.ResetClip();
         }
@@ -448,7 +442,7 @@ namespace Panoptes.ViewModels.Charts
         {
             var lastValidPoint = new ScreenPoint?();
             var areBrokenLinesRendered = false;
-            var dashArray = LineStyle.Solid.GetDashArray(); // areBrokenLinesRendered ? this.BrokenLineStyle.GetDashArray() : null;
+            var dashArray = LineStyle.Solid.GetDashArray();
             var broken = areBrokenLinesRendered ? new List<ScreenPoint>(2) : null;
 
             var contiguousScreenPointsBuffer = new List<ScreenPoint>(points.Count);
@@ -543,10 +537,9 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         private void RenderCandlesSerie(IRenderContext rc)
         {
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             try
             {
-                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
                 List<HighLowItem> items;
 
                 lock (Items)
@@ -577,8 +570,6 @@ namespace Panoptes.ViewModels.Charts
 
                 var clippingRect = GetClippingRect();
                 rc.SetClip(clippingRect);
-
-                var dashArray = LineStyle.GetDashArray();
 
                 var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
                 var first = items[0];
@@ -636,18 +627,18 @@ namespace Panoptes.ViewModels.Charts
                         //Body
                         if (i % 2 == 0)
                         {
-                            rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
+                            rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, null, LineJoin, false);
                         }
                     }
                     else if (candlewidth < 1.75)
                     {
                         // Body
-                        rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
+                        rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, null, LineJoin, false);
                     }
                     else if (candlewidth < 3.5)
                     {
                         // Body
-                        rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
+                        rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, null, LineJoin, false);
 
                         var open = Transform(bar.X, bar.Open);
                         var close = Transform(bar.X, bar.Close);
@@ -655,11 +646,11 @@ namespace Panoptes.ViewModels.Charts
                         // Open
                         var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
 
-                        rc.DrawClippedLine(clippingRect, new[] { openLeft, new ScreenPoint(open.X, open.Y) }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
+                        rc.DrawClippedLine(clippingRect, new[] { openLeft, new ScreenPoint(open.X, open.Y) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
 
                         // Close
                         var closeRight = close + new ScreenVector(candlewidth * 0.5, 0);
-                        rc.DrawClippedLine(clippingRect, new[] { closeRight, new ScreenPoint(open.X, close.Y) }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
+                        rc.DrawClippedLine(clippingRect, new[] { closeRight, new ScreenPoint(open.X, close.Y) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
                     }
                     else
                     {
@@ -670,10 +661,10 @@ namespace Panoptes.ViewModels.Charts
                         var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
 
                         // Upper extent
-                        rc.DrawClippedLine(clippingRect, new[] { high, min }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
+                        rc.DrawClippedLine(clippingRect, new[] { high, min }, 1, lineColor, StrokeThickness, null, LineJoin, false);
 
                         // Lower extent
-                        rc.DrawClippedLine(clippingRect, new[] { max, low }, 1, lineColor, StrokeThickness, dashArray, LineJoin, false);
+                        rc.DrawClippedLine(clippingRect, new[] { max, low }, 1, lineColor, StrokeThickness, null, LineJoin, false);
 
                         // Body
                         var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
@@ -695,13 +686,16 @@ namespace Panoptes.ViewModels.Charts
                         }
                     }
                 }
-                rc.ResetClip();
-                cts.Dispose();
             }
             catch (OperationCanceledException ex)
             {
                 Log.Warning(ex, "LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.", Tag);
                 throw new TimeoutException("LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.", ex);
+            }
+            finally
+            {
+                rc.ResetClip();
+                cts.Dispose();
             }
         }
 
@@ -740,7 +734,7 @@ namespace Panoptes.ViewModels.Charts
                     return GetNearestPointLine(point, interpolate);
 
                 default:
-                    throw new ArgumentException($"Unknown SerieType: '{SerieType}'");
+                    throw new ArgumentException($"LineCandleStickSeries.RenderLegend({Tag}): Unknown SerieType: '{SerieType}'");
             }
         }
 
@@ -775,13 +769,10 @@ namespace Panoptes.ViewModels.Charts
             }
 
             int pidx = 0;
-            //var pidx = this.FindWindowStartIndex(this.Items, item => item.X, targetX, this.WindowStartIndex);
 
             if (nbars > 1000)
             {
-                var filteredItems = items//.AsParallel()
-                    .Where(x => x.X <= XAxis.ActualMaximum)
-                    .ToList();
+                var filteredItems = items.Where(x => x.X <= XAxis.ActualMaximum).ToList();
                 pidx = FindWindowStartIndex(filteredItems, item => item.X, targetX, WindowStartIndex);
             }
             else
@@ -811,27 +802,11 @@ namespace Panoptes.ViewModels.Charts
             var midx = distance(items[pidx]) <= distance(items[nidx]) ? pidx : nidx;
             var mbar = items[midx];
 
-            //DataPoint hit = new DataPoint(mbar.X, mbar.Close);
-
-            TrackerFormatString = "{6:0.00}";
             var nearest = GetNearestPointHighLowSeries(point, interpolate);
             if (nearest == null) return null;
 
-            DataPoint hit = new DataPoint(mbar.X, nearest.DataPoint.Y);
+            var hit = new DataPoint(mbar.X, nearest.DataPoint.Y);
             if (mbar.X != nearest.DataPoint.X) return null;
-
-            if (nearest.DataPoint.Y == mbar.Open)
-            {
-                TrackerFormatString = "{5:0.00}";
-            }
-            else if (nearest.DataPoint.Y == mbar.High)
-            {
-                TrackerFormatString = "{3:0.00}";
-            }
-            else if (nearest.DataPoint.Y == mbar.Low)
-            {
-                TrackerFormatString = "{4:0.00}";
-            }
 
             var trackerHitResult = new TrackerHitResult
             {
@@ -840,17 +815,6 @@ namespace Panoptes.ViewModels.Charts
                 Position = Transform(hit),
                 Item = mbar,
                 Index = midx,
-                Text = StringHelper.Format(
-                    ActualCulture,
-                    TrackerFormatString,
-                    mbar,
-                    Title,
-                    XAxis.Title ?? DefaultXAxisTitle,
-                    XAxis.GetValue(mbar.X),
-                    YAxis.GetValue(mbar.High),
-                    YAxis.GetValue(mbar.Low),
-                    YAxis.GetValue(mbar.Open),
-                    YAxis.GetValue(mbar.Close))
             };
             previousPoint = new Tuple<ScreenPoint, TrackerHitResult>(point, trackerHitResult);
 
@@ -922,39 +886,6 @@ namespace Panoptes.ViewModels.Charts
         /// <returns>A TrackerHitResult for the current hit.</returns>
         private TrackerHitResult GetNearestPointLine(ScreenPoint point, bool interpolate)
         {
-            //if (interpolate)
-            //{
-            //    // Cannot interpolate if there is no line
-            //    if (this.ActualColor.IsInvisible() || this.StrokeThickness.Equals(0))
-            //    {
-            //        return null;
-            //    }
-
-            //    if (!this.CanTrackerInterpolatePoints)
-            //    {
-            //        return null;
-            //    }
-            //}
-
-            //if (interpolate && this.InterpolationAlgorithm != null)
-            //{
-            //    var result = this.GetNearestInterpolatedPointInternal(this.SmoothedPoints, point);
-            //    if (result != null)
-            //    {
-            //        result.Text = StringHelper.Format(
-            //            this.ActualCulture,
-            //            this.TrackerFormatString,
-            //            result.Item,
-            //            this.Title,
-            //            this.XAxis.Title ?? XYAxisSeries.DefaultXAxisTitle,
-            //            this.XAxis.GetValue(result.DataPoint.X),
-            //            this.YAxis.Title ?? XYAxisSeries.DefaultYAxisTitle,
-            //            this.YAxis.GetValue(result.DataPoint.Y));
-            //    }
-
-            //    return result;
-            //}
-
             return GetNearestPointLineBase(point, interpolate);
         }
 
@@ -966,39 +897,7 @@ namespace Panoptes.ViewModels.Charts
         /// <returns>A TrackerHitResult for the current hit.</returns>
         private TrackerHitResult GetNearestPointLineBase(ScreenPoint point, bool interpolate)
         {
-            //if (interpolate && !this.CanTrackerInterpolatePoints)
-            //{
-            //    return null;
-            //}
-
-            //TrackerHitResult result = null;
-            //if (interpolate)
-            //{
-            //    result = this.GetNearestInterpolatedPointInternal(this._points, point);
-            //}
-
-            //if (result == null)
-            //{
-            //    result = this.GetNearestPointInternal(this._points, point);
-            //}
-
-            TrackerHitResult result = GetNearestPointInternal(_points, point);
-            TrackerFormatString = "{0}\n{1}: {2}\n{3}: {4}";
-
-            if (result != null)
-            {
-                result.Text = StringHelper.Format(
-                    ActualCulture,
-                    TrackerFormatString,
-                    result.Item,
-                    Title,
-                    XAxis.Title ?? DefaultXAxisTitle,
-                    XAxis.GetValue(result.DataPoint.X),
-                    YAxis.Title ?? DefaultYAxisTitle,
-                    YAxis.GetValue(result.DataPoint.Y));
-            }
-
-            return result;
+            return GetNearestPointInternal(_points, point);
         }
 
         /// <summary>
