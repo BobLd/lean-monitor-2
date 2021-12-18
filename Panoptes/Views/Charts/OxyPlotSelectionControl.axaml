@@ -7,12 +7,7 @@
 			 xmlns:charts="clr-namespace:Panoptes.Views.Charts"
              mc:Ignorable="d"
 			 d:DesignWidth="800" d:DesignHeight="450">
-	<Grid>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
-
+	<Grid RowDefinitions="Auto,*">
 		<StackPanel Margin="4" Orientation="Horizontal">
 			<Label Content="Series"></Label>
 			<ComboBox MinWidth="100" Items="{Binding PlotModels}" SelectedItem="{Binding SelectedSeries, Mode=TwoWay}" IsTextSearchEnabled="True"/>

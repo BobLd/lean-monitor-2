@@ -313,6 +313,8 @@ namespace Panoptes.ViewModels.Charts
 
         private Task SetAndProcessPlot(PlotSerieTypes serieTypes, TimeSpan period, CancellationToken cancelationToken)
         {
+            if (SelectedSeries == null) return Task.CompletedTask;
+
             if (_plotCommands.Any(c => c.IsRunning))
             {
                 foreach (var running in _plotCommands.Where(c=>c.IsRunning))
@@ -397,7 +399,7 @@ namespace Panoptes.ViewModels.Charts
 
                 PlotSerieTypes = serieTypes;
                 Period = period;
-                InvalidatePlotThreadUI();
+                InvalidatePlotThreadUI(true);
                 Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}, {Id}).", PlotSerieTypes, period, Period, Environment.CurrentManagedThreadId);
                 DisplayLoading = false;
             }, cancelationToken);
@@ -556,7 +558,7 @@ namespace Panoptes.ViewModels.Charts
             _invalidatePlotTiming[SelectedSeries.Title] = current;
 
             _limitRefreshMs = Math.Max(_limitRefreshMsSettings, (int)(current * 500.0)); // 500 times the time in ms it took to render
-            Log.Debug("It took {current:0.000000}ms to refresh, refresh limit set to {Time}ms for {Title}.", current, _limitRefreshMs, SelectedSeries.Title);
+            //Log.Debug("It took {current:0.000000}ms to refresh, refresh limit set to {Time}ms for {Title}.", current, _limitRefreshMs, SelectedSeries.Title);
         }
 
         private void ResultQueueReader(object sender, DoWorkEventArgs e)
@@ -789,7 +791,7 @@ namespace Panoptes.ViewModels.Charts
                 _ordersDic.TryAdd(order.Key, order.Value);
             }
 
-            InvalidatePlotThreadUI();
+            InvalidatePlotThreadUI(false);
         }
 
         private void TimeSpanAxis1_AxisChanged(object sender, AxisChangedEventArgs e)
@@ -839,8 +841,14 @@ namespace Panoptes.ViewModels.Charts
         }
 
         private DateTime _lastInvalidatePlot = DateTime.MinValue;
-        private void InvalidatePlotThreadUI()
+        private void InvalidatePlotThreadUI(bool force)
         {
+            if (force)
+            {
+                _resultBgWorker.ReportProgress(1);
+                return;
+            }
+
             var now = DateTime.UtcNow;
             if ((now - _lastInvalidatePlot).TotalMilliseconds > _limitRefreshMs)
             {

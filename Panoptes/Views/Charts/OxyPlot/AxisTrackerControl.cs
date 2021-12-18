@@ -528,7 +528,7 @@ namespace Panoptes.Views.Charts
             }
             else
             {
-                throw new ArgumentException("Not possible");
+                throw new ArgumentException("AxisTrackerControl.CreatePointerBorderGeometry: Not possible");
             }
 
             if (points == null)

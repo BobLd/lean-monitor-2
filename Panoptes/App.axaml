@@ -8,44 +8,16 @@
 	
 	<Application.Styles>
 		<StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>
-		<!--<StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseDark.xaml"/>-->
 		<StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Default.xaml"/>
 		<StyleInclude Source="avares://Panoptes/Resources/Themes/BaseDark.axaml"/>
 		<StyleInclude Source="avares://Panoptes/Resources/TablerIcons.axaml"/>
 		<StyleInclude Source="avares://Panoptes/Resources/LogoPlain.axaml"/>
 		<StyleInclude Source="avares://Panoptes/Resources/Themes/OxyPlot.axaml"/>
-		<!--<StyleInclude Source="resm:OxyPlot.Avalonia.Themes.Default.xaml?assembly=OxyPlot.Avalonia"/>-->
 		
 		<Style Selector="TabItem">
 			<Setter Property="FontSize" Value="11"/>
 			<Setter Property="Padding" Value="7,2,7,3"/>
 			<Setter Property="VerticalAlignment" Value="Bottom"/>
-		</Style>
-
-		<!--OxyPlot-->
-		<Style Selector="charts|AxisTrackerControl">
-			<Setter Property="Background" Value="{StaticResource ThemeAccentColor2}"/>
-			<Setter Property="LineStroke" Value="{StaticResource ThemeAccentColor}"/>
-			<Setter Property="BorderBrush" Value="Black"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="HorizontalLineVisibility" Value="True"/>
-			<Setter Property="VerticalLineVisibility" Value="True"/>
-			<Setter Property="Distance" Value="5"/>
-			<Setter Property="ShowPointer" Value="False"/>
-			<Setter Property="Template">
-				<ControlTemplate TargetType="{x:Type charts:AxisTrackerControl}">
-					<Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-						<Line Name="PART_HorizontalLine" IsVisible="{TemplateBinding HorizontalLineVisibility}"
-								Stroke="{TemplateBinding LineStroke}" StrokeDashArray="{TemplateBinding LineDashArray}"/>
-						<Line Name="PART_VerticalLine" IsVisible="{TemplateBinding VerticalLineVisibility}"
-								Stroke="{TemplateBinding LineStroke}" StrokeDashArray="{TemplateBinding LineDashArray}"/>
-						<Panel Name="PART_ContentContainer">
-							<Path Name="PART_Path" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="0"/>
-							<ContentPresenter Name="PART_Content" Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-						</Panel>
-					</Canvas>
-				</ControlTemplate>
-			</Setter>
 		</Style>
 	</Application.Styles>
 

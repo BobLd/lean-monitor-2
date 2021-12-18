@@ -10,6 +10,7 @@
 		d:DesignWidth="800" d:DesignHeight="450"        
         Title="{Binding OrderSummary}"
 		Height="450" Width="900" MinHeight="400" MinWidth="850"
+		WindowStartupLocation="CenterOwner"
 		Topmost="True" ShowActivated="True" ShowInTaskbar="True"
 		ExtendClientAreaChromeHints="NoChrome"
 		ExtendClientAreaTitleBarHeightHint="-1"
@@ -33,34 +34,11 @@
 		</Style>
 	</Window.Styles>
 	
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="Auto"/>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
-
+	<Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,*">
 		<!-- Left -->
 		<Border Grid.Row="0" Grid.Column="0">
 			<!--Header="Symbol Data"-->
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
-
+			<Grid ColumnDefinitions="Auto,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto">
 				<Label Content="Symbol Id" Grid.Row="0" Grid.Column="0"/>
 				<TextBox Text="{Binding Symbol.ID, Mode=OneWay}" Grid.Row="0" Grid.Column="1"/>
 
@@ -81,20 +59,7 @@
 
 		<Border Grid.Column="0" Grid.Row="1">
 			<!--Header="Details"-->
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
-
+			<Grid Grid.ColumnDefinitions="Auto,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
 				<Label Content="Id" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Order ID"/>
 				<TextBox Text="{Binding Id, Mode=OneWay}" Grid.Row="0" Grid.Column="1" ToolTip.Tip="Order ID"/>
 
@@ -126,21 +91,7 @@
 
 		<Border Grid.Column="0" Grid.Row="2">
 			<!--Header="Fills"-->
-			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="Auto"/>
-				</Grid.ColumnDefinitions>
-
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="Auto"/>
-				</Grid.RowDefinitions>
-
+			<Grid ColumnDefinitions="Auto,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
 				<Label Content="Status" Grid.Row="0" Grid.Column="0" ToolTip.Tip="Status of the order"/>
 				<TextBox Text="{Binding Status, Mode=OneWay}" Grid.Row="0" Grid.Column="1" ToolTip.Tip="Status of the order"/>
 
@@ -171,31 +122,10 @@
 		</Border>
 
 		<!-- Right -->
-		<Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="3">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="*"/>
-			</Grid.ColumnDefinitions>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="*"/>
-			</Grid.RowDefinitions>
-
+		<Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto,*">
 			<Border Grid.Column="0">
 				<!--Header="Submission Data"-->
-				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="Auto"/>
-					</Grid.ColumnDefinitions>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
-
+				<Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
 					<Label Content="Bid" Grid.Column="0" Grid.Row="0" ToolTip.Tip="The bid price at order submission time"/>
 					<TextBox Text="{Binding BidPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1" Grid.Row="0" ToolTip.Tip="The bid price at order submission time"/>
 
@@ -212,25 +142,7 @@
 
 			<Border Grid.Column="1">
 				<!--Header="{Binding Type, Mode=OneWay}"-->
-				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="Auto"/>
-						<ColumnDefinition Width="Auto"/>
-					</Grid.ColumnDefinitions>
-
-					<Grid.RowDefinitions>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
-
+				<Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
 					<Label Content="Limit" Grid.Column="0"/>
 					<TextBox Text="{Binding LimitPrice, StringFormat={}\{0:0.0######\}, Mode=OneWay}" Grid.Column="1"/>
 

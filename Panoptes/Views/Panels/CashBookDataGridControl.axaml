@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
 			 d:DesignWidth="800" d:DesignHeight="450">
+	
 	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
 			  CanUserReorderColumns="True" CanUserResizeColumns="True"
 			  HeadersVisibility="Column" DoubleTapped="OnDataGridDoubleTapped"

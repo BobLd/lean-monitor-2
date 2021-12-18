@@ -322,17 +322,6 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="rc">The rendering context.</param>
         private void RenderLineSerie(IRenderContext rc)
         {
-            List<DataPoint> actualPoints;
-            lock (_points)
-            {
-                actualPoints = _points.ToList();
-            }
-
-            if (actualPoints == null || actualPoints.Count == 0)
-            {
-                return;
-            }
-
             if (XAxis == null)
             {
                 Log.Debug("LineCandleStickSeries.RenderLineSerie({Tag}): Error - XAxis is null.", Tag);
@@ -345,6 +334,17 @@ namespace Panoptes.ViewModels.Charts
                 return;
             }
 
+            List<DataPoint> actualPoints;
+            lock (_points)
+            {
+                actualPoints = _points.ToList();
+            }
+
+            if (actualPoints == null || actualPoints.Count == 0)
+            {
+                return;
+            }
+
             VerifyAxes(); // this is prevented by the checks above
 
             var clippingRect = GetClippingRect();
@@ -353,6 +353,7 @@ namespace Panoptes.ViewModels.Charts
             RenderPoints(rc, clippingRect, actualPoints);
 
             rc.ResetClip();
+            actualPoints.Clear();
         }
 
         /// <summary>
@@ -491,11 +492,11 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="pointsToRender">The points to render.</param>
         private void RenderLine(IRenderContext rc, OxyRect clippingRect, IList<ScreenPoint> pointsToRender)
         {
-            var dashArray = LineStyle.Solid.GetDashArray(); // this.ActualDashArray;
+            var dashArray = LineStyle.Solid.GetDashArray();
             var outputBuffer = new List<ScreenPoint>(pointsToRender.Count);
 
             rc.DrawClippedLine(clippingRect, pointsToRender, MinimumSegmentLength * MinimumSegmentLength,
-                GetSelectableColor(LineColor), StrokeThickness, dashArray, LineJoin, false, outputBuffer);
+                GetSelectableColor(LineColor), StrokeThickness, dashArray, LineJoin, false, null);
         }
 
         /// <summary>
@@ -540,6 +541,18 @@ namespace Panoptes.ViewModels.Charts
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             try
             {
+                if (XAxis == null)
+                {
+                    Log.Warning("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.", Tag);
+                    return;
+                }
+
+                if (YAxis == null)
+                {
+                    Log.Warning("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.", Tag);
+                    return;
+                }
+
                 List<HighLowItem> items;
 
                 lock (Items)
@@ -551,18 +564,6 @@ namespace Panoptes.ViewModels.Charts
 
                 if (nitems == 0 || StrokeThickness <= 0 || LineStyle == LineStyle.None)
                 {
-                    return;
-                }
-
-                if (XAxis == null)
-                {
-                    Log.Warning("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - XAxis is null.", Tag);
-                    return;
-                }
-
-                if (YAxis == null)
-                {
-                    Log.Warning("LineCandleStickSeries.RenderCandlesSerie({Tag}): Error - YAxis is null.", Tag);
                     return;
                 }
 
@@ -588,115 +589,293 @@ namespace Panoptes.ViewModels.Charts
                 var ymax = YAxis.ActualMaximum;
                 WindowStartIndex = UpdateWindowStartIndex(items, item => item.X, xmin, WindowStartIndex);
 
-                for (int i = WindowStartIndex; i < nitems; i++)
+                if (candlewidth < 0.4)
                 {
-                    cts.Token.ThrowIfCancellationRequested();
-
-                    var bar = items[i];
-
-                    // check to see whether is valid
-                    if (!IsValidItem(bar, XAxis, YAxis))
-                    {
-                        continue;
-                    }
-
-                    // if item beyond visible range, done
-                    if (bar.X - (datacandlewidth * 0.5) > xmax)
-                    {
-                        return;
-                    }
-
-                    if (bar.X + (datacandlewidth * 0.5) < xmin)
-                    {
-                        continue;
-                    }
-
-                    // Out of y-axis range
-                    if (bar.Low > ymax || bar.High < ymin)
-                    {
-                        continue;
-                    }
-
-                    var fillColor = bar.Close > bar.Open ? fillUp : fillDown;
-
-                    var high = Transform(bar.X, bar.High);
-                    var low = Transform(bar.X, bar.Low);
-
-                    if (candlewidth < 0.4)
-                    {
-                        //Body
-                        if (i % 2 == 0)
-                        {
-                            rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-                        }
-                    }
-                    else if (candlewidth < 1.75)
-                    {
-                        // Body
-                        rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-                    }
-                    else if (candlewidth < 3.5)
-                    {
-                        // Body
-                        rc.DrawClippedLine(clippingRect, new[] { high, low }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-
-                        var open = Transform(bar.X, bar.Open);
-                        var close = Transform(bar.X, bar.Close);
-
-                        // Open
-                        var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-
-                        rc.DrawClippedLine(clippingRect, new[] { openLeft, new ScreenPoint(open.X, open.Y) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-
-                        // Close
-                        var closeRight = close + new ScreenVector(candlewidth * 0.5, 0);
-                        rc.DrawClippedLine(clippingRect, new[] { closeRight, new ScreenPoint(open.X, close.Y) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-                    }
-                    else
-                    {
-                        var open = Transform(bar.X, bar.Open);
-                        var close = Transform(bar.X, bar.Close);
-
-                        var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
-                        var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
-
-                        // Upper extent
-                        rc.DrawClippedLine(clippingRect, new[] { high, min }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-
-                        // Lower extent
-                        rc.DrawClippedLine(clippingRect, new[] { max, low }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-
-                        // Body
-                        var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-
-                        if (max.Y - min.Y < 1.0)
-                        {
-                            var leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, min.Y);
-                            var rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, min.Y);
-                            rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, 1, lineColor, StrokeThickness, null, LineJoin.Miter, false);
-
-                            leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, max.Y);
-                            rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candlewidth, max.Y);
-                            rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, 1, lineColor, StrokeThickness, null, LineJoin.Miter, false);
-                        }
-                        else
-                        {
-                            var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                            rc.DrawClippedRectangle(clippingRect, rect, fillColor, lineColor, StrokeThickness);
-                        }
-                    }
+                    RenderCandlesSerieMinimal(rc, items, clippingRect, lineColor, cts.Token);
+                }
+                else if (candlewidth < 1.75)
+                {
+                    RenderCandlesSerieLow(rc, items, lineColor, cts.Token);
+                }
+                else if (candlewidth < 3.5)
+                {
+                    RenderCandlesSerieMedium(rc, items, datacandlewidth, candlewidth, lineColor, cts.Token);
+                }
+                else
+                {
+                    RenderCandlesSerieHigh(rc, items, datacandlewidth, candlewidth, lineColor, fillUp, fillDown, cts.Token);
                 }
             }
             catch (OperationCanceledException ex)
             {
-                Log.Warning(ex, "LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.", Tag);
-                throw new TimeoutException("LineCandleStickSeries.RenderCandlesSerie({Tag}): Operation was canceled because it took too long.", ex);
+                Log.Warning(ex, "LineCandleStickSeries.RenderCandlesSerie: The rendering of the {SerieType} series '{Tag}' with period '{Period}' was canceled because it took too long.", SerieType, Tag, Period);
+                throw new TimeoutException($"The rendering of the {SerieType} series '{Tag}' with period '{Period}' was canceled because it took too long.", ex);
             }
             finally
             {
                 rc.ResetClip();
                 cts.Dispose();
             }
+        }
+
+        private void RenderCandlesSerieMinimal(IRenderContext rc, List<HighLowItem> items, OxyRect clippingRect,
+            OxyColor lineColor, CancellationToken cancellationToken)
+        {
+            // determine render range
+            var xmin = XAxis.ActualMinimum;
+            var xmax = XAxis.ActualMaximum;
+
+            var ymin = YAxis.ActualMinimum;
+            var ymax = YAxis.ActualMaximum;
+
+            for (int i = WindowStartIndex; i < items.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var bar = items[i];
+
+                // check to see whether is valid
+                if (!IsValidItem(bar, XAxis, YAxis))
+                {
+                    continue;
+                }
+
+                // if item beyond visible range, done
+                if (bar.X > xmax)
+                {
+                    break;
+                }
+
+                if (bar.X < xmin)
+                {
+                    continue;
+                }
+
+                // Out of y-axis range
+                if (bar.Low > ymax || bar.High < ymin)
+                {
+                    continue;
+                }
+
+                //Body
+                if (i % 2 == 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    rc.DrawClippedLine(clippingRect, new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+                }
+            }
+        }
+
+        private void RenderCandlesSerieLow(IRenderContext rc, List<HighLowItem> items, OxyColor lineColor, CancellationToken cancellationToken)
+        {
+            IList<IList<ScreenPoint>> lines = new List<IList<ScreenPoint>>();
+
+            // determine render range
+            var xmin = XAxis.ActualMinimum;
+            var xmax = XAxis.ActualMaximum;
+
+            var ymin = YAxis.ActualMinimum;
+            var ymax = YAxis.ActualMaximum;
+
+            for (int i = WindowStartIndex; i < items.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var bar = items[i];
+
+                // check to see whether is valid
+                if (!IsValidItem(bar, XAxis, YAxis))
+                {
+                    continue;
+                }
+
+                // if item beyond visible range, done
+                if (bar.X > xmax)
+                {
+                    break;
+                }
+
+                if (bar.X < xmin)
+                {
+                    continue;
+                }
+
+                // Out of y-axis range
+                if (bar.Low > ymax || bar.High < ymin)
+                {
+                    continue;
+                }
+
+                // Body
+                lines.Add(new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) });
+                //rc.DrawClippedLine(clippingRect, new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+            }
+            rc.DrawPolygons(lines, OxyColors.Transparent, lineColor, StrokeThickness);
+            lines.Clear();
+        }
+
+        private void RenderCandlesSerieMedium(IRenderContext rc, List<HighLowItem> items, double datacandleWidth, double candleWidth,
+            OxyColor lineColor, CancellationToken cancellationToken)
+        {
+            IList<IList<ScreenPoint>> lines = new List<IList<ScreenPoint>>();
+
+            // determine render range
+            var xmin = XAxis.ActualMinimum;
+            var xmax = XAxis.ActualMaximum;
+
+            var ymin = YAxis.ActualMinimum;
+            var ymax = YAxis.ActualMaximum;
+
+            for (int i = WindowStartIndex; i < items.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var bar = items[i];
+
+                // check to see whether is valid
+                if (!IsValidItem(bar, XAxis, YAxis))
+                {
+                    continue;
+                }
+
+                // if item beyond visible range, done
+                if (bar.X - (datacandleWidth * 0.5) > xmax)
+                {
+                    break;
+                }
+
+                if (bar.X + (datacandleWidth * 0.5) < xmin)
+                {
+                    continue;
+                }
+
+                // Out of y-axis range
+                if (bar.Low > ymax || bar.High < ymin)
+                {
+                    continue;
+                }
+
+                // Body
+                //rc.DrawClippedLine(clippingRect, new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+                lines.Add(new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) });
+
+                // Open
+                var open = Transform(bar.X, bar.Open);
+                var openLeft = open + new ScreenVector(-candleWidth * 0.5, 0);
+                //rc.DrawClippedLine(clippingRect, new[] { openLeft, new ScreenPoint(open.X, open.Y) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+                lines.Add(new[] { openLeft, new ScreenPoint(open.X, open.Y) });
+                // Close
+                var close = Transform(bar.X, bar.Close);
+                var closeRight = close + new ScreenVector(candleWidth * 0.5, 0);
+                //rc.DrawClippedLine(clippingRect, new[] { closeRight, new ScreenPoint(open.X, close.Y) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+                lines.Add(new[] { closeRight, new ScreenPoint(open.X, close.Y) });
+            }
+            rc.DrawPolygons(lines, OxyColors.Transparent, lineColor, StrokeThickness);
+            lines.Clear();
+        }
+
+        private void RenderCandlesSerieHigh(IRenderContext rc, List<HighLowItem> items, double datacandleWidth, double candleWidth,
+            OxyColor lineColor, OxyColor fillUp, OxyColor fillDown, CancellationToken cancellationToken)
+        {
+            IList<IList<ScreenPoint>> lines = new List<IList<ScreenPoint>>();
+            var upRects = new List<OxyRect>();
+            var downRects = new List<OxyRect>();
+
+            // determine render range
+            var xmin = XAxis.ActualMinimum;
+            var xmax = XAxis.ActualMaximum;
+
+            var ymin = YAxis.ActualMinimum;
+            var ymax = YAxis.ActualMaximum;
+
+            for (int i = WindowStartIndex; i < items.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var bar = items[i];
+
+                // check to see whether is valid
+                if (!IsValidItem(bar, XAxis, YAxis))
+                {
+                    continue;
+                }
+
+                // if item beyond visible range, done
+                if (bar.X - (datacandleWidth * 0.5) > xmax)
+                {
+                    break;
+                }
+
+                if (bar.X + (datacandleWidth * 0.5) < xmin)
+                {
+                    continue;
+                }
+
+                // Out of y-axis range
+                if (bar.Low > ymax || bar.High < ymin)
+                {
+                    continue;
+                }
+
+                var open = Transform(bar.X, bar.Open);
+                var close = Transform(bar.X, bar.Close);
+
+                var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
+                var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
+
+                // Upper extent
+                //rc.DrawClippedLine(clippingRect, new[] { Transform(bar.X, bar.High), min }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+                lines.Add(new[] { Transform(bar.X, bar.High), min });
+
+                // Lower extent
+                //rc.DrawClippedLine(clippingRect, new[] { max, Transform(bar.X, bar.Low) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+                lines.Add(new[] { max, Transform(bar.X, bar.Low) });
+
+                // Body
+                var openLeft = open + new ScreenVector(-candleWidth * 0.5, 0);
+
+                if (max.Y - min.Y < 1.0)
+                {
+                    var leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, min.Y);
+                    var rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candleWidth, min.Y);
+                    //rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, 1, lineColor, StrokeThickness, null, LineJoin.Miter, false);
+                    lines.Add(new[] { leftPoint, rightPoint });
+
+                    leftPoint = new ScreenPoint(openLeft.X - StrokeThickness, max.Y);
+                    rightPoint = new ScreenPoint(openLeft.X + StrokeThickness + candleWidth, max.Y);
+                    //rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, 1, lineColor, StrokeThickness, null, LineJoin.Miter, false);
+                    lines.Add(new[] { leftPoint, rightPoint });
+                }
+                else
+                {
+                    var rect = new OxyRect(openLeft.X, min.Y, candleWidth, max.Y - min.Y);
+                    //rc.DrawClippedRectangle(clippingRect, rect, bar.Close > bar.Open ? fillUp : fillDown, lineColor, StrokeThickness);
+                    if (bar.Close > bar.Open)
+                    {
+                        upRects.Add(rect);
+                    }
+                    else
+                    {
+                        downRects.Add(rect);
+                    }
+                }
+            }
+
+            rc.DrawPolygons(lines, OxyColors.Transparent, lineColor, StrokeThickness);
+
+            if (upRects.Count > 0)
+            {
+                rc.DrawRectangles(upRects, fillUp, lineColor, StrokeThickness);
+            }
+
+            if (downRects.Count > 0)
+            {
+                rc.DrawRectangles(downRects, fillDown, lineColor, StrokeThickness);
+            }
+
+            lines.Clear();
+            upRects.Clear();
+            downRects.Clear();
         }
 
         /// <summary>
@@ -708,7 +887,6 @@ namespace Panoptes.ViewModels.Charts
         {
             try
             {
-                double xmid = (legendBox.Left + legendBox.Right) / 2.0;
                 double ymid = (legendBox.Top + legendBox.Bottom) / 2.0;
                 var pts = new[] { new ScreenPoint(legendBox.Left, ymid), new ScreenPoint(legendBox.Right, ymid) };
                 rc.DrawLine(pts, GetSelectableColor(LineColor), StrokeThickness, LineStyle.GetDashArray());

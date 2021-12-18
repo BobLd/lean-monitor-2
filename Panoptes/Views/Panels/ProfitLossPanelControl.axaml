@@ -6,19 +6,17 @@
 			 IsVisible="{Binding IsVisible}"
              mc:Ignorable="d"
 			 d:DesignWidth="800" d:DesignHeight="450">
-	
+
 	<UserControl.Styles>
 		<Style Selector="DataGridCell.posNegColor">
 			<Setter Property="Foreground" Value="{Binding Path=Profit, Mode=OneWay, Converter={StaticResource PositiveNegativeNumberConverter}}"/>
 		</Style>
 	</UserControl.Styles>
 
-	<Grid>
-		<DataGrid IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False" Items="{Binding ProfitLoss}">
-			<DataGrid.Columns>
-				<DataGridTextColumn Header="Date" Binding="{Binding DateTime, Mode=OneWay}"/>
-				<DataGridTextColumn Header="Profit / Loss" Binding="{Binding Profit, StringFormat={}\{0:0.0######\}, Mode=OneWay}" CellStyleClasses="posNegColor"/>
-			</DataGrid.Columns>
-		</DataGrid>
-	</Grid>
+	<DataGrid IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False" Items="{Binding ProfitLoss}">
+		<DataGrid.Columns>
+			<DataGridTextColumn Header="Date" Binding="{Binding DateTime, Mode=OneWay}"/>
+			<DataGridTextColumn Header="Profit / Loss" Binding="{Binding Profit, StringFormat={}\{0:0.0######\}, Mode=OneWay}" CellStyleClasses="posNegColor"/>
+		</DataGrid.Columns>
+	</DataGrid>
 </UserControl>

@@ -18,6 +18,31 @@
 
 	
     <!-- Add Styles Here -->
+	<Style Selector="charts|AxisTrackerControl">
+		<Setter Property="Background" Value="{StaticResource ThemeAccentColor2}"/>
+		<Setter Property="LineStroke" Value="{StaticResource ThemeAccentColor}"/>
+		<Setter Property="BorderBrush" Value="Black"/>
+		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="HorizontalLineVisibility" Value="True"/>
+		<Setter Property="VerticalLineVisibility" Value="True"/>
+		<Setter Property="Distance" Value="5"/>
+		<Setter Property="ShowPointer" Value="False"/>
+		<Setter Property="Template">
+			<ControlTemplate TargetType="{x:Type charts:AxisTrackerControl}">
+				<Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+					<Line Name="PART_HorizontalLine" IsVisible="{TemplateBinding HorizontalLineVisibility}"
+						  Stroke="{TemplateBinding LineStroke}" StrokeDashArray="{TemplateBinding LineDashArray}"/>
+					<Line Name="PART_VerticalLine" IsVisible="{TemplateBinding VerticalLineVisibility}"
+						  Stroke="{TemplateBinding LineStroke}" StrokeDashArray="{TemplateBinding LineDashArray}"/>
+					<Panel Name="PART_ContentContainer">
+						<Path Name="PART_Path" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="0"/>
+						<ContentPresenter Name="PART_Content" Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+					</Panel>
+				</Canvas>
+			</ControlTemplate>
+		</Setter>
+	</Style>
+
 	<Style Selector="oxy|TrackerControl">
 		<Setter Property="Background" Value="#E0FFFFA0" />
 		<Setter Property="BorderBrush" Value="Black" />

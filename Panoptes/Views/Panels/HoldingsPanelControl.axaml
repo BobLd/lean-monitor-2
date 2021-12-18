@@ -16,11 +16,7 @@
 		</Style>
 	</UserControl.Styles>
 
-	<Grid Margin="0,2,0,0">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*"/>
-			<RowDefinition Height="25"/>
-		</Grid.RowDefinitions>
+	<Grid Margin="0,2,0,0" RowDefinitions="*,25">
 		<local:HoldingsDataGridControl Items="{Binding CurrentHoldings, Mode=OneWay}"/>
 		<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
 			  IsVisible="{Binding DisplayLoading}" IsEnabled="{Binding DisplayLoading}">

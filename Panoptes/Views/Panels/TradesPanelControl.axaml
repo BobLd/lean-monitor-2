@@ -23,11 +23,7 @@
 			<local:TradesDataGridControl Name="_todayTradesDataGrid" Items="{Binding OrdersToday, Mode=OneWay}" Margin="0,2,0,0"/>
 		</TabItem>
 		<TabItem Name="_historyTab" Header="History">
-			<Grid Margin="0,2,0,0">
-				<Grid.RowDefinitions>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="25"/>
-				</Grid.RowDefinitions>
+			<Grid Margin="0,2,0,0" RowDefinitions="*,25">
 				<local:TradesDataGridControl Name="_historyTradesDataGrid" Grid.Row="0" Items="{Binding OrdersHistory, Mode=OneWay}"/>
 				<StackPanel Grid.Row="1" Orientation="Horizontal">
 					<Label Content="From "/>
@@ -36,21 +32,6 @@
 					<Label Content=" to "/>
 					<CalendarDatePicker x:Name="_calendarDatePickerTo" SelectedDate="{Binding ToDate, Mode=TwoWay}"
 										DisplayDateStart="{Binding FromDate, Mode=OneWay}"/>
-
-					<!--
-					<Label Content="|>"/>
-					<Label Content="{Binding FromDate}"/>
-					<Label Content=" to "/>
-					<Label Content="{Binding ToDate}"/>
-					<Label Content="|"/>
-
-					<Button Width="25" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"
-							BorderThickness="1" Padding="0" Background="Transparent">
-						<Button.Content>
-							<DrawingPresenter Drawing="{StaticResource TablerIcons.Gauge}"/>
-						</Button.Content>
-					</Button>
-					-->
 				</StackPanel>
 			</Grid>
 		</TabItem>

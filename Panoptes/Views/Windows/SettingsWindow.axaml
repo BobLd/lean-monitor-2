@@ -12,26 +12,14 @@
 		MinWidth="400" Width="500"
 		MinHeight="100" Height="200"
 		mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="200">
-	<Grid Margin="2">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*"/>
-			<RowDefinition Height="Auto"/>
-		</Grid.RowDefinitions>
-		
+
+	<Grid Margin="2" RowDefinitions="*,Auto">
 		<TabControl Grid.Row="0" TabStripPlacement="Left">
 			<TabItem Header="General">
 				<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1">
-					<Grid>
-						<Grid.RowDefinitions>
-							<RowDefinition Height="Auto"/>
-							<RowDefinition Height="Auto"/>
-							<RowDefinition Height="Auto"/>
-							<RowDefinition Height="Auto"/>
-						</Grid.RowDefinitions>
-
+					<Grid RowDefinitions="Auto,Auto,Auto,Auto">
 						<TextBlock Grid.Row="0" Text="{Binding SelectedTimeZone}"/>
 						<ComboBox Grid.Row="1" Items="{Binding TimeZones}" SelectedItem="{Binding SelectedTimeZone}"/>
-
 						<ComboBox Grid.Row="2" Items="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" SelectedIndex="0"/>
 					</Grid>
 				</Border>

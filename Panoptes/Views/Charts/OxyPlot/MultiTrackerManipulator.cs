@@ -141,7 +141,9 @@ namespace Panoptes.Views.Charts
                 double mindist = double.MaxValue;
                 Series nearestSeries = null;
 
-                foreach (var series in plotModel.Series.Reverse().Where(s => s.IsVisible))
+                var copy = plotModel.Series.ToList();
+                copy.Reverse();
+                foreach (var series in copy.Where(s => s.IsVisible))
                 {
                     var thr = series.GetNearestPoint(point, true) ?? series.GetNearestPoint(point, false);
 
@@ -168,7 +170,7 @@ namespace Panoptes.Views.Charts
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "MultiTrackerManipulator.GetSeriesFromPoint");
+                Log.Error(ex, "MultiTrackerManipulator.GetSeriesFromPoint");
                 return null;
             }
         }
@@ -292,7 +294,7 @@ namespace Panoptes.Views.Charts
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "MultiTrackerManipulator.GetNearestHit");
+                Log.Error(ex, "MultiTrackerManipulator.GetNearestHit");
                 return null;
             }
         }

@@ -11,21 +11,7 @@
 		</Style>
 	</UserControl.Styles>
 
-	<Grid Margin="5">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="60"/>
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="40"/>
-		</Grid.ColumnDefinitions>
-
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="5"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-		</Grid.RowDefinitions>
-
+	<Grid Margin="5" ColumnDefinitions="60,*,40" RowDefinitions="Auto,Auto,5,Auto,Auto">
 		<Label Grid.Row="0" Content="File"/>
 		<TextBox Name="_textBoxFileName" Grid.Row="0" Grid.Column="1" Text="{Binding FileName}"
 				 IsEnabled="{Binding OpenCommandAsync.IsRunning, Converter={StaticResource InverseBooleanConverter}}"/>
