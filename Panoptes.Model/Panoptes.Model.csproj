@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <DebugType>embedded</DebugType>
-    <Version>0.0.0.1-alpha3</Version>
+    <Version>0.0.0.1-alpha4</Version>
   </PropertyGroup>
 
   <ItemGroup>

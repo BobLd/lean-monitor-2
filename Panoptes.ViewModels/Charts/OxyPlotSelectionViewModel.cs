@@ -124,7 +124,18 @@ namespace Panoptes.ViewModels.Charts
 
         public bool IsAutoFitYAxis { get; set; }
 
-        public bool IsPlotTrades { get; set; }
+        private bool _isPlotTrades;
+        public bool IsPlotTrades
+        {
+            get { return _isPlotTrades; }
+
+            set
+            {
+                if (_isPlotTrades == value) return;
+                _isPlotTrades = value;
+                OnPropertyChanged();
+            }
+        }
 
         private void AddTradesToPlot(IDictionary<int, Order> orders, CancellationToken cancelationToken)
         {
@@ -224,7 +235,6 @@ namespace Panoptes.ViewModels.Charts
 
                 // Do not use SelectedSeries.SyncRoot
                 // This will prevent async
-
                 if (!IsPlotTrades)
                 {
                     SelectedSeries.Annotations.Clear();
@@ -337,7 +347,6 @@ namespace Panoptes.ViewModels.Charts
                     foreach (var serie in SelectedSeries.Series)
                     {
                         // Cancel disabled
-
                         if (serie is LineCandleStickSeries candleStickSeries)
                         {
                             if (candleStickSeries.SerieType != serieTypes)
@@ -407,12 +416,22 @@ namespace Panoptes.ViewModels.Charts
 
         public bool CanDoBarsAll()
         {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            // Other checks
+
             return true;
             //return PlotSerieTypes == PlotSerieTypes.Line;
         }
 
         public bool CanDoBars1m()
         {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            // Other checks
+
             return true;
             //if (SelectedSeries == null) return true;
             //foreach (var serie in SelectedSeries.Series)
@@ -428,6 +447,11 @@ namespace Panoptes.ViewModels.Charts
 
         public bool CanDoBars5min()
         {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            // Other checks
+
             return true;
             //if (SelectedSeries == null) return true;
             //foreach (var serie in SelectedSeries.Series)
@@ -443,6 +467,11 @@ namespace Panoptes.ViewModels.Charts
 
         public bool CanDoBars1h()
         {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            // Other checks
+
             return true;
             //if (SelectedSeries == null) return true;
             //foreach (var serie in SelectedSeries.Series)
@@ -458,6 +487,10 @@ namespace Panoptes.ViewModels.Charts
 
         public bool CanDoBars1d()
         {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            // Other checks
             return true;
             /*
             if (SelectedSeries == null) return true;
@@ -473,6 +506,32 @@ namespace Panoptes.ViewModels.Charts
             */
         }
 
+        public bool CanDoLines()
+        {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            // Other checks
+            return true;
+        }
+
+        public bool CanDoCandles()
+        {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            // Other checks
+            return true;
+        }
+
+        private void NotifyCanExecuteChanged()
+        {
+            foreach (var command in _plotCommands)
+            {
+                command.NotifyCanExecuteChanged();
+            }
+        }
+
         public OxyPlotSelectionViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<OxyPlotSelectionViewModel> logger)
             : base(messenger, settingsManager, logger)
         {
@@ -484,8 +543,8 @@ namespace Panoptes.ViewModels.Charts
             Plot5m = new AsyncRelayCommand(ProcessPlot5min, CanDoBars5min);
             Plot1h = new AsyncRelayCommand(ProcessPlot1hour, CanDoBars1h);
             Plot1d = new AsyncRelayCommand(ProcessPlot1day, CanDoBars1d);
-            PlotLines = new AsyncRelayCommand(ProcessPlotLines, () => true);
-            PlotCandles = new AsyncRelayCommand(ProcessPlotCandles, () => true);
+            PlotLines = new AsyncRelayCommand(ProcessPlotLines, CanDoLines);
+            PlotCandles = new AsyncRelayCommand(ProcessPlotCandles, CanDoCandles);
 
             _plotCommands = new AsyncRelayCommand[]
             {
@@ -520,6 +579,7 @@ namespace Panoptes.ViewModels.Charts
                                 SelectedSeries = PlotModels.FirstOrDefault();
                             }
                         }
+                        NotifyCanExecuteChanged();
                         break;
 
                     case 1:
@@ -528,6 +588,10 @@ namespace Panoptes.ViewModels.Charts
 
                     case 2:
                         InvalidatePlotWithTiming(false);
+                        break;
+
+                    case 3:
+                        NotifyCanExecuteChanged();
                         break;
 
                     default:
@@ -618,10 +682,38 @@ namespace Panoptes.ViewModels.Charts
                 _selectedSeries = value;
                 // Need to update toggle buttons for candles/lines, period selected
                 // or deactivate them
+                SetPlotParameters();
 
                 // v TODO - Investigate: This throws 'Collection was modified' exception sometimes at startup v
                 OnPropertyChanged();
             }
+        }
+
+        private void SetPlotParameters()
+        {
+            if (SelectedSeries == null) return;
+
+            NotifyCanExecuteChanged();
+
+            var ts = default(TimeSpan);
+            var type = PlotSerieTypes.Line;
+
+            foreach (var series in SelectedSeries.Series)
+            {
+                if (series is LineCandleStickSeries candle)
+                {
+                    ts = candle.Period;
+                    type = candle.SerieType;
+                    break;
+                }
+            }
+            Period = ts;
+            PlotSerieTypes = type;
+
+            // Handle plot trades and fit axis
+            //ProcessPlotTrades() <- async
+
+            // Need to change behaviour and use message
         }
 
         private static string GetUnit(ChartDefinition chartDefinition)
@@ -736,6 +828,7 @@ namespace Panoptes.ViewModels.Charts
                                 Log.Debug("ParseResult: Skipping creation series of type '{Type}' with name '{Name}'.", serie.Value.SeriesType, serie.Value.Name);
                                 break;
                         }
+                        _resultBgWorker.ReportProgress(3, plot);
                     }
 
                     switch (serie.Value.SeriesType)
