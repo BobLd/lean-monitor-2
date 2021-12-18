@@ -419,8 +419,6 @@ namespace Panoptes.ViewModels.Charts
             if (SelectedSeries == null) return false;
             if (SelectedSeries.Series.Count == 0) return false;
 
-            // Other checks
-
             return true;
             //return PlotSerieTypes == PlotSerieTypes.Line;
         }
@@ -430,19 +428,16 @@ namespace Panoptes.ViewModels.Charts
             if (SelectedSeries == null) return false;
             if (SelectedSeries.Series.Count == 0) return false;
 
-            // Other checks
+            foreach (var series in SelectedSeries.Series)
+            {
+                if (series is LineCandleStickSeries candles)
+                {
+                    var canDo = candles.CanDoTimeSpan(Times.OneMinute);
+                    if (canDo) return true;
+                }
+            }
 
-            return true;
-            //if (SelectedSeries == null) return true;
-            //foreach (var serie in SelectedSeries.Series)
-            //{
-            //    if (serie is LineCandleStickSeries candleStickSeries &&
-            //        candleStickSeries.CanDoTimeSpan(TimeSpan.FromMinutes(1)))
-            //    {
-            //        return true;
-            //    }
-            //}
-            //return false;
+            return false;
         }
 
         public bool CanDoBars5min()
@@ -450,19 +445,16 @@ namespace Panoptes.ViewModels.Charts
             if (SelectedSeries == null) return false;
             if (SelectedSeries.Series.Count == 0) return false;
 
-            // Other checks
+            foreach (var series in SelectedSeries.Series)
+            {
+                if (series is LineCandleStickSeries candles)
+                {
+                    var canDo = candles.CanDoTimeSpan(Times.FiveMinutes);
+                    if (canDo) return true;
+                }
+            }
 
-            return true;
-            //if (SelectedSeries == null) return true;
-            //foreach (var serie in SelectedSeries.Series)
-            //{
-            //    if (serie is LineCandleStickSeries candleStickSeries &&
-            //        candleStickSeries.CanDoTimeSpan(TimeSpan.FromMinutes(5)))
-            //    {
-            //        return true;
-            //    }
-            //}
-            //return false;
+            return false;
         }
 
         public bool CanDoBars1h()
@@ -470,19 +462,16 @@ namespace Panoptes.ViewModels.Charts
             if (SelectedSeries == null) return false;
             if (SelectedSeries.Series.Count == 0) return false;
 
-            // Other checks
+            foreach (var series in SelectedSeries.Series)
+            {
+                if (series is LineCandleStickSeries candles)
+                {
+                    var canDo = candles.CanDoTimeSpan(Times.OneHour);
+                    if (canDo) return true;
+                }
+            }
 
-            return true;
-            //if (SelectedSeries == null) return true;
-            //foreach (var serie in SelectedSeries.Series)
-            //{
-            //    if (serie is LineCandleStickSeries candleStickSeries &&
-            //        candleStickSeries.CanDoTimeSpan(TimeSpan.FromHours(1)))
-            //    {
-            //        return true;
-            //    }
-            //}
-            //return false;
+            return false;
         }
 
         public bool CanDoBars1d()
@@ -490,20 +479,16 @@ namespace Panoptes.ViewModels.Charts
             if (SelectedSeries == null) return false;
             if (SelectedSeries.Series.Count == 0) return false;
 
-            // Other checks
-            return true;
-            /*
-            if (SelectedSeries == null) return true;
-            foreach (var serie in SelectedSeries.Series)
+            foreach (var series in SelectedSeries.Series)
             {
-                if (serie is LineCandleStickSeries candleStickSeries &&
-                    candleStickSeries.CanDoTimeSpan(TimeSpan.FromDays(1)))
+                if (series is LineCandleStickSeries candles)
                 {
-                    return true;
+                    var canDo = candles.CanDoTimeSpan(Times.OneDay);
+                    if (canDo) return true;
                 }
             }
+
             return false;
-            */
         }
 
         public bool CanDoLines()
@@ -871,6 +856,7 @@ namespace Panoptes.ViewModels.Charts
                             Log.Debug("ParseResult: Skipping handling of series of type '{Type}' with name '{Name}'.", serie.Value.SeriesType, serie.Value.Name);
                             continue;
                     }
+                    _resultBgWorker.ReportProgress(3, plot);
                 }
             }
 

@@ -76,14 +76,9 @@ namespace Panoptes.ViewModels.Charts
 
         public bool CanDoTimeSpan(TimeSpan ts)
         {
-            var points = RawPoints?.ToList();
-            if (points == null || points.Count == 0) return false;
-
-            var span = points[points.Count - 1].X - points[0].X;
-
-            if (span < ts.TotalDays) return false;
-
-            return points.GroupBy(p => Times.OxyplotRoundDown(p.X, ts)).Any(g => g.Count() > 1);
+            if (_minTs == double.MaxValue) return false;
+            return ts > TimeSpan.FromDays(_minTs) &&
+                   ts < TimeSpan.FromDays(_maxTs);
         }
 
         public OxyColor LineColor { get; set; }
@@ -256,6 +251,27 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
+        private double _minTs = double.MaxValue;
+        private double _maxTs;
+
+        private void UpdateMinMaxDeltaTime()
+        {
+            if (_rawPoints.Count < 2) return;
+
+            var ts = _rawPoints[_rawPoints.Count - 1].X - _rawPoints[_rawPoints.Count - 2].X;
+            if (ts == 0) return;
+
+            if (ts < 0)
+            {
+                throw new ArgumentException();
+            }
+
+            ts -= ts % Times.OneSecond.TotalDays; // Round to closest second
+
+            _minTs = Math.Min(_minTs, ts);
+            _maxTs += ts;
+        }
+
         public void AddRange(IEnumerable<DataPoint> dataPoints)
         {
             if (!dataPoints.Any()) return;
@@ -268,7 +284,12 @@ namespace Panoptes.ViewModels.Charts
                 newPoints = dataPoints.Except(_rawPoints).OrderBy(x => x.X).ToList();
 
                 // Add new data points to the raw data points
-                _rawPoints.AddRange(newPoints);
+                foreach (var point in newPoints)
+                {
+                    _rawPoints.Add(point);
+                    UpdateMinMaxDeltaTime();
+                }
+                //_rawPoints.AddRange(newPoints);                
             }
 
             // Update the line
@@ -500,7 +521,7 @@ namespace Panoptes.ViewModels.Charts
         }
 
         /// <summary>
-        /// Update Candles
+        /// Update Line
         /// </summary>
         /// <param name="newPoints">Must be distinct</param>
         private void UpdateLine(IReadOnlyList<DataPoint> newPoints, bool reset)
