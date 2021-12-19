@@ -658,7 +658,8 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     SerieType = PlotSerieTypes.Line, // Default to line
-                                    Period = Times.Zero
+                                    Period = Times.Zero,
+                                    RenderInLegend = true
                                 };
                                 plot.Series.Add(s);
                                 break;
@@ -670,7 +671,8 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     SerieType = PlotSerieTypes.Line,
-                                    Period = Times.Zero
+                                    Period = Times.Zero,
+                                    RenderInLegend = true
                                 };
                                 plot.Series.Add(s);
                                 break;
@@ -682,7 +684,8 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
-                                    CanTrackerInterpolatePoints = false
+                                    CanTrackerInterpolatePoints = false,
+                                    RenderInLegend = true
                                 };
                                 plot.Series.Add(s);
                                 break;
@@ -696,6 +699,7 @@ namespace Panoptes.ViewModels.Charts
                                     Title = serie.Value.Name,
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
                                     MarkerOutline = null,
+                                    RenderInLegend = true
                                 };
                                 plot.Series.Add(s);
                                 break;
