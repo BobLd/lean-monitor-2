@@ -606,8 +606,8 @@ namespace Panoptes.ViewModels.Charts
             var current = sw.ElapsedTicks / (double)TimeSpan.TicksPerMillisecond * w + previous * (1.0 - w);
             _invalidatePlotTiming[SelectedSeries.Title] = current;
 
-            _limitRefreshMs = Math.Max(_limitRefreshMsSettings, (int)(current * 500.0)); // 500 times the time in ms it took to render
-            //Log.Debug("It took {current:0.000000}ms to refresh, refresh limit set to {Time}ms for {Title}.", current, _limitRefreshMs, SelectedSeries.Title);
+            _limitRefreshMs = Math.Min(Math.Max(_limitRefreshMsSettings, (int)(current * 500.0)), 3_000); // 500 times the time in ms it took to render
+            Log.Debug("It took {current:0.000000}ms to refresh, refresh limit set to {Time}ms for {Title}.", current, _limitRefreshMs, SelectedSeries.Title);
         }
 
         private void ResultQueueReader(object sender, DoWorkEventArgs e)
