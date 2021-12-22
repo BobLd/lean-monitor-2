@@ -671,6 +671,7 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     SerieType = PlotSerieTypes.Line,
+                                    
                                     Period = Times.Zero,
                                     RenderInLegend = true
                                 };
@@ -684,6 +685,8 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
+                                    MarkerStrokeThickness = 0,
+                                    MarkerStroke = OxyColors.Undefined,
                                     CanTrackerInterpolatePoints = false,
                                     RenderInLegend = true
                                 };
@@ -698,9 +701,13 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
+                                    EdgeRenderingMode = EdgeRenderingMode.PreferSpeed,
+                                    MarkerStroke = OxyColors.Undefined,
+                                    MarkerStrokeThickness = 0,
                                     MarkerOutline = null,
                                     RenderInLegend = true
                                 };
+
                                 plot.Series.Add(s);
                                 break;
 

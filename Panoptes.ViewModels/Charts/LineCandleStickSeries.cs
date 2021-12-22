@@ -727,7 +727,7 @@ namespace Panoptes.ViewModels.Charts
                         else
                         {
                             var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                            rc.DrawRectangle(rect, fillColor, OxyColors.Transparent, 0, this.EdgeRenderingMode);
+                            rc.DrawRectangle(rect, fillColor, OxyColors.Undefined, 0, this.EdgeRenderingMode);
                         }
                     }
                 }

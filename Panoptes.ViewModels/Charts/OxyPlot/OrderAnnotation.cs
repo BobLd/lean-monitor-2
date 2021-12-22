@@ -71,7 +71,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             }
 
             Fill = OxyColor.FromAColor(_lowLightAlpha, FillBase);
-            Stroke = OxyColors.Transparent;
+            Stroke = OxyColors.Undefined;
             StrokeThickness = 0;
             IsHighLighted = false;
         }
@@ -102,7 +102,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         {
             if (!IsHighLighted) return;
             Fill = OxyColor.FromAColor(_lowLightAlpha, FillBase);
-            Stroke = OxyColors.Transparent;
+            Stroke = OxyColors.Undefined;
             StrokeThickness = 0;
             IsHighLighted = false;
         }
