@@ -811,7 +811,6 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
-                                    EdgeRenderingMode = EdgeRenderingMode.PreferSpeed,
                                     MarkerStroke = OxyColors.Undefined,
                                     MarkerStrokeThickness = 0,
                                     MarkerOutline = null,

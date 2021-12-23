@@ -49,6 +49,10 @@ namespace Panoptes.Views.Charts
         private DataPoint PreviousPositionShortTerm { get; set; }
         private bool IsPanEnabled { get; set; }
 
+        private const double inScale = 1.03;
+
+        private const double outScale = 0.97;
+
         public override void Completed(OxyMouseEventArgs e)
         {
             base.Completed(e);
@@ -78,8 +82,6 @@ namespace Panoptes.Views.Charts
             }
 
             DataPoint current = InverseTransform(e.Position.X, e.Position.Y);
-            const double inScale = 1.03;
-            const double outScale = 0.97;
 
             if (XAxis != null && YAxis != null)
             {
@@ -137,6 +139,7 @@ namespace Panoptes.Views.Charts
         public override void Started(OxyMouseEventArgs e)
         {
             base.Started(e);
+
             PreviousPosition = e.Position;
 
             IsPanEnabled = (XAxis?.IsPanEnabled == true) || (YAxis?.IsPanEnabled == true);

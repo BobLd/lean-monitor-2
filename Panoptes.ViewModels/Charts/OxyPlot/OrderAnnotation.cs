@@ -137,26 +137,24 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         /// <param name="rc">The render context.</param>
         public override void Render(IRenderContext rc)
         {
-            try
+            base.Render(rc);
+
+            if (Centers == null || Centers.Count == 0)
             {
-                base.Render(rc);
+                return;
+            }
 
-                if (Centers == null || Centers.Count == 0)
-                {
-                    return;
-                }
+            if (XAxis == null)
+            {
+                Log.Warning("OrderAnnotation.Render: Error - XAxis is null.");
+                return;
+            }
 
-                if (XAxis == null)
-                {
-                    Log.Warning("OrderAnnotation.Render: Error - XAxis is null.");
-                    return;
-                }
-
-                if (YAxis == null)
-                {
-                    Log.Warning("OrderAnnotation.Render: Error - YAxis is null.");
-                    return;
-                }
+            if (YAxis == null)
+            {
+                Log.Warning("OrderAnnotation.Render: Error - YAxis is null.");
+                return;
+            }
 
             var polygons = new List<IList<ScreenPoint>>();
             var positions = new List<ScreenPoint>();
@@ -180,7 +178,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
                 rc.DrawLine(x, 0, x, 1000, OxyPen.Create(OxyColors.White, 1.0), this.EdgeRenderingMode);
             }
 
-                if (polygons.Count == 0) return;
+            if (polygons.Count == 0) return;
 
             _screenPositions = positions.AsReadOnly();
             rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness, this.EdgeRenderingMode);

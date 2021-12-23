@@ -503,8 +503,7 @@ namespace Panoptes.ViewModels.Charts
         /// <param name="pointsToRender">The points to render.</param>
         private void RenderLineAndMarkers(IRenderContext rc, IList<ScreenPoint> pointsToRender)
         {
-            var screenPoints = pointsToRender;
-            this.RenderLine(rc, screenPoints);
+            this.RenderLine(rc, pointsToRender);
         }
 
         private List<ScreenPoint> outputBuffer;
@@ -604,9 +603,6 @@ namespace Panoptes.ViewModels.Charts
 
                 VerifyAxes(); // this is prevented by the checks above
 
-                var clippingRect = GetClippingRect();
-                rc.SetClip(clippingRect);
-
                 var datacandlewidth = (CandleWidth > 0) ? CandleWidth : minDx * 0.80;
                 var first = items[0];
                 var candlewidth = XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X);
@@ -626,7 +622,7 @@ namespace Panoptes.ViewModels.Charts
 
                 if (candlewidth < 0.4)
                 {
-                    RenderCandlesSerieMinimal(rc, items, clippingRect, lineColor, cts.Token);
+                    RenderCandlesSerieMinimal(rc, items, lineColor, cts.Token);
                 }
                 else if (candlewidth < 1.75)
                 {
@@ -648,14 +644,15 @@ namespace Panoptes.ViewModels.Charts
             }
             finally
             {
-                rc.ResetClip();
                 cts.Dispose();
             }
         }
 
-        private void RenderCandlesSerieMinimal(IRenderContext rc, List<HighLowItem> items, OxyRect clippingRect,
+        private void RenderCandlesSerieMinimal(IRenderContext rc, List<HighLowItem> items,
             OxyColor lineColor, CancellationToken cancellationToken)
         {
+            IList<IList<ScreenPoint>> lines = new List<IList<ScreenPoint>>();
+
             // determine render range
             var xmin = XAxis.ActualMinimum;
             var xmax = XAxis.ActualMaximum;
@@ -695,10 +692,11 @@ namespace Panoptes.ViewModels.Charts
                 //Body
                 if (i % 2 == 0)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    rc.DrawClippedLine(clippingRect, new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+                    lines.Add(new[] { this.Transform(bar.X, bar.High), this.Transform(bar.X, bar.Low) });
                 }
             }
+            rc.DrawPolygons(lines, OxyColors.Undefined, lineColor, StrokeThickness, EdgeRenderingMode);
+            lines.Clear();
         }
 
         private void RenderCandlesSerieLow(IRenderContext rc, List<HighLowItem> items, OxyColor lineColor, CancellationToken cancellationToken)
@@ -730,8 +728,6 @@ namespace Panoptes.ViewModels.Charts
                     break;
                 }
 
-                    var high = this.Transform(bar.X, bar.High);
-                    var low = this.Transform(bar.X, bar.Low);
                 if (bar.X < xmin)
                 {
                     continue;
@@ -744,10 +740,9 @@ namespace Panoptes.ViewModels.Charts
                 }
 
                 // Body
-                lines.Add(new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) });
-                //rc.DrawClippedLine(clippingRect, new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
+                lines.Add(new[] { this.Transform(bar.X, bar.High), this.Transform(bar.X, bar.Low) });
             }
-            rc.DrawPolygons(lines, OxyColors.Transparent, lineColor, StrokeThickness);
+            rc.DrawPolygons(lines, OxyColors.Undefined, lineColor, StrokeThickness, EdgeRenderingMode);
             lines.Clear();
         }
 
@@ -794,20 +789,20 @@ namespace Panoptes.ViewModels.Charts
 
                 // Body
                 //rc.DrawClippedLine(clippingRect, new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-                lines.Add(new[] { Transform(bar.X, bar.High), Transform(bar.X, bar.Low) });
+                lines.Add(new[] { this. Transform(bar.X, bar.High), this.Transform(bar.X, bar.Low) });
 
                 // Open
-                var open = Transform(bar.X, bar.Open);
+                var open = this.Transform(bar.X, bar.Open);
                 var openLeft = open + new ScreenVector(-candleWidth * 0.5, 0);
                 //rc.DrawClippedLine(clippingRect, new[] { openLeft, new ScreenPoint(open.X, open.Y) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
                 lines.Add(new[] { openLeft, new ScreenPoint(open.X, open.Y) });
                 // Close
-                var close = Transform(bar.X, bar.Close);
+                var close = this.Transform(bar.X, bar.Close);
                 var closeRight = close + new ScreenVector(candleWidth * 0.5, 0);
                 //rc.DrawClippedLine(clippingRect, new[] { closeRight, new ScreenPoint(open.X, close.Y) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
                 lines.Add(new[] { closeRight, new ScreenPoint(open.X, close.Y) });
             }
-            rc.DrawPolygons(lines, OxyColors.Transparent, lineColor, StrokeThickness);
+            rc.DrawPolygons(lines, OxyColors.Undefined, lineColor, StrokeThickness, EdgeRenderingMode);
             lines.Clear();
         }
 
@@ -854,19 +849,19 @@ namespace Panoptes.ViewModels.Charts
                     continue;
                 }
 
-                var open = Transform(bar.X, bar.Open);
-                var close = Transform(bar.X, bar.Close);
+                var open = this.Transform(bar.X, bar.Open);
+                var close = this.Transform(bar.X, bar.Close);
 
                 var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
                 var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
 
                 // Upper extent
                 //rc.DrawClippedLine(clippingRect, new[] { Transform(bar.X, bar.High), min }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-                lines.Add(new[] { Transform(bar.X, bar.High), min });
+                lines.Add(new[] { this.Transform(bar.X, bar.High), min });
 
                 // Lower extent
                 //rc.DrawClippedLine(clippingRect, new[] { max, Transform(bar.X, bar.Low) }, 1, lineColor, StrokeThickness, null, LineJoin, false);
-                lines.Add(new[] { max, Transform(bar.X, bar.Low) });
+                lines.Add(new[] { max, this.Transform(bar.X, bar.Low) });
 
                 // Body
                 var openLeft = open + new ScreenVector(-candleWidth * 0.5, 0);
@@ -898,16 +893,16 @@ namespace Panoptes.ViewModels.Charts
                 }
             }
 
-            rc.DrawPolygons(lines, OxyColors.Transparent, lineColor, StrokeThickness);
+            rc.DrawPolygons(lines, OxyColors.Transparent, lineColor, StrokeThickness, EdgeRenderingMode);
 
             if (upRects.Count > 0)
             {
-                rc.DrawRectangles(upRects, fillUp, lineColor, StrokeThickness);
+                rc.DrawRectangles(upRects, fillUp, lineColor, StrokeThickness, EdgeRenderingMode);
             }
 
             if (downRects.Count > 0)
             {
-                rc.DrawRectangles(downRects, fillDown, lineColor, StrokeThickness);
+                rc.DrawRectangles(downRects, fillDown, lineColor, StrokeThickness, EdgeRenderingMode);
             }
 
             lines.Clear();
@@ -926,7 +921,7 @@ namespace Panoptes.ViewModels.Charts
             {
                 double ymid = (legendBox.Top + legendBox.Bottom) / 2.0;
                 var pts = new[] { new ScreenPoint(legendBox.Left, ymid), new ScreenPoint(legendBox.Right, ymid) };
-                rc.DrawLine(pts, GetSelectableColor(LineColor), StrokeThickness, LineStyle.GetDashArray());
+                rc.DrawLine(pts, GetSelectableColor(LineColor), StrokeThickness, EdgeRenderingMode, LineStyle.GetDashArray());
             }
             catch (Exception ex)
             {
