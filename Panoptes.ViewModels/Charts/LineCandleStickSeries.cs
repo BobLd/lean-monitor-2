@@ -368,33 +368,33 @@ namespace Panoptes.ViewModels.Charts
 
             VerifyAxes(); // this is prevented by the checks above
 
-            var clippingRect = GetClippingRect();
-            rc.SetClip(clippingRect);
+            RenderPoints(rc, actualPoints);
 
-            RenderPoints(rc, clippingRect, actualPoints);
-
-            rc.ResetClip();
-            actualPoints.Clear();
+            //if (this.LabelFormatString != null)
+            //{
+            //    // render point labels (not optimized for performance)
+            //    this.RenderPointLabels(rc, clippingRect);
+            //}
         }
 
         /// <summary>
-        /// Extracts a single contiguous line segment beginning with the element at the position of the enumerator when the method
-        /// is called. Initial invalid data points are ignored.
-        /// </summary>
-        /// <param name="pointIdx">Current point index</param>
-        /// <param name="previousContiguousLineSegmentEndPoint">Initially set to null, but I will update I won't give a broken line if this is null</param>
-        /// <param name="xmax">Maximum visible X value</param>
-        /// <param name="broken">place to put broken segment</param>
-        /// <param name="contiguous">place to put contiguous segment</param>
-        /// <param name="points">Points collection</param>
-        /// <returns>
-        ///   <c>true</c> if line segments are extracted, <c>false</c> if reached end.
-        /// </returns>
-        private bool ExtractNextContiguousLineSegment(IList<DataPoint> points, ref int pointIdx,
+	    /// Extracts a single contiguous line segment beginning with the element at the position of the enumerator when the method
+	    /// is called. Initial invalid data points are ignored.
+	    /// </summary>
+	    /// <param name="pointIdx">Current point index</param>
+	    /// <param name="previousContiguousLineSegmentEndPoint">Initially set to null, but I will update I won't give a broken line if this is null</param>
+	    /// <param name="xmax">Maximum visible X value</param>
+	    /// <param name="broken">place to put broken segment</param>
+	    /// <param name="contiguous">place to put contiguous segment</param>
+	    /// <param name="points">Points collection</param>
+	    /// <returns>
+	    ///   <c>true</c> if line segments are extracted, <c>false</c> if reached end.
+	    /// </returns>
+	    private bool ExtractNextContiguousLineSegment(IList<DataPoint> points, ref int pointIdx,
             ref ScreenPoint? previousContiguousLineSegmentEndPoint, double xmax,
             List<ScreenPoint> broken, List<ScreenPoint> contiguous)
         {
-            DataPoint currentPoint = default;
+            DataPoint currentPoint = default(DataPoint);
             bool hasValidPoint = false;
 
             // Skip all undefined points
@@ -406,7 +406,7 @@ namespace Panoptes.ViewModels.Charts
                     return false;
                 }
 
-                if (hasValidPoint = IsValidPoint(currentPoint))
+                if (hasValidPoint = this.IsValidPoint(currentPoint))
                 {
                     break;
                 }
@@ -418,7 +418,7 @@ namespace Panoptes.ViewModels.Charts
             }
 
             // First valid point
-            var screenPoint = Transform(currentPoint);
+            var screenPoint = this.Transform(currentPoint);
 
             // Handle broken line segment if exists
             if (previousContiguousLineSegmentEndPoint.HasValue)
@@ -440,12 +440,12 @@ namespace Panoptes.ViewModels.Charts
                 {
                     break;
                 }
-                if (!IsValidPoint(currentPoint))
+                if (!this.IsValidPoint(currentPoint))
                 {
                     break;
                 }
 
-                screenPoint = Transform(currentPoint);
+                screenPoint = this.Transform(currentPoint);
                 contiguous.Add(screenPoint);
             }
 
@@ -454,70 +454,84 @@ namespace Panoptes.ViewModels.Charts
             return true;
         }
 
+        private readonly List<ScreenPoint> contiguousScreenPointsBuffer = new List<ScreenPoint>();
         /// <summary>
         /// Renders the points as line, broken line and markers.
         /// </summary>
         /// <param name="rc">The rendering context.</param>
-        /// <param name="clippingRect">The clipping rectangle.</param>
         /// <param name="points">The points to render.</param>
-        private void RenderPoints(IRenderContext rc, OxyRect clippingRect, IList<DataPoint> points)
+        private void RenderPoints(IRenderContext rc, IList<DataPoint> points)
         {
             var lastValidPoint = new ScreenPoint?();
-            var areBrokenLinesRendered = false;
-            var dashArray = LineStyle.Solid.GetDashArray();
-            var broken = areBrokenLinesRendered ? new List<ScreenPoint>(2) : null;
 
-            var contiguousScreenPointsBuffer = new List<ScreenPoint>(points.Count);
+            //if (this.contiguousScreenPointsBuffer == null)
+            //{
+            //    this.contiguousScreenPointsBuffer = new List<ScreenPoint>(points.Count);
+            //}
 
             int startIdx = 0;
             double xmax = double.MaxValue;
 
-            if (IsXMonotonic)
+            if (this.IsXMonotonic)
             {
                 // determine render range
-                var xmin = XAxis.ActualMinimum;
-                xmax = XAxis.ActualMaximum;
-                WindowStartIndex = UpdateWindowStartIndex(points, point => point.X, xmin, WindowStartIndex);
+                var xmin = this.XAxis.ClipMinimum;
+                xmax = this.XAxis.ClipMaximum;
+                this.WindowStartIndex = this.UpdateWindowStartIndex(points, point => point.X, xmin, this.WindowStartIndex);
 
-                startIdx = WindowStartIndex;
+                startIdx = this.WindowStartIndex;
             }
 
             for (int i = startIdx; i < points.Count; i++)
             {
-                if (!ExtractNextContiguousLineSegment(points, ref i, ref lastValidPoint, xmax, broken, contiguousScreenPointsBuffer))
+                if (!this.ExtractNextContiguousLineSegment(points, ref i, ref lastValidPoint, xmax, null, this.contiguousScreenPointsBuffer))
                 {
                     break;
                 }
-                RenderLineAndMarkers(rc, clippingRect, contiguousScreenPointsBuffer);
-                contiguousScreenPointsBuffer.Clear();
+                lastValidPoint = null;
+
+                this.RenderLineAndMarkers(rc, this.contiguousScreenPointsBuffer);
+
+                this.contiguousScreenPointsBuffer.Clear();
             }
         }
 
         /// <summary>
-        /// Renders the transformed points as a line and markers (if <see cref="MarkerType"/> is not <c>None</c>).
+        /// Renders the transformed points as a line (smoothed if <see cref="InterpolationAlgorithm"/> isn’t <c>null</c>) and markers (if <see cref="MarkerType"/> is not <c>None</c>).
         /// </summary>
         /// <param name="rc">The render context.</param>
-        /// <param name="clippingRect">The clipping rectangle.</param>
         /// <param name="pointsToRender">The points to render.</param>
-        private void RenderLineAndMarkers(IRenderContext rc, OxyRect clippingRect, IList<ScreenPoint> pointsToRender)
+        private void RenderLineAndMarkers(IRenderContext rc, IList<ScreenPoint> pointsToRender)
         {
             var screenPoints = pointsToRender;
-            RenderLine(rc, clippingRect, screenPoints);
+            this.RenderLine(rc, screenPoints);
         }
+
+        private List<ScreenPoint> outputBuffer;
 
         /// <summary>
         /// Renders a continuous line.
         /// </summary>
         /// <param name="rc">The render context.</param>
-        /// <param name="clippingRect">The clipping rectangle.</param>
         /// <param name="pointsToRender">The points to render.</param>
-        private void RenderLine(IRenderContext rc, OxyRect clippingRect, IList<ScreenPoint> pointsToRender)
+        private void RenderLine(IRenderContext rc, IList<ScreenPoint> pointsToRender)
         {
-            var dashArray = LineStyle.Solid.GetDashArray();
-            var outputBuffer = new List<ScreenPoint>(pointsToRender.Count);
+            if (this.outputBuffer == null)
+            {
+                // Does that makes sense? Size is only set once.
+                // Why do we want to keep track of that?
+                this.outputBuffer = new List<ScreenPoint>(pointsToRender.Count);
+            }
 
-            rc.DrawClippedLine(clippingRect, pointsToRender, MinimumSegmentLength * MinimumSegmentLength,
-                GetSelectableColor(LineColor), StrokeThickness, dashArray, LineJoin, false, null);
+            rc.DrawReducedLine(
+                pointsToRender,
+                this.MinimumSegmentLength * this.MinimumSegmentLength,
+                this.GetSelectableColor(this.LineColor),
+                this.StrokeThickness,
+                this.EdgeRenderingMode,
+                null,
+                this.LineJoin,
+                this.outputBuffer);
         }
 
         /// <summary>
@@ -716,6 +730,8 @@ namespace Panoptes.ViewModels.Charts
                     break;
                 }
 
+                    var high = this.Transform(bar.X, bar.High);
+                    var low = this.Transform(bar.X, bar.Low);
                 if (bar.X < xmin)
                 {
                     continue;

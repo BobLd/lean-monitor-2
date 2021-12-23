@@ -7,7 +7,7 @@
         <Border Height="200" Width="400" Padding="2">
             <!-- Add Controls for Previewer Here -->
 			<oxy:Plot Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-					  Background="Transparent" Foreground="White">
+					  Background="Transparent" Foreground="White" IsLegendVisible="True">
 				<oxy:Plot.Axes>
 					<oxy:LinearAxis Position="Right" MajorGridlineStyle="Solid" MinorGridlineStyle="Solid" TickStyle="Outside"/>
 					<oxy:DateTimeAxis Position="Bottom" IntervalType="Auto" ExtraGridlineStyle="DashDot"/>

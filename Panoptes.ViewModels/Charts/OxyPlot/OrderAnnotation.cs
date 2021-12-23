@@ -71,7 +71,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             }
 
             Fill = OxyColor.FromAColor(_lowLightAlpha, FillBase);
-            Stroke = OxyColors.Transparent;
+            Stroke = OxyColors.Undefined;
             StrokeThickness = 0;
             IsHighLighted = false;
         }
@@ -102,7 +102,7 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         {
             if (!IsHighLighted) return;
             Fill = OxyColor.FromAColor(_lowLightAlpha, FillBase);
-            Stroke = OxyColors.Transparent;
+            Stroke = OxyColors.Undefined;
             StrokeThickness = 0;
             IsHighLighted = false;
         }
@@ -158,44 +158,50 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
                     return;
                 }
 
-                var polygons = new List<IList<ScreenPoint>>();
-                var positions = new List<ScreenPoint>();
-                var clippingRectangle = GetClippingRect();
-                rc.SetClip(clippingRectangle);
-
-                foreach (var center in Centers)
+            var polygons = new List<IList<ScreenPoint>>();
+            var positions = new List<ScreenPoint>();
+            var clippingRectangle = GetClippingRect();
+            foreach (var center in Centers)
+            {
+                var screenPosition = Transform(center);
+                // clip to the area defined by the axes
+                if (screenPosition.X + Size < clippingRectangle.Left || screenPosition.X - Size > clippingRectangle.Right ||
+                    screenPosition.Y + Size < clippingRectangle.Top || screenPosition.Y - Size > clippingRectangle.Bottom)
                 {
-                    var screenPosition = Transform(center.X, center.Y);
-                    // clip to the area defined by the axes
-                    if (screenPosition.X + Size < clippingRectangle.Left || screenPosition.X - Size > clippingRectangle.Right ||
-                        screenPosition.Y + Size < clippingRectangle.Top || screenPosition.Y - Size > clippingRectangle.Bottom)
-                    {
-                        continue;
-                    }
-                    positions.Add(screenPosition);
-                    polygons.Add(GetShape(Direction, screenPosition, Size));
+                    continue;
                 }
+                positions.Add(screenPosition);
+                polygons.Add(GetShape(Direction, screenPosition, Size));
+            }
 
-                if (IsHighLighted)
-                {
-                    var x = Transform(Centers[0]).X;
-                    rc.DrawLine(x, 0, x, 1000, OxyPen.Create(OxyColors.White, 1.0), false);
-                }
+            if (IsHighLighted)
+            {
+                var x = Transform(Centers[0]).X;
+                rc.DrawLine(x, 0, x, 1000, OxyPen.Create(OxyColors.White, 1.0), this.EdgeRenderingMode);
+            }
 
                 if (polygons.Count == 0) return;
 
-                _screenPositions = positions.AsReadOnly();
-                rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "OrderAnnotation.Render(): Something wrong happened.");
-                throw;
-            }
-            finally
-            {
-                rc.ResetClip();
-            }
+            _screenPositions = positions.AsReadOnly();
+            rc.DrawPolygons(polygons, Fill, Stroke, StrokeThickness, this.EdgeRenderingMode);
+
+            //if (!string.IsNullOrEmpty(Text))
+            //{
+            //    var dx = -(int)TextHorizontalAlignment * (Size + TextMargin);
+            //    var dy = -(int)TextVerticalAlignment * (Size + TextMargin);
+            //    var textPosition = screenPosition + new ScreenVector(dx, dy);
+            //    rc.DrawClippedText(
+            //        clippingRectangle,
+            //        textPosition,
+            //        Text,
+            //        ActualTextColor,
+            //        ActualFont,
+            //        ActualFontSize,
+            //        ActualFontWeight,
+            //        TextRotation,
+            //        TextHorizontalAlignment,
+            //        TextVerticalAlignment);
+            //}
         }
 
         /// <summary>

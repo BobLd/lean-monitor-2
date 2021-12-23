@@ -725,10 +725,14 @@ namespace Panoptes.ViewModels.Charts
                 {
                     // Create Plot
                     plot = OxyPlotExtensions.CreateDefaultPlotModel(chart.Key);
+                    plot.Culture = System.Globalization.CultureInfo.InvariantCulture;
 
                     // Keep axis simple for the moment
                     var timeSpanAxis1 = OxyPlotExtensions.CreateDefaultDateTimeAxis(AxisPosition.Bottom);
+#pragma warning disable CS0618 // Type or member is obsolete
+                    // See https://github.com/oxyplot/oxyplot/issues/111
                     timeSpanAxis1.AxisChanged += TimeSpanAxis1_AxisChanged;
+#pragma warning restore CS0618 // Type or member is obsolete
                     plot.Axes.Add(timeSpanAxis1);
 
                     var linearAxis1 = OxyPlotExtensions.CreateDefaultLinearAxis(AxisPosition.Right, GetUnit(chart.Value));
@@ -756,7 +760,8 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     SerieType = PlotSerieTypes.Line, // Default to line
-                                    Period = Times.Zero
+                                    Period = Times.Zero,
+                                    RenderInLegend = true
                                 };
                                 lock (plot.SyncRoot)
                                 {
@@ -771,7 +776,9 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     SerieType = PlotSerieTypes.Line,
-                                    Period = Times.Zero
+                                    
+                                    Period = Times.Zero,
+                                    RenderInLegend = true
                                 };
                                 lock (plot.SyncRoot)
                                 {
@@ -786,7 +793,10 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
-                                    CanTrackerInterpolatePoints = false
+                                    MarkerStrokeThickness = 0,
+                                    MarkerStroke = OxyColors.Undefined,
+                                    CanTrackerInterpolatePoints = false,
+                                    RenderInLegend = true
                                 };
                                 lock (plot.SyncRoot)
                                 {
@@ -801,7 +811,11 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
+                                    EdgeRenderingMode = EdgeRenderingMode.PreferSpeed,
+                                    MarkerStroke = OxyColors.Undefined,
+                                    MarkerStrokeThickness = 0,
                                     MarkerOutline = null,
+                                    RenderInLegend = true
                                 };
                                 lock (plot.SyncRoot)
                                 {

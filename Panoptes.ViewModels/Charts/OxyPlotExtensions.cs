@@ -1,5 +1,6 @@
 ﻿using OxyPlot;
 using OxyPlot.Axes;
+using OxyPlot.Legends;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -33,7 +34,7 @@ namespace Panoptes.ViewModels.Charts
 
         public static PlotModel CreateDefaultPlotModel(string title)
         {
-            return new PlotModel()
+            var model =  new PlotModel()
             {
                 Title = title,
                 TitleFontSize = 0,
@@ -42,6 +43,10 @@ namespace Panoptes.ViewModels.Charts
                 TitleColor = ThemeForegroundColor,
                 SubtitleColor = ThemeForegroundColor
             };
+
+            model.Legends.Add(new Legend { LegendPlacement = LegendPlacement.Inside, LegendPosition = LegendPosition.RightTop, LegendOrientation = LegendOrientation.Vertical });
+
+            return model;
         }
 
         public static DateTimeAxis CreateDefaultDateTimeAxis(AxisPosition axisPosition)

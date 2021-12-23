@@ -92,7 +92,8 @@
 		-->
 
 		<oxy:PlotView Model="{Binding SelectedSeries}" Grid.Row="1" HorizontalAlignment="Stretch"
-					  VerticalAlignment="Stretch" Background="Transparent" Foreground="White">
+					  VerticalAlignment="Stretch" Background="Transparent" Foreground="White"
+					  DisconnectCanvasWhileUpdating="True">
 			<oxy:PlotView.TrackerDefinitions>
 				<oxy:TrackerDefinition TrackerKey="TrackerHorizontal">
 					<oxy:TrackerDefinition.TrackerTemplate>

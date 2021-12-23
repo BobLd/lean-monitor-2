@@ -241,9 +241,16 @@ namespace Panoptes.Views.Charts
         /// <param name="e">The <see cref="OxyMouseEventArgs" /> instance containing the event data.</param>
         public override void Started(OxyMouseEventArgs e)
         {
-            base.Started(e);
-            currentSeries = PlotView.ActualModel?.GetSeriesFromPoint(e.Position, FiresDistance);
-            Delta(e);
+            try
+            {
+                base.Started(e);
+                currentSeries = PlotView.ActualModel?.GetSeriesFromPoint(e.Position, FiresDistance);
+                Delta(e);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "MultiTrackerManipulator.Started");
+            }
         }
 
         #region TrackerHelper

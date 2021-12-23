@@ -30,7 +30,7 @@ namespace Panoptes.Views.Converters
                 Error = (DrawingGroup)error;
             }
 
-            if (App.Current.Styles.TryGetResource("Logo", out var monitor) && monitor != null) // TablerIcons.Activity
+            if (App.Current.Styles.TryGetResource("Logo", out var monitor) && monitor != null)
             {
                 Monitor = (DrawingGroup)monitor;
             }
