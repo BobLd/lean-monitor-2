@@ -335,7 +335,7 @@ namespace Panoptes.ViewModels.Charts
                 }
             }
 
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
                 DisplayLoading = true;
                 // Check if any change already requested
@@ -408,6 +408,14 @@ namespace Panoptes.ViewModels.Charts
 
                 PlotSerieTypes = serieTypes;
                 Period = period;
+
+                if (IsPlotTrades)
+                {
+                    // Re-fit trades annotations
+                    SelectedSeries.Annotations.Clear();
+                    await ProcessPlotTrades(cancelationToken).ConfigureAwait(false);
+                }
+
                 InvalidatePlotThreadUI(true);
                 Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Done({PlotSerieTypes}, {period}->{Period}, {Id}).", PlotSerieTypes, period, Period, Environment.CurrentManagedThreadId);
                 DisplayLoading = false;

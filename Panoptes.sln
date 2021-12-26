@@ -20,8 +20,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes", "Panoptes\Panopt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.Model.Tests", "Panoptes.Model.Tests\Panoptes.Model.Tests.csproj", "{826C6B48-6225-474D-AB60-1DDBF096A5E4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OxyPlot.Avalonia", "ext\oxyplot-avalonia\Source\OxyPlot.Avalonia\OxyPlot.Avalonia.csproj", "{B1C81DCD-0622-4B7D-B6CC-F54777B0924C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,10 +50,6 @@ Global
 		{826C6B48-6225-474D-AB60-1DDBF096A5E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{826C6B48-6225-474D-AB60-1DDBF096A5E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{826C6B48-6225-474D-AB60-1DDBF096A5E4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B1C81DCD-0622-4B7D-B6CC-F54777B0924C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B1C81DCD-0622-4B7D-B6CC-F54777B0924C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B1C81DCD-0622-4B7D-B6CC-F54777B0924C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B1C81DCD-0622-4B7D-B6CC-F54777B0924C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
