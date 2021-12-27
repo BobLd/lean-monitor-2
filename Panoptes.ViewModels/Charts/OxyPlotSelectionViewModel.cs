@@ -29,6 +29,29 @@ namespace Panoptes.ViewModels.Charts
 {
     public sealed class OxyPlotSelectionViewModel : ToolPaneViewModel
     {
+        private enum ActionsThreadUI : byte
+        {
+            /// <summary>
+            /// Finish the order update.
+            /// </summary>
+            AddPlotModel = 0,
+
+            /// <summary>
+            /// Invalidate current plot.
+            /// </summary>
+            InvalidatePlot = 1,
+
+            /// <summary>
+            /// Invalidate current plot (no data update).
+            /// </summary>
+            InvalidatePlotNoData = 2,
+
+            /// <summary>
+            /// Add order to history.
+            /// </summary>
+            NotifyAllCanExecuteChanged = 3,
+        }
+
         private int _limitRefreshMs;
         private readonly int _limitRefreshMsSettings;
 
@@ -36,7 +59,79 @@ namespace Panoptes.ViewModels.Charts
 
         private readonly BlockingCollection<Result> _resultsQueue = new BlockingCollection<Result>();
 
-        private readonly Dictionary<string, PlotModel> _plotModelsDict = new Dictionary<string, PlotModel>();
+        private readonly ConcurrentDictionary<string, PlotModel> _plotModelsDict = new ConcurrentDictionary<string, PlotModel>();
+
+        public OxyPlotSelectionViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<OxyPlotSelectionViewModel> logger)
+            : base(messenger, settingsManager, logger)
+        {
+            Name = "Charts";
+            _limitRefreshMs = SettingsManager.GetPlotRefreshLimitMilliseconds();
+            _limitRefreshMsSettings = _limitRefreshMs;
+
+            PlotAll = new AsyncRelayCommand((ct) => SetAndProcessPlot(PlotSerieTypes, Times.Zero, ct), () => CanDoPeriod(Times.Zero));
+            Plot1m = new AsyncRelayCommand((ct) => SetAndProcessPlot(PlotSerieTypes, Times.OneMinute, ct), () => CanDoPeriod(Times.OneMinute));
+            Plot5m = new AsyncRelayCommand((ct) => SetAndProcessPlot(PlotSerieTypes, Times.FiveMinutes, ct), () => CanDoPeriod(Times.FiveMinutes));
+            Plot1h = new AsyncRelayCommand((ct) => SetAndProcessPlot(PlotSerieTypes, Times.OneHour, ct), () => CanDoPeriod(Times.OneHour));
+            Plot1d = new AsyncRelayCommand((ct) => SetAndProcessPlot(PlotSerieTypes, Times.OneDay, ct), () => CanDoPeriod(Times.OneDay));
+            PlotLines = new AsyncRelayCommand((ct) => SetAndProcessPlot(PlotSerieTypes.Line, Period, ct), () => CanDoSeriesType(PlotSerieTypes.Line));
+            PlotCandles = new AsyncRelayCommand((ct) => SetAndProcessPlot(PlotSerieTypes.Candles, Period, ct), () => CanDoSeriesType(PlotSerieTypes.Candles));
+
+            _plotCommands = new AsyncRelayCommand[]
+            {
+                PlotAll, Plot1m, Plot5m,
+                Plot1h, Plot1d, PlotLines,
+                PlotCandles,
+            };
+
+            PlotTrades = new AsyncRelayCommand(ProcessPlotTrades, () => true);
+
+            Messenger.Register<OxyPlotSelectionViewModel, SessionUpdateMessage>(this, (r, m) =>
+            {
+                if (m.ResultContext.Result.Charts.Count == 0 && m.ResultContext.Result.Orders.Count == 0) return;
+                r._resultsQueue.Add(m.ResultContext.Result);
+            });
+            Messenger.Register<OxyPlotSelectionViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
+            Messenger.Register<OxyPlotSelectionViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
+
+            _resultBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
+            _resultBgWorker.DoWork += ResultQueueReader;
+            _resultBgWorker.ProgressChanged += (s, e) =>
+            {
+                switch ((ActionsThreadUI)e.ProgressPercentage)
+                {
+                    case ActionsThreadUI.AddPlotModel:
+                        var plot = (PlotModel)e.UserState;
+                        lock (PlotModels)
+                        {
+                            PlotModels.Add(plot);
+                            if (PlotModels.Count == 1)
+                            {
+                                SelectedSeries = PlotModels.FirstOrDefault();
+                            }
+                        }
+                        NotifyAllCanExecuteChanged();
+                        break;
+
+                    case ActionsThreadUI.InvalidatePlot:
+                        InvalidatePlotWithTiming(true);
+                        break;
+
+                    case ActionsThreadUI.InvalidatePlotNoData:
+                        InvalidatePlotWithTiming(false);
+                        break;
+
+                    case ActionsThreadUI.NotifyAllCanExecuteChanged:
+                        NotifyAllCanExecuteChanged();
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(e), $"Unknown 'ProgressPercentage' value passed '{e.ProgressPercentage}'.");
+                }
+            };
+
+            _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
+            _resultBgWorker.RunWorkerAsync();
+        }
 
         private bool _displayLoading;
         public bool DisplayLoading
@@ -54,6 +149,7 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
+        #region Plot commands
         public AsyncRelayCommand PlotAll { get; }
         public AsyncRelayCommand Plot1m { get; }
         public AsyncRelayCommand Plot5m { get; }
@@ -62,7 +158,7 @@ namespace Panoptes.ViewModels.Charts
         public AsyncRelayCommand PlotLines { get; }
         public AsyncRelayCommand PlotCandles { get; }
 
-        public readonly AsyncRelayCommand[] _plotCommands;
+        private readonly AsyncRelayCommand[] _plotCommands;
 
         public AsyncRelayCommand PlotTrades { get; }
 
@@ -122,7 +218,67 @@ namespace Panoptes.ViewModels.Charts
         public bool IsPlot1hChecked => _period.Equals(Times.OneHour);
         public bool IsPlot1dChecked => _period.Equals(Times.OneDay);
 
-        public bool IsAutoFitYAxis { get; set; }
+        public bool CanDoPeriod(TimeSpan ts)
+        {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            if (ts == Times.Zero)
+            {
+                return PlotSerieTypes == PlotSerieTypes.Line;
+            }
+
+            foreach (var series in SelectedSeries.Series.ToList())
+            {
+                if (series is LineCandleStickSeries candles)
+                {
+                    var canDo = candles.CanDoTimeSpan(ts);
+                    if (canDo) return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool _canDoCandles;
+        public bool CanDoSeriesType(PlotSerieTypes plotSerieTypes)
+        {
+            if (SelectedSeries == null) return false;
+            if (SelectedSeries.Series.Count == 0) return false;
+
+            switch (plotSerieTypes)
+            {
+                case PlotSerieTypes.Candles:
+                    // Check that any aggregation period is available
+                    // Other possibility: check that Period is 1min/5min/1h/1day
+                    if (!_canDoCandles)
+                    {
+                        _canDoCandles = new[]
+                        {
+                            Times.OneMinute, Times.FiveMinutes,
+                            Times.OneHour, Times.OneDay
+                        }.Any(p => CanDoPeriod(p));
+                    }
+                    return _canDoCandles;
+
+                case PlotSerieTypes.Line:
+                    break;
+            }
+
+            return true;
+        }
+
+        private void NotifyAllCanExecuteChanged()
+        {
+            foreach (var command in _plotCommands)
+            {
+                command.NotifyCanExecuteChanged();
+            }
+        }
+        #endregion
+
+        #region Plot trades / orders
+        private readonly ConcurrentDictionary<int, Order> _ordersDic = new ConcurrentDictionary<int, Order>();
 
         private bool _isPlotTrades;
         public bool IsPlotTrades
@@ -139,7 +295,8 @@ namespace Panoptes.ViewModels.Charts
 
         private void AddTradesToPlot(IDictionary<int, Order> orders, CancellationToken cancelationToken)
         {
-            if (SelectedSeries == null) return;
+            if (SelectedSeries == null || SelectedSeries.Series.Count == 0) return;
+            if (orders == null || orders.Count == 0) return;
 
             var localOrders = orders.ToList(); // TODO: check if it avoids 'Collection was modified' exception
             var series = SelectedSeries.Series.Where(s => s.IsVisible).ToList();
@@ -254,7 +411,7 @@ namespace Panoptes.ViewModels.Charts
                     }
                 }
 
-                InvalidatePlotNoDataThreadUI();
+                _resultBgWorker.ReportProgress((int)ActionsThreadUI.InvalidatePlotNoData);
 
                 Logger.LogInformation("OxyPlotSelectionViewModel.ProcessPlotTrades: Done ({IsPlotTrades}).", IsPlotTrades);
                 DisplayLoading = false;
@@ -286,40 +443,70 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
-        private Task ProcessPlotLines(CancellationToken cancelationToken)
+        private void ProcessTradeSelected(TradeSelectedMessage m)
         {
-            return SetAndProcessPlot(PlotSerieTypes.Line, Period, cancelationToken);
-        }
+            if (!m.IsCumulative)
+            {
+                // Not cumulative selection
+                ClearHighlightSelectOrderPoints(m.Value);
+            }
 
-        private Task ProcessPlotCandles(CancellationToken cancelationToken)
-        {
-            return SetAndProcessPlot(PlotSerieTypes.Candles, Period, cancelationToken);
-        }
+            foreach (var id in m.Value)
+            {
+                if (HighlightSelectOrderPoints(id) && _ordersDic.TryGetValue(id, out var ovm))
+                {
+                    Logger.LogInformation("Plot: ProcessTradeSelected({Id})", ovm.Id);
+                }
+            }
 
-        private Task ProcessPlotAll(CancellationToken cancelationToken)
-        {
-            return SetAndProcessPlot(PlotSerieTypes, Times.Zero, cancelationToken);
+            _resultBgWorker.ReportProgress((int)ActionsThreadUI.InvalidatePlotNoData);
         }
+        #endregion
 
-        private Task ProcessPlot1min(CancellationToken cancelationToken)
-        {
-            return SetAndProcessPlot(PlotSerieTypes, Times.OneMinute, cancelationToken);
-        }
+        #region Auto fit y axis
+        public bool IsAutoFitYAxis { get; set; }
 
-        private Task ProcessPlot5min(CancellationToken cancelationToken)
+        private void TimeSpanAxis1_AxisChanged(object sender, AxisChangedEventArgs e)
         {
-            return SetAndProcessPlot(PlotSerieTypes, Times.FiveMinutes, cancelationToken);
-        }
+            if (!IsAutoFitYAxis || sender is not Axis axis || SelectedSeries == null)
+            {
+                return;
+            }
 
-        private Task ProcessPlot1hour(CancellationToken cancelationToken)
-        {
-            return SetAndProcessPlot(PlotSerieTypes, Times.OneHour, cancelationToken);
-        }
+            double min = double.MaxValue;
+            double max = double.MinValue;
 
-        private Task ProcessPlot1day(CancellationToken cancelationToken)
-        {
-            return SetAndProcessPlot(PlotSerieTypes, Times.OneDay, cancelationToken);
+            foreach (var series in SelectedSeries.Series)
+            {
+                if (series is LineCandleStickSeries lcs)
+                {
+                    foreach (var p in lcs.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                    {
+                        min = Math.Min(p.Y, min);
+                        max = Math.Max(p.Y, max);
+                    }
+                }
+                else if (series is LineSeries l)
+                {
+                    foreach (var p in l.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                    {
+                        min = Math.Min(p.Y, min);
+                        max = Math.Max(p.Y, max);
+                    }
+                }
+                else if (series is ScatterSeries s)
+                {
+                    foreach (var p in s.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                    {
+                        min = Math.Min(p.Y, min);
+                        max = Math.Max(p.Y, max);
+                    }
+                }
+            }
+
+            SelectedSeries.DefaultYAxis.Zoom(min, max);
         }
+        #endregion
 
         private Task SetAndProcessPlot(PlotSerieTypes serieTypes, TimeSpan period, CancellationToken cancelationToken)
         {
@@ -327,7 +514,7 @@ namespace Panoptes.ViewModels.Charts
 
             if (_plotCommands.Any(c => c.IsRunning))
             {
-                foreach (var running in _plotCommands.Where(c=>c.IsRunning))
+                foreach (var running in _plotCommands.Where(c => c.IsRunning))
                 {
                     var state = running.ExecutionTask.AsyncState;
                     Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Canceling ({Id}, {Status})...", running.ExecutionTask.Id, running.ExecutionTask.Status);
@@ -422,181 +609,7 @@ namespace Panoptes.ViewModels.Charts
             }, cancelationToken);
         }
 
-        public bool CanDoBarsAll()
-        {
-            if (SelectedSeries == null) return false;
-            if (SelectedSeries.Series.Count == 0) return false;
-
-            return true;
-            //return PlotSerieTypes == PlotSerieTypes.Line;
-        }
-
-        public bool CanDoBars1m()
-        {
-            if (SelectedSeries == null) return false;
-            if (SelectedSeries.Series.Count == 0) return false;
-
-            foreach (var series in SelectedSeries.Series)
-            {
-                if (series is LineCandleStickSeries candles)
-                {
-                    var canDo = candles.CanDoTimeSpan(Times.OneMinute);
-                    if (canDo) return true;
-                }
-            }
-
-            return false;
-        }
-
-        public bool CanDoBars5min()
-        {
-            if (SelectedSeries == null) return false;
-            if (SelectedSeries.Series.Count == 0) return false;
-
-            foreach (var series in SelectedSeries.Series)
-            {
-                if (series is LineCandleStickSeries candles)
-                {
-                    var canDo = candles.CanDoTimeSpan(Times.FiveMinutes);
-                    if (canDo) return true;
-                }
-            }
-
-            return false;
-        }
-
-        public bool CanDoBars1h()
-        {
-            if (SelectedSeries == null) return false;
-            if (SelectedSeries.Series.Count == 0) return false;
-
-            foreach (var series in SelectedSeries.Series)
-            {
-                if (series is LineCandleStickSeries candles)
-                {
-                    var canDo = candles.CanDoTimeSpan(Times.OneHour);
-                    if (canDo) return true;
-                }
-            }
-
-            return false;
-        }
-
-        public bool CanDoBars1d()
-        {
-            if (SelectedSeries == null) return false;
-            if (SelectedSeries.Series.Count == 0) return false;
-
-            foreach (var series in SelectedSeries.Series)
-            {
-                if (series is LineCandleStickSeries candles)
-                {
-                    var canDo = candles.CanDoTimeSpan(Times.OneDay);
-                    if (canDo) return true;
-                }
-            }
-
-            return false;
-        }
-
-        public bool CanDoLines()
-        {
-            if (SelectedSeries == null) return false;
-            if (SelectedSeries.Series.Count == 0) return false;
-
-            // Other checks
-            return true;
-        }
-
-        public bool CanDoCandles()
-        {
-            if (SelectedSeries == null) return false;
-            if (SelectedSeries.Series.Count == 0) return false;
-
-            // Other checks
-            return true;
-        }
-
-        private void NotifyCanExecuteChanged()
-        {
-            foreach (var command in _plotCommands)
-            {
-                command.NotifyCanExecuteChanged();
-            }
-        }
-
-        public OxyPlotSelectionViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<OxyPlotSelectionViewModel> logger)
-            : base(messenger, settingsManager, logger)
-        {
-            Name = "Charts";
-            _limitRefreshMs = SettingsManager.GetPlotRefreshLimitMilliseconds();
-            _limitRefreshMsSettings = _limitRefreshMs;
-            PlotAll = new AsyncRelayCommand(ProcessPlotAll, CanDoBarsAll);
-            Plot1m = new AsyncRelayCommand(ProcessPlot1min, CanDoBars1m);
-            Plot5m = new AsyncRelayCommand(ProcessPlot5min, CanDoBars5min);
-            Plot1h = new AsyncRelayCommand(ProcessPlot1hour, CanDoBars1h);
-            Plot1d = new AsyncRelayCommand(ProcessPlot1day, CanDoBars1d);
-            PlotLines = new AsyncRelayCommand(ProcessPlotLines, CanDoLines);
-            PlotCandles = new AsyncRelayCommand(ProcessPlotCandles, CanDoCandles);
-
-            _plotCommands = new AsyncRelayCommand[]
-            {
-                PlotAll, Plot1m, Plot5m,
-                Plot1h, Plot1d, PlotLines,
-                PlotCandles,
-            };
-
-            PlotTrades = new AsyncRelayCommand(ProcessPlotTrades, () => true);
-
-            Messenger.Register<OxyPlotSelectionViewModel, SessionUpdateMessage>(this, (r, m) =>
-            {
-                if (m.ResultContext.Result.Charts.Count == 0 && m.ResultContext.Result.Orders.Count == 0) return;
-                r._resultsQueue.Add(m.ResultContext.Result);
-            });
-            Messenger.Register<OxyPlotSelectionViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
-            Messenger.Register<OxyPlotSelectionViewModel, TradeSelectedMessage>(this, (r, m) => r.ProcessTradeSelected(m));
-
-            _resultBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
-            _resultBgWorker.DoWork += ResultQueueReader;
-            _resultBgWorker.ProgressChanged += (s, e) =>
-            {
-                switch (e.ProgressPercentage)
-                {
-                    case 0:
-                        var plot = (PlotModel)e.UserState;
-                        lock (PlotModels)
-                        {
-                            PlotModels.Add(plot);
-                            if (PlotModels.Count == 1)
-                            {
-                                SelectedSeries = PlotModels.FirstOrDefault();
-                            }
-                        }
-                        NotifyCanExecuteChanged();
-                        break;
-
-                    case 1:
-                        InvalidatePlotWithTiming(true);
-                        break;
-
-                    case 2:
-                        InvalidatePlotWithTiming(false);
-                        break;
-
-                    case 3:
-                        NotifyCanExecuteChanged();
-                        break;
-
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(e), $"Unknown 'ProgressPercentage' value passed '{e.ProgressPercentage}'.");
-                }
-            };
-
-            _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
-            _resultBgWorker.RunWorkerAsync();
-        }
-
-        private ConcurrentDictionary<string, double> _invalidatePlotTiming = new ConcurrentDictionary<string, double>();
+        private readonly ConcurrentDictionary<string, double> _invalidatePlotTiming = new ConcurrentDictionary<string, double>();
         private const double w = 2.0 / (100.0 + 1.0);
         private void InvalidatePlotWithTiming(bool updateData)
         {
@@ -614,8 +627,8 @@ namespace Panoptes.ViewModels.Charts
             var current = sw.ElapsedTicks / (double)TimeSpan.TicksPerMillisecond * w + previous * (1.0 - w);
             _invalidatePlotTiming[SelectedSeries.Title] = current;
 
-            _limitRefreshMs = Math.Min(Math.Max(_limitRefreshMsSettings, (int)(current * 500.0)), 3_000); // 500 times the time in ms it took to render
-            Log.Debug("It took {current:0.000000}ms to refresh, refresh limit set to {Time}ms for {Title}.", current, _limitRefreshMs, SelectedSeries.Title);
+            _limitRefreshMs = Math.Min(Math.Max(_limitRefreshMsSettings, (int)(current * 200.0)), 3_000); // 500 times the time in ms it took to render
+            //Log.Debug("It took {current:0.000000}ms to refresh, refresh limit set to {Time}ms for {Title}.", current, _limitRefreshMs, SelectedSeries.Title);
         }
 
         private void ResultQueueReader(object sender, DoWorkEventArgs e)
@@ -626,25 +639,6 @@ namespace Panoptes.ViewModels.Charts
                 if (result.Charts.Count == 0 && result.Orders.Count == 0) continue;
                 ParseResult(result);
             }
-        }
-
-        private void ProcessTradeSelected(TradeSelectedMessage m)
-        {
-            if (!m.IsCumulative)
-            {
-                // Not cumulative selection
-                ClearHighlightSelectOrderPoints(m.Value);
-            }
-
-            foreach (var id in m.Value)
-            {
-                if (HighlightSelectOrderPoints(id) && _ordersDic.TryGetValue(id, out var ovm))
-                {
-                    Logger.LogInformation("Plot: ProcessTradeSelected({Id})", ovm.Id);
-                }
-            }
-
-            InvalidatePlotNoDataThreadUI();
         }
 
         protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
@@ -686,7 +680,7 @@ namespace Panoptes.ViewModels.Charts
         {
             if (SelectedSeries == null) return;
 
-            NotifyCanExecuteChanged();
+            NotifyAllCanExecuteChanged();
 
             var ts = default(TimeSpan);
             var type = PlotSerieTypes.Line;
@@ -704,9 +698,12 @@ namespace Panoptes.ViewModels.Charts
             PlotSerieTypes = type;
 
             // Handle plot trades and fit axis
-            //ProcessPlotTrades() <- async
-
-            // Need to change behaviour and use message
+            // We changed plotmodel so we don't know if annoations are displayed
+            // We always clear them
+            // ProcessPlotTrades() <- async
+            // Need to refactor and change behaviour + use message?
+            SelectedSeries.Annotations.Clear();
+            IsPlotTrades = false;
         }
 
         private static string GetUnit(ChartDefinition chartDefinition)
@@ -722,8 +719,6 @@ namespace Panoptes.ViewModels.Charts
 
             return string.Join(",", chartDefinition.Series?.Values?.Select(s => s.Unit).Distinct());
         }
-
-        private readonly ConcurrentDictionary<int, Order> _ordersDic = new ConcurrentDictionary<int, Order>();
 
         private void ParseResult(Result result)
         {
@@ -747,7 +742,7 @@ namespace Panoptes.ViewModels.Charts
                     plot.Axes.Add(linearAxis1);
 
                     _plotModelsDict[chart.Key] = plot;
-                    AddPlotThreadUI(plot);
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.AddPlotModel, plot);
                 }
 
                 foreach (var serie in chart.Value.Series.OrderBy(x => x.Key))
@@ -784,7 +779,6 @@ namespace Panoptes.ViewModels.Charts
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
                                     SerieType = PlotSerieTypes.Line,
-                                    
                                     Period = Times.Zero,
                                     RenderInLegend = true
                                 };
@@ -834,7 +828,7 @@ namespace Panoptes.ViewModels.Charts
                                 Log.Debug("ParseResult: Skipping creation series of type '{Type}' with name '{Name}'.", serie.Value.SeriesType, serie.Value.Name);
                                 break;
                         }
-                        _resultBgWorker.ReportProgress(3, plot);
+                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.NotifyAllCanExecuteChanged);
                     }
 
                     switch (serie.Value.SeriesType)
@@ -877,7 +871,7 @@ namespace Panoptes.ViewModels.Charts
                             Log.Debug("ParseResult: Skipping handling of series of type '{Type}' with name '{Name}'.", serie.Value.SeriesType, serie.Value.Name);
                             continue;
                     }
-                    _resultBgWorker.ReportProgress(3, plot);
+                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.NotifyAllCanExecuteChanged);
                 }
             }
 
@@ -894,58 +888,12 @@ namespace Panoptes.ViewModels.Charts
             InvalidatePlotThreadUI(false);
         }
 
-        private void TimeSpanAxis1_AxisChanged(object sender, AxisChangedEventArgs e)
-        {
-            if (!IsAutoFitYAxis || sender is not Axis axis || SelectedSeries == null)
-            {
-                return;
-            }
-
-            double min = double.MaxValue;
-            double max = double.MinValue;
-
-            foreach (var series in SelectedSeries.Series)
-            {
-                if (series is LineCandleStickSeries lcs)
-                {
-                    foreach (var p in lcs.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
-                    {
-                        min = Math.Min(p.Y, min);
-                        max = Math.Max(p.Y, max);
-                    }
-                }
-                else if (series is LineSeries l)
-                {
-                    foreach (var p in l.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
-                    {
-                        min = Math.Min(p.Y, min);
-                        max = Math.Max(p.Y, max);
-                    }
-                }
-                else if (series is ScatterSeries s)
-                {
-                    foreach (var p in s.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
-                    {
-                        min = Math.Min(p.Y, min);
-                        max = Math.Max(p.Y, max);
-                    }
-                }
-            }
-
-            SelectedSeries.DefaultYAxis.Zoom(min, max);
-        }
-
-        private void AddPlotThreadUI(PlotModel plot)
-        {
-            _resultBgWorker.ReportProgress(0, plot);
-        }
-
         private DateTime _lastInvalidatePlot = DateTime.MinValue;
         private void InvalidatePlotThreadUI(bool force)
         {
             if (force)
             {
-                _resultBgWorker.ReportProgress(1);
+                _resultBgWorker.ReportProgress((int)ActionsThreadUI.InvalidatePlot);
                 return;
             }
 
@@ -953,20 +901,8 @@ namespace Panoptes.ViewModels.Charts
             if ((now - _lastInvalidatePlot).TotalMilliseconds > _limitRefreshMs)
             {
                 _lastInvalidatePlot = now;
-                _resultBgWorker.ReportProgress(1);
+                _resultBgWorker.ReportProgress((int)ActionsThreadUI.InvalidatePlot);
             }
-        }
-
-        private void InvalidatePlotNoDataThreadUI()
-        {
-            _resultBgWorker.ReportProgress(2);
-
-            //var now = DateTime.UtcNow;
-            //if ((now - _lastInvalidatePlot).TotalMilliseconds > 250)
-            //{
-            //    _lastInvalidatePlot = now;
-            //    _resultBgWorker.ReportProgress(2);
-            //}
         }
 
         private void Clear()

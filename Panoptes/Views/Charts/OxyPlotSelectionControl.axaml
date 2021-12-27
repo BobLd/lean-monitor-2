@@ -40,16 +40,18 @@
 			<ToggleButton Content="1d" IsChecked="{Binding IsPlot1dChecked, Mode=OneWay}"
 						  Command="{Binding Plot1d}" ToolTip.Tip="1-day"/>
 
+			<!--
 			<ToggleButton Content="1w" ToolTip.Tip="1-week"/>
 			<ToggleButton Content="1M" ToolTip.Tip="1-month"/>
 			<ToggleButton Content="1y" ToolTip.Tip="1-year"/>
+			-->
 			
 			<Label Width="10"/>
 			<ToggleButton Content="Fit y-axis" IsChecked="{Binding IsAutoFitYAxis, Mode=OneWayToSource}"
 						  ToolTip.Tip="Automatically fit y-axis to data"/>
 			
 			<Label Width="10"/>
-			<ToggleButton Content="Plot trades" IsChecked="{Binding IsPlotTrades, Mode=OneWayToSource}"
+			<ToggleButton Content="Plot trades" IsChecked="{Binding IsPlotTrades, Mode=TwoWay}"
 						  Command="{Binding PlotTrades}" ToolTip.Tip="Plot trades"/>
 
 		</StackPanel>
@@ -59,37 +61,6 @@
 				Padding="50" MinWidth="80" MinHeight="80" Focusable="False" IsEnabled="False" Opacity="200">
 			<DrawingPresenter Drawing="{StaticResource Logo}" MinWidth="40" MinHeight="40" IsEnabled="False"/>
 		</Border>
-
-		<!--https://github.com/oxyplot/oxyplot-avalonia/blob/master/Source/OxyPlot.Avalonia/Themes/Default.xaml-->
-		<!--
-		<oxy:Plot Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-				  Background="Transparent" Foreground="White">
-			<oxy:Plot.TrackerDefinitions>
-				<oxy:TrackerDefinition TrackerKey="TrackerHorizontal">
-					<oxy:TrackerDefinition.TrackerTemplate>
-						<ControlTemplate>
-							<charts:AxisTrackerControl Position="{Binding Position}" IsVertical="False"
-													   LineExtents="{Binding PlotModel.PlotArea}"
-													   ShowPointer="False" HorizontalLineVisibility="False">
-								<charts:AxisTrackerControl.Content>
-									<TextBlock Text="{Binding DataPoint.X, Converter={StaticResource DateConverter}}" Margin="1"/>
-								</charts:AxisTrackerControl.Content>
-							</charts:AxisTrackerControl>
-						</ControlTemplate>
-					</oxy:TrackerDefinition.TrackerTemplate>
-				</oxy:TrackerDefinition>
-			</oxy:Plot.TrackerDefinitions>
-			
-			<oxy:Plot.Axes>
-				<oxy:LinearAxis Position="Right" MajorGridlineStyle="Solid" MinorGridlineStyle="Solid" TickStyle="Outside"/>
-				<oxy:DateTimeAxis Position="Bottom" IntervalType="Auto" ExtraGridlineStyle="DashDot"/>
-			</oxy:Plot.Axes>
-
-			<oxy:Plot.Series>
-				
-			</oxy:Plot.Series>
-		</oxy:Plot>
-		-->
 
 		<oxy:PlotView Model="{Binding SelectedSeries}" Grid.Row="1" HorizontalAlignment="Stretch"
 					  VerticalAlignment="Stretch" Background="Transparent" Foreground="White"
