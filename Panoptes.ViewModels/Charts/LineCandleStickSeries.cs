@@ -791,13 +791,13 @@ namespace Panoptes.ViewModels.Charts
             lines.Clear();
         }
 
+        private readonly List<ScreenPoint> lines = new List<ScreenPoint>();
+        private readonly List<OxyRect> upRects = new List<OxyRect>();
+        private readonly List<OxyRect> downRects = new List<OxyRect>();
+
         private void RenderCandlesSerieHigh(IRenderContext rc, List<HighLowItem> items, double datacandleWidth, double candleWidth,
             OxyColor lineColor, OxyColor fillUp, OxyColor fillDown, CancellationToken cancellationToken)
         {
-            var lines = new List<ScreenPoint>();
-            var upRects = new List<OxyRect>();
-            var downRects = new List<OxyRect>();
-
             // determine render range
             var xmin = XAxis.ActualMinimum;
             var xmax = XAxis.ActualMaximum;

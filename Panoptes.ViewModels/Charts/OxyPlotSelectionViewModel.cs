@@ -142,7 +142,7 @@ namespace Panoptes.ViewModels.Charts
             if (SelectedSeries == null) return;
 
             var localOrders = orders.ToList(); // TODO: check if it avoids 'Collection was modified' exception
-            var series = SelectedSeries.Series.ToList();
+            var series = SelectedSeries.Series.Where(s => s.IsVisible).ToList();
 
             // Do not use SelectedSeries.SyncRoot
             // This will prevent async

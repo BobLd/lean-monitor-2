@@ -20,6 +20,10 @@ namespace Panoptes.ViewModels.Charts
         internal readonly static OxyColor SciChartCandleStickDecreasingOxy = OxyColor.FromArgb(255, 226, 101, 101);
         #endregion
 
+        static OxyPlotExtensions()
+        {
+        }
+
         public static OxyColor ToOxyColor(this Color color)
         {
             return OxyColor.FromRgb(color.R, color.G, color.B);
@@ -34,7 +38,7 @@ namespace Panoptes.ViewModels.Charts
 
         public static PlotModel CreateDefaultPlotModel(string title)
         {
-            var model =  new PlotModel()
+            var model = new PlotModel()
             {
                 Title = title,
                 TitleFontSize = 0,
@@ -44,7 +48,14 @@ namespace Panoptes.ViewModels.Charts
                 SubtitleColor = ThemeForegroundColor
             };
 
-            model.Legends.Add(new Legend { LegendPlacement = LegendPlacement.Inside, LegendPosition = LegendPosition.RightTop, LegendOrientation = LegendOrientation.Vertical });
+            model.Legends.Add(new Legend
+            {
+                LegendPlacement = LegendPlacement.Inside,
+                LegendPosition = LegendPosition.RightTop,
+                LegendOrientation = LegendOrientation.Vertical,
+                EdgeRenderingMode = EdgeRenderingMode.PreferSpeed,
+                SeriesInvisibleTextColor = model.TextColor.ChangeIntensity(0.80),
+            });
 
             return model;
         }
