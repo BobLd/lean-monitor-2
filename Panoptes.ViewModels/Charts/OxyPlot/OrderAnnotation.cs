@@ -137,8 +137,6 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         /// <param name="rc">The render context.</param>
         public override void Render(IRenderContext rc)
         {
-            base.Render(rc);
-
             if (Centers == null || Centers.Count == 0)
             {
                 return;
@@ -155,6 +153,8 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
                 Log.Warning("OrderAnnotation.Render: Error - YAxis is null.");
                 return;
             }
+
+            base.Render(rc);
 
             var polygons = new List<IList<ScreenPoint>>();
             var positions = new List<ScreenPoint>();
@@ -200,6 +200,51 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             //        TextHorizontalAlignment,
             //        TextVerticalAlignment);
             //}
+        }
+
+        public override OxyRect GetClippingRect()
+        {
+            if (XAxis == null)
+            {
+                Log.Warning("OrderAnnotation.GetClippingRect: Error - XAxis is null.");
+                return new OxyRect();
+            }
+
+            if (YAxis == null)
+            {
+                Log.Warning("OrderAnnotation.GetClippingRect: Error - YAxis is null.");
+                return new OxyRect();
+            }
+
+            var rect = this.PlotModel.PlotArea;
+
+            //var axisRect = PlotElementUtilities.GetClippingRect(this);
+            var xrect = new OxyRect(XAxis.ScreenMin, XAxis.ScreenMax);
+            var yrect = new OxyRect(YAxis.ScreenMin, YAxis.ScreenMax);
+            var axisRect = xrect.Intersect(yrect);
+
+            var minX = 0d;
+            var maxX = double.PositiveInfinity;
+            var minY = 0d;
+            var maxY = double.PositiveInfinity;
+
+            if (this.ClipByXAxis)
+            {
+                minX = this.Orientate(axisRect.TopLeft).X;
+                maxX = this.Orientate(axisRect.BottomRight).X;
+            }
+
+            if (this.ClipByYAxis)
+            {
+                minY = this.Orientate(axisRect.TopLeft).Y;
+                maxY = this.Orientate(axisRect.BottomRight).Y;
+            }
+
+            var minPoint = this.Orientate(new ScreenPoint(minX, minY));
+            var maxPoint = this.Orientate(new ScreenPoint(maxX, maxY));
+
+            var axisClipRect = new OxyRect(minPoint, maxPoint);
+            return rect.Clip(axisClipRect);
         }
 
         /// <summary>
