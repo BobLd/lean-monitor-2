@@ -445,6 +445,11 @@ namespace Panoptes.ViewModels.Charts
 
         private void ProcessTradeSelected(TradeSelectedMessage m)
         {
+            if (PlotTrades.IsRunning)
+            {
+                return;
+            }
+
             if (!m.IsCumulative)
             {
                 // Not cumulative selection
