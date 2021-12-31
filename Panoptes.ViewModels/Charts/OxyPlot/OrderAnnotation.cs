@@ -23,13 +23,18 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
         private const int _lowLightAlpha = 150;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PointAnnotation" /> class.
+        /// Initializes a new instance of the <see cref="OrderAnnotation"/> class.
         /// </summary>
         public OrderAnnotation(Order[] orders, IReadOnlyList<Series> referenceSeries) : this()
         {
             if (orders == null || orders.Length == 0)
             {
                 throw new ArgumentException("Cannot be null or empty.", nameof(orders));
+            }
+
+            if (referenceSeries == null || referenceSeries.Count == 0)
+            {
+                throw new ArgumentException("Cannot be null or empty.", nameof(referenceSeries));
             }
 
             var dt = orders[0].Time;
@@ -41,10 +46,8 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             List<DataPoint> centers = new List<DataPoint>();
             foreach (var series in referenceSeries)
             {
-                var X = DateTimeAxis.ToDouble(dt);
-                var Y = GetNearestPointY(X, series);
-
-                centers.Add(new DataPoint(X, Y));
+                var x = DateTimeAxis.ToDouble(dt);
+                centers.Add(new DataPoint(x, GetNearestPointY(x, series))); // This is time consuming
             }
             Centers = centers;
 

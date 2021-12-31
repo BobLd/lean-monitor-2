@@ -289,7 +289,6 @@ namespace Panoptes.ViewModels.Charts
                     _rawPoints.Add(point);
                     UpdateMinMaxDeltaTime();
                 }
-                //_rawPoints.AddRange(newPoints);                
             }
 
             // Update the line

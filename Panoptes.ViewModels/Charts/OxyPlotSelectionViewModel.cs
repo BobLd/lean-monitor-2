@@ -298,13 +298,16 @@ namespace Panoptes.ViewModels.Charts
             if (SelectedSeries == null || SelectedSeries.Series.Count == 0) return;
             if (orders == null || orders.Count == 0) return;
 
-            var localOrders = orders.ToList(); // TODO: check if it avoids 'Collection was modified' exception
+            // We could store annotations in IDictionary<DateTime, OrderAnnot> and check if annot already exists and check integrity.
+            // There's an issue when changing PlotModel because the annotation already belongs to another plot
+
+            var localOrders = orders.Values.ToList(); // TODO: check if it avoids 'Collection was modified' exception
             var series = SelectedSeries.Series.Where(s => s.IsVisible).ToList();
 
             // Do not use SelectedSeries.SyncRoot
             // This will prevent async
-
-            foreach (var orderAsOf in localOrders.GroupBy(o => o.Value.Time))
+            var tempAnnotations = new List<OrderAnnotation>();
+            foreach (var orderAsOf in localOrders.GroupBy(o => o.Time))
             {
                 if (cancelationToken.IsCancellationRequested)
                 {
@@ -312,11 +315,19 @@ namespace Panoptes.ViewModels.Charts
                     return;
                 }
 
-                var ordersArr = orderAsOf.Select(o => o.Value).ToArray();
-
-                var orderAnnotation = new OrderAnnotation(ordersArr, series);
+                var orderAnnotation = new OrderAnnotation(orderAsOf.ToArray(), series);
+                var tooltip = string.Join("\n", orderAsOf.Select(o => $"#{o.Id}: {o.Tag.Trim()}")).Trim();
+                if (!string.IsNullOrEmpty(tooltip))
+                {
+                    orderAnnotation.ToolTip = tooltip;
+                }
                 orderAnnotation.MouseDown += OrderAnnotation_MouseDown;
-                SelectedSeries.Annotations.Add(orderAnnotation);
+                tempAnnotations.Add(orderAnnotation);
+            }
+
+            foreach (var ann in tempAnnotations)
+            {
+                SelectedSeries.Annotations.Add(ann); // 'Collection was modified' exception here... #11
             }
         }
 
@@ -344,10 +355,10 @@ namespace Panoptes.ViewModels.Charts
         }
 
         /// <summary>
-        /// Returns true if order points were not already highlighted.
+        /// Highlight selected order.
         /// </summary>
         /// <param name="id"></param>
-        /// <returns></returns>
+        /// <returns>True if order points were not already highlighted.</returns>
         private bool HighlightSelectOrderPoints(int id)
         {
             if (SelectedSeries == null || _selectedOrderIds.Contains(id)) return false;
@@ -398,10 +409,6 @@ namespace Panoptes.ViewModels.Charts
                 }
                 else
                 {
-                    if (SelectedSeries.Series.Count == 0)
-                    {
-                        return;
-                    }
                     AddTradesToPlot(_ordersDic, cancelationToken);
 
                     if (cancelationToken.IsCancellationRequested)
@@ -485,10 +492,21 @@ namespace Panoptes.ViewModels.Charts
             {
                 if (series is LineCandleStickSeries lcs)
                 {
-                    foreach (var p in lcs.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                    if (lcs.SerieType == PlotSerieTypes.Candles)
                     {
-                        min = Math.Min(p.Y, min);
-                        max = Math.Max(p.Y, max);
+                        foreach (var c in lcs.Items.Where(c => c.X >= axis.ActualMinimum && c.X <= axis.ActualMaximum))
+                        {
+                            min = Math.Min(c.Low, min);
+                            max = Math.Max(c.High, max);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var p in lcs.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                        {
+                            min = Math.Min(p.Y, min);
+                            max = Math.Max(p.Y, max);
+                        }
                     }
                 }
                 else if (series is LineSeries l)
@@ -506,6 +524,10 @@ namespace Panoptes.ViewModels.Charts
                         min = Math.Min(p.Y, min);
                         max = Math.Max(p.Y, max);
                     }
+                }
+                else
+                {
+                    throw new ArgumentOutOfRangeException($"Unknown series type '{series.GetType()}'.", nameof(series));
                 }
             }
 
