@@ -166,11 +166,11 @@ namespace Panoptes.ViewModels.Charts.OxyPlot
             {
                 var screenPosition = Transform(center);
                 // clip to the area defined by the axes
-                if (screenPosition.X + Size < clippingRectangle.Left || screenPosition.X - Size > clippingRectangle.Right ||
-                    screenPosition.Y + Size < clippingRectangle.Top || screenPosition.Y - Size > clippingRectangle.Bottom)
+                if (!clippingRectangle.Contains(screenPosition))
                 {
                     continue;
                 }
+
                 positions.Add(screenPosition);
                 polygons.Add(GetShape(Direction, screenPosition, Size));
             }
