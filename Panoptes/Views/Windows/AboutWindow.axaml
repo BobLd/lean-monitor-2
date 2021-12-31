@@ -1,0 +1,23 @@
+<Window x:Class="Panoptes.Views.Windows.AboutWindow"
+		xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+		d:DesignWidth="600" d:DesignHeight="300"
+		Width="600" Height="300"
+		CanResize="False"
+        Title="About"
+		WindowStartupLocation="CenterScreen">
+	
+	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
+		<Grid ColumnDefinitions="220,Auto">
+			<DrawingPresenter Grid.Column="0" Drawing="{StaticResource Logo}" Margin="10" VerticalAlignment="Center"/>
+			<Grid Grid.Column="1" RowDefinitions="Auto,Auto">
+				<TextBlock Grid.Row="0" Text="Panoptes - LEAN Algorithm Monitor"/>
+				<TextBlock Grid.Row="1" TextWrapping="WrapWithOverflow" MaxWidth="380" FontSize="10"
+						   Text="Panoptes is an open-source Desktop tool for Windows, Linux and MacOS to browse QuantConnect Lean engine's backtest and monitor live performances. It is updated and ported from https://github.com/mirthestam/lean-monitor."/>
+			</Grid>
+		</Grid>
+	</Border>
+</Window>

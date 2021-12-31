@@ -239,15 +239,13 @@ namespace Panoptes.ViewModels.Panels
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
                     case ActionsThreadUI.CashFinishUpdate:
-                        //hvm.FinishUpdateInThreadUI();
-                        break;
+                        throw new ArgumentOutOfRangeException("CashBookPanelViewModel: No need for 'ActionsThreadUI.CashFinishUpdate'.");
 
                     case ActionsThreadUI.CashAdd:
                         if (e.UserState is not CashViewModel add)
                         {
                             throw new ArgumentException($"CashBookPanelViewModel: Expecting {nameof(e.UserState)} of type 'CashViewModel' but received '{e.UserState.GetType()}'", nameof(e));
                         }
-                        //hvm.FinishUpdateInThreadUI();
 
                         // Could optimise the below, check don't need to be done in UI thread
                         AddCash(add);
@@ -273,18 +271,6 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _resultBgWorker.RunWorkerAsync();
         }
-
-        //private void ProcessTradeSelected(TradeSelectedMessage m)
-        //{
-        //    if (m.Sender == Name) return;
-
-        //    // Trade selected message received from another ViewModel
-        //    if (_ordersDic.TryGetValue(m.Value[0], out var ovm)) // TODO: support multiple orders id
-        //    {
-        //        // We don't wnat to send another message of trade selected
-        //        SetSelectedItem(ovm);
-        //    }
-        //}
 
         private void ProcessNewDay(TimerMessage timerMessage)
         {

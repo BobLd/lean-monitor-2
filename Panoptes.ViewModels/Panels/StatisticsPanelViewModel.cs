@@ -114,7 +114,6 @@ namespace Panoptes.ViewModels.Panels
                 }
             };
 
-            _statisticsBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _statisticsBgWorker.RunWorkerAsync();
         }
 

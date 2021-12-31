@@ -83,12 +83,12 @@ namespace Panoptes.ViewModels.Charts
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Solid,
                 TickStyle = TickStyle.Outside,
+                TicklineColor = ThemeBorderMidColor,
                 AxislineColor = ThemeBorderMidColor,
                 ExtraGridlineColor = ThemeBorderLowColor,
                 MajorGridlineColor = ThemeBorderMidColor,
-                TicklineColor = ThemeBorderMidColor,
                 MinorGridlineColor = ThemeBorderLowColor,
-                MinorTicklineColor = ThemeBorderLowColor,  // ThemePanoptesColor
+                MinorTicklineColor = ThemeBorderLowColor,
                 TextColor = ThemeForegroundColor,
                 TitleColor = ThemeForegroundColor,
                 Unit = unit

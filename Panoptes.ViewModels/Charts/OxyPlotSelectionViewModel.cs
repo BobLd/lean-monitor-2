@@ -129,7 +129,6 @@ namespace Panoptes.ViewModels.Charts
                 }
             };
 
-            _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _resultBgWorker.RunWorkerAsync();
         }
 
@@ -327,6 +326,12 @@ namespace Panoptes.ViewModels.Charts
 
             foreach (var ann in tempAnnotations)
             {
+                if (cancelationToken.IsCancellationRequested)
+                {
+                    Logger.LogInformation("OxyPlotSelectionViewModel.AddTradesToPlot: Canceled.");
+                    return;
+                }
+
                 SelectedSeries.Annotations.Add(ann); // 'Collection was modified' exception here... #11
             }
         }
@@ -525,6 +530,14 @@ namespace Panoptes.ViewModels.Charts
                         max = Math.Max(p.Y, max);
                     }
                 }
+                else if (series is LinearBarSeries lb)
+                {
+                    foreach (var p in lb.Points.Where(p => p.X >= axis.ActualMinimum && p.X <= axis.ActualMaximum))
+                    {
+                        min = Math.Min(p.Y, min);
+                        max = Math.Max(p.Y, max);
+                    }
+                }
                 else
                 {
                     throw new ArgumentOutOfRangeException($"Unknown series type '{series.GetType()}'.", nameof(series));
@@ -543,7 +556,6 @@ namespace Panoptes.ViewModels.Charts
             {
                 foreach (var running in _plotCommands.Where(c => c.IsRunning))
                 {
-                    var state = running.ExecutionTask.AsyncState;
                     Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Canceling ({Id}, {Status})...", running.ExecutionTask.Id, running.ExecutionTask.Status);
                     running.Cancel();
                 }
@@ -692,8 +704,26 @@ namespace Panoptes.ViewModels.Charts
             set
             {
                 if (_selectedSeries == value) return;
-
                 _selectedSeries = value;
+
+                /*
+                if (PlotTrades.IsRunning)
+                {
+                    Logger.LogInformation("OxyPlotSelectionViewModel.SelectedSeries.set: Canceling ({Id}, {Status})...", PlotTrades.ExecutionTask.Id, PlotTrades.ExecutionTask.Status);
+                    PlotTrades.Cancel();
+                }
+
+                if (_plotCommands.Any(c => c.IsRunning))
+                {
+                    foreach (var running in _plotCommands.Where(c => c.IsRunning))
+                    {
+                        Logger.LogInformation("OxyPlotSelectionViewModel.SetAndProcessPlot: Canceling ({Id}, {Status})...", running.ExecutionTask.Id, running.ExecutionTask.Status);
+                        running.Cancel();
+                    }
+                    DisplayLoading = false;
+                }
+                */
+
                 // Need to update toggle buttons for candles/lines, period selected
                 // or deactivate them
                 SetPlotParameters();
@@ -816,14 +846,14 @@ namespace Panoptes.ViewModels.Charts
                                 break;
 
                             case SeriesType.Bar:
-                                s = new LineSeries()
+                                s = new LinearBarSeries()
                                 {
-                                    Color = serie.Value.Color.ToOxyColor().Negative(),
+                                    //Color = serie.Value.Color.ToOxyColor().Negative(),
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
-                                    MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
-                                    MarkerStrokeThickness = 0,
-                                    MarkerStroke = OxyColors.Undefined,
+                                    //MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
+                                    //MarkerStrokeThickness = 0,
+                                    //MarkerStroke = OxyColors.Undefined,
                                     CanTrackerInterpolatePoints = false,
                                     RenderInLegend = true
                                 };
@@ -871,7 +901,7 @@ namespace Panoptes.ViewModels.Charts
 
                         case SeriesType.Bar:
                             // Handle candle and line series the same way, choice is done in UI
-                            var lineSeriesBar = (LineSeries)s;
+                            var lineSeriesBar = (LinearBarSeries)s;
                             var newLinePointsBar = serie.Value.Values.Select(p => DateTimeAxis.CreateDataPoint(p.X.UtcDateTime, (double)p.Y));
                             var currentLineBar = lineSeriesBar.Points;
                             var filteredLineBar = newLinePointsBar.Except(currentLineBar).ToList();

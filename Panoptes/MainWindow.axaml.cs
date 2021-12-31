@@ -9,6 +9,7 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model.Messages;
 using Panoptes.ViewModels;
 using Panoptes.Views.NewSession;
+using Panoptes.Views.Windows;
 using Serilog;
 using System;
 using System.ComponentModel;
@@ -109,7 +110,7 @@ namespace Panoptes
 
         private void ShowAboutButton_OnClick(object sender, RoutedEventArgs e)
         {
-            //ShowWindowDialog<AboutWindow>();
+            ShowWindowDialog<AboutWindow>();
         }
 
         private void BrowseLeanGithubMenuItem_OnClick(object sender, RoutedEventArgs e)

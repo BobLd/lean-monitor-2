@@ -70,7 +70,6 @@ namespace Panoptes.ViewModels.Panels
                 }
             };
 
-            _resultBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _resultBgWorker.RunWorkerAsync();
         }
 

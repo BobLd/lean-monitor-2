@@ -79,7 +79,6 @@ namespace Panoptes.ViewModels.Panels
                 }
             };
 
-            _pnlBgWorker.RunWorkerCompleted += (s, e) => { /*do anything here*/ };
             _pnlBgWorker.RunWorkerAsync();
         }
 
