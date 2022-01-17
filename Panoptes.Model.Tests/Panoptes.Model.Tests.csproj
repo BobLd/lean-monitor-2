@@ -5,7 +5,7 @@
 
     <IsPackable>false</IsPackable>
 
-    <Version>0.0.0.1-alpha4</Version>
+    <Version>0.0.0.1-beta1</Version>
   </PropertyGroup>
 
   <ItemGroup>
