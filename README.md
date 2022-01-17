@@ -6,7 +6,7 @@ Panoptes is an open-source Desktop based tool to browse [QuantConnect Lean](http
 
 Available for Windows, Linux and MacOS using [Avalonia](https://github.com/AvaloniaUI/Avalonia). Legacy WPF version available in the[ wpf-legacy branch](https://github.com/BobLd/lean-monitor-2/tree/wpf-legacy).
 
-# Download
+## Download
 Download the latest binaries from the [Releases](https://github.com/BobLd/lean-monitor-2/releases) page. Windows, Linux and MacOS versions are available.
 
 ## How to use
