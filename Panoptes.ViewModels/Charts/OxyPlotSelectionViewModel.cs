@@ -481,6 +481,9 @@ namespace Panoptes.ViewModels.Charts
         #endregion
 
         #region Auto fit y axis
+        /// <summary>
+        /// Automatically fit the Y axis to visiblie series.
+        /// </summary>
         public bool IsAutoFitYAxis { get; set; }
 
         private void TimeSpanAxis1_AxisChanged(object sender, AxisChangedEventArgs e)
@@ -493,7 +496,7 @@ namespace Panoptes.ViewModels.Charts
             double min = double.MaxValue;
             double max = double.MinValue;
 
-            foreach (var series in SelectedSeries.Series)
+            foreach (var series in SelectedSeries.Series.Where(s => s.IsVisible).ToList())
             {
                 if (series is LineCandleStickSeries lcs)
                 {
