@@ -390,6 +390,12 @@ namespace Panoptes.ViewModels.Charts
 
         private Task ProcessPlotTrades(CancellationToken cancelationToken)
         {
+            if (SelectedSeries == null)
+            {
+                Logger.LogInformation("OxyPlotSelectionViewModel.ProcessPlotTrades: No Selected Series, doing nothing ({Id}, {Status}).", PlotTrades.ExecutionTask.Id, PlotTrades.ExecutionTask.Status);
+                return Task.CompletedTask;
+            }
+
             // https://github.com/CommunityToolkit/WindowsCommunityToolkit/blob/rel/7.1.0/UnitTests/UnitTests.Shared/Mvvm/Test_AsyncRelayCommand.cs
             if (PlotTrades.IsRunning)
             {
@@ -403,8 +409,6 @@ namespace Panoptes.ViewModels.Charts
                 // need try/catch + finally
                 Logger.LogInformation("OxyPlotSelectionViewModel.ProcessPlotTrades: Start ({IsPlotTrades})...", IsPlotTrades);
                 DisplayLoading = true;
-
-                if (SelectedSeries == null) return;
 
                 // Do not use SelectedSeries.SyncRoot
                 // This will prevent async
@@ -486,7 +490,7 @@ namespace Panoptes.ViewModels.Charts
         /// </summary>
         public bool IsAutoFitYAxis { get; set; }
 
-        private void TimeSpanAxis1_AxisChanged(object sender, AxisChangedEventArgs e)
+        private void TimeSpanAxisChanged(object sender, AxisChangedEventArgs e)
         {
             if (!IsAutoFitYAxis || sender is not Axis axis || SelectedSeries == null)
             {
@@ -791,12 +795,12 @@ namespace Panoptes.ViewModels.Charts
                     plot.Culture = System.Globalization.CultureInfo.InvariantCulture;
 
                     // Keep axis simple for the moment
-                    var timeSpanAxis1 = OxyPlotExtensions.CreateDefaultDateTimeAxis(AxisPosition.Bottom);
+                    var timeSpanAxis = OxyPlotExtensions.CreateDefaultDateTimeAxis(AxisPosition.Bottom);
 #pragma warning disable CS0618 // Type or member is obsolete
                     // See https://github.com/oxyplot/oxyplot/issues/111
-                    timeSpanAxis1.AxisChanged += TimeSpanAxis1_AxisChanged;
+                    timeSpanAxis.AxisChanged += TimeSpanAxisChanged;
 #pragma warning restore CS0618 // Type or member is obsolete
-                    plot.Axes.Add(timeSpanAxis1);
+                    plot.Axes.Add(timeSpanAxis);
 
                     var linearAxis1 = OxyPlotExtensions.CreateDefaultLinearAxis(AxisPosition.Right, GetUnit(chart.Value));
                     plot.Axes.Add(linearAxis1);
@@ -851,12 +855,11 @@ namespace Panoptes.ViewModels.Charts
                             case SeriesType.Bar:
                                 s = new LinearBarSeries()
                                 {
-                                    //Color = serie.Value.Color.ToOxyColor().Negative(),
+                                    NegativeFillColor = OxyColors.Red,
+                                    StrokeColor = OxyColors.Undefined,
+                                    NegativeStrokeColor = OxyColors.Undefined,
                                     Tag = serie.Value.Name,
                                     Title = serie.Value.Name,
-                                    //MarkerType = GetMarkerType(serie.Value.ScatterMarkerSymbol),
-                                    //MarkerStrokeThickness = 0,
-                                    //MarkerStroke = OxyColors.Undefined,
                                     CanTrackerInterpolatePoints = false,
                                     RenderInLegend = true
                                 };

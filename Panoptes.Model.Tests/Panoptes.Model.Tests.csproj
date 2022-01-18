@@ -2,10 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
-
     <Version>0.0.0.1-beta1</Version>
+	<Authors>Panoptes</Authors>
+	<Company>Panoptes</Company>
+	<PackageProjectUrl>https://github.com/BobLd/lean-monitor-2</PackageProjectUrl>
+	<Description>Windows/Linux/MacOS Desktop App to browse QuantConnect Lean engine's backtest and monitor live performances.</Description>
+	<RepositoryUrl>https://github.com/BobLd/lean-monitor-2</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>

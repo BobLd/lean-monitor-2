@@ -8,6 +8,14 @@
 	<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	<NeutralLanguage>en</NeutralLanguage>
 	<DebugType>embedded</DebugType>
+	<Company>Panoptes</Company>
+	<Product>Panoptes</Product>
+	<PackageProjectUrl>https://github.com/BobLd/lean-monitor-2</PackageProjectUrl>
+	<Description>Windows/Linux/MacOS Desktop App to browse QuantConnect Lean engine's backtest and monitor live performances.</Description>
+	<PackageIcon>logo_plain.png</PackageIcon>
+	<RepositoryUrl>https://github.com/BobLd/lean-monitor-2</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	<Authors>Panoptes</Authors>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\icon\logo_plain.ico" />
@@ -37,5 +45,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\sounds\alerts\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\logo\logo_plain.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>
