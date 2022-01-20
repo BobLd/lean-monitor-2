@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Microsoft.Toolkit.Mvvm.Messaging;
+using Panoptes.Model;
 using System;
 
 namespace Panoptes.Views.Windows
@@ -10,6 +11,7 @@ namespace Panoptes.Views.Windows
     {
         private readonly IMessenger _messenger;
 
+        private readonly Label _statusLabel;
         private readonly Label _loadingLabel;
 
         public SplashScreenWindow()
@@ -24,7 +26,11 @@ namespace Panoptes.Views.Windows
 #if DEBUG
             this.AttachDevTools();
 #endif
+            _statusLabel = this.Get<Label>("_statusLabel");
+            _statusLabel.Content = $"Opening {Global.AppName}...";
+
             _loadingLabel = this.Get<Label>("_loadingLabel");
+            _loadingLabel.Content = $"v{Global.AppVersion}";
         }
 
         private void InitializeComponent()

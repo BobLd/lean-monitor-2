@@ -30,8 +30,7 @@
 	
 	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderLowBrush}">
 		<Grid RowDefinitions="24,*,Auto">
-			<Label Name="_statusLabel" Grid.Row="0" Content="Opening Panoptes..." HorizontalContentAlignment="Center" VerticalContentAlignment="Stretch"/>
-
+			<Label Name="_statusLabel" Grid.Row="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Stretch"/>
 			<DrawingPresenter Grid.Row="1" Drawing="{StaticResource Logo}" Classes="Opacity" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 			
 			<TextBox Name="_errorTextBlock" Grid.Row="1" Margin="0" Padding="0" IsReadOnly="True" IsEnabled="False" IsVisible="False"
