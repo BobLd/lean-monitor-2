@@ -179,7 +179,7 @@ namespace Panoptes
                 {
                     new Views.Windows.OpenBacktestWindow()
                     {
-                        FilePath = argument
+                        LoadingContent = $"{argument} ({Global.GetFileSize(argument):0.#} MB)",
                     }.Show();
 
                     await OpenAsync(new FileSessionParameters
@@ -194,7 +194,7 @@ namespace Panoptes
                 {
                     new Views.Windows.OpenBacktestWindow()
                     {
-                        FilePath = $"{argument} ({Global.GetFileSize(argument):0.#} MB)",
+                        LoadingContent = $"{argument} ({Global.GetFileSize(argument):0.#} MB)",
                     }.Show();
 
                     await OpenAsync(new FileSessionParameters
@@ -205,16 +205,6 @@ namespace Panoptes
                     }, CancellationToken.None).ConfigureAwait(false);
                     return;
                 }
-                //else if (argument.EndsWith(".qcb") && File.Exists(argument))
-                //{
-                //    // Expect it is a fileName
-                //    OpenAsync(new FileSessionParameters
-                //    {
-                //        FileName = argument,
-                //        Watch = false
-                //    }, CancellationToken.None).Wait();
-                //    return;
-                //}
 
                 // First try whether it is a port
                 /*
@@ -224,19 +214,6 @@ namespace Panoptes
                     {
                         Host = "localhost",
                         Port = port
-                    });
-                    return;
-                }
-                */
-
-                /*
-                if (argument.EndsWith(".json"))
-                {
-                    // Expect it is a fileName
-                    OpenFile(new FileSessionParameters
-                    {
-                        FileName = argument,
-                        Watch = true
                     });
                     return;
                 }
@@ -340,21 +317,6 @@ namespace Panoptes
 
             await OpenSessionAsync(session, cancellationToken).ConfigureAwait(false);
         }
-
-        /*
-        public void OpenApi(ApiSessionParameters parameters)
-        {
-            if (_session != null)
-            {
-                // Another session is open.
-                // Close the session first before opening this new one
-                ShutdownSession();
-            }
-
-            var session = new ApiSession(this, _apiClient, parameters);
-            OpenSession(session);
-        }
-        */
 
         private async Task OpenSessionAsync(ISession session, CancellationToken cancellationToken)
         {

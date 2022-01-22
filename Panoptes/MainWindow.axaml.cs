@@ -35,6 +35,7 @@ namespace Panoptes
             _messenger.Register<MainWindow, ShowNewSessionWindowMessage>(this, async (r, _) => await r.ShowWindowDialog<NewSessionWindow>().ConfigureAwait(false));
 
             InitializeComponent();
+
 #if DEBUG
             this.AttachDevTools();
 #endif

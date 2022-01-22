@@ -20,7 +20,7 @@
 			<Label Name="_statusLabel" Grid.Row="0" Content="Opening backtest..." MaxWidth="800" HorizontalContentAlignment="Center" VerticalContentAlignment="Stretch"/>
 			<DrawingPresenter Margin="5" Height="40" Grid.Row="1" Drawing="{StaticResource Logo}" Classes="Opacity" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 			<ProgressBar Name="_mainProgressBar" MaxWidth="800" Grid.Row="1" IsIndeterminate="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-			<Label Name="_filePathLabel" MaxWidth="800" Grid.Row="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+			<Label Name="_loadingLabel" MaxWidth="800" Grid.Row="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
 			<TextBox Name="_errorTextBlock" MaxWidth="800" Grid.Row="2" Margin="0" Padding="0" IsReadOnly="True" IsEnabled="False" IsVisible="False"
 					 HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource ErrorBrush}"/>
 		</Grid>

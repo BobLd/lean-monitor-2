@@ -146,21 +146,6 @@ namespace Panoptes.ViewModels
             });
 
             /*
-            Messenger.Register<MainWindowViewModel, SessionUpdateMessage>(this, (r, m) =>
-            {
-                try
-                {
-                    lock (_documents)
-                    {
-                        r.ParseResult(m.ResultContext.Result);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Trace.WriteLine(e);
-                }
-            });
-
             Messenger.Register<MainWindowViewModel, GridRequestMessage>(this, (r, m) =>
             {
                 var chartTableViewModel = new GridPanelViewModel

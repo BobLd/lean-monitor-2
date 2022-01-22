@@ -12,7 +12,7 @@ namespace Panoptes.Views.Windows
     {
         private readonly IMessenger _messenger;
 
-        private readonly Label _filePathLabel;
+        private readonly Label _loadingLabel;
 
         public OpenBacktestWindow()
         {
@@ -45,11 +45,12 @@ namespace Panoptes.Views.Windows
             });
 
             InitializeComponent();
+
+            _loadingLabel = this.Get<Label>("_loadingLabel");
+
 #if DEBUG
             this.AttachDevTools();
 #endif
-
-            _filePathLabel = this.Get<Label>("_filePathLabel");
         }
 
         private void InitializeComponent()
@@ -57,17 +58,17 @@ namespace Panoptes.Views.Windows
             AvaloniaXamlLoader.Load(this);
         }
 
-        public object FilePath
+        public object LoadingContent
         {
             get
             {
-                return _filePathLabel.Content;
+                return _loadingLabel.Content;
             }
 
             set
             {
-                if (_filePathLabel.Content == value) return;
-                _filePathLabel.Content = value;
+                if (_loadingLabel.Content == value) return;
+                _loadingLabel.Content = value;
             }
         }
     }

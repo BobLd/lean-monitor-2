@@ -13,12 +13,11 @@ namespace Panoptes
         /// Reorder the <see cref="DataGrid"/> columns.
         /// </summary>
         /// <param name="dataGrid">The datagrid to reorder.</param>
-        /// <param name="columnsOrder">Display position - Header.</param>
+        /// <param name="columnsOrder">Header - Display position.</param>
         public static void ReorderColumns(this DataGrid dataGrid, IReadOnlyList<Tuple<string, int>> columnsOrder)
         {
             if (columnsOrder == null) return;
             var currentColumns = dataGrid.Columns.ToDictionary(k => k.GetSettingsKey(), k => k.DisplayIndex);
-            //dataGrid.BeginBatchUpdate();
             foreach (var order in columnsOrder)
             {
                 if (!currentColumns.TryGetValue(order.Item1, out var oldIndex))
@@ -29,7 +28,6 @@ namespace Panoptes
                 if (oldIndex == order.Item2) continue;
                 dataGrid.Columns[oldIndex].DisplayIndex = order.Item2;
             }
-            //dataGrid.EndBatchUpdate();
         }
 
         /// <summary>
