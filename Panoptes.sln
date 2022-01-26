@@ -20,7 +20,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes", "Panoptes\Panopt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.Model.Tests", "Panoptes.Model.Tests\Panoptes.Model.Tests.csproj", "{826C6B48-6225-474D-AB60-1DDBF096A5E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Panoptes.QuantConnect", "Panoptes.QuantConnect\Panoptes.QuantConnect.csproj", "{AD2FBC96-CB45-42BC-A502-EE0405AED080}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Panoptes.QuantConnect", "Panoptes.QuantConnect\Panoptes.QuantConnect.csproj", "{AD2FBC96-CB45-42BC-A502-EE0405AED080}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect", "ext\Lean\Common\QuantConnect.csproj", "{F9F46279-434E-47FC-8941-8EF9FA22FD8D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,6 +58,10 @@ Global
 		{AD2FBC96-CB45-42BC-A502-EE0405AED080}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD2FBC96-CB45-42BC-A502-EE0405AED080}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD2FBC96-CB45-42BC-A502-EE0405AED080}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9F46279-434E-47FC-8941-8EF9FA22FD8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9F46279-434E-47FC-8941-8EF9FA22FD8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9F46279-434E-47FC-8941-8EF9FA22FD8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9F46279-434E-47FC-8941-8EF9FA22FD8D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
