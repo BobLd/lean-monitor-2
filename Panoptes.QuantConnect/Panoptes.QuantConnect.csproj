@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="QuantConnect.Common" Version="2.5.13513" />
+    <PackageReference Include="QuantConnect.Common" Version="2.5.13532" />
   </ItemGroup>
 
 </Project>
