@@ -21,6 +21,12 @@
     <None Remove="Resources\icon\logo_plain.ico" />
   </ItemGroup>
   <ItemGroup>
+	<TrimmableAssembly Include="Avalonia.Themes.Fluent" />
+	<TrimmableAssembly Include="QLNet" />
+	<TrimmableAssembly Include="MathNet.Numerics" />
+	<TrimmableAssembly Include="Python.Runtime" />
+  </ItemGroup>
+  <ItemGroup>
     <AvaloniaResource Include="Resources\icon\logo_plain.ico" />
   </ItemGroup>
   <ItemGroup>
