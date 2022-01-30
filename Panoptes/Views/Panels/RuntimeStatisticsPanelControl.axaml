@@ -26,7 +26,7 @@
 				</DataGridTemplateColumn.CellTemplate>
 			</DataGridTemplateColumn>
 
-			<DataGridTemplateColumn Header="Value" CellStyleClasses="posNegColor">
+			<DataGridTemplateColumn Header="Value" SortMemberPath="Value" CellStyleClasses="posNegColor">
 				<DataGridTemplateColumn.CellTemplate>
 					<DataTemplate>
 						<Label Content="{Binding Value, Mode=OneWay}">
