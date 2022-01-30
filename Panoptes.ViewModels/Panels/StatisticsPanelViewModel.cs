@@ -29,34 +29,36 @@ namespace Panoptes.ViewModels.Panels
 
         private readonly Dictionary<string, string> _definitions = new Dictionary<string, string>()
         {
+            // Definitions seats in QuantConnect.Statistics.StatisticsBuilder -> GetSummary()
             { "Probabilistic Sharpe Ratio", "Probability that the observed Sharpe ratio is greater than or equal to\nthe benchmark Sharpe ratio.\nPSR(SR*) = Prob[SR* ≤ SR^], with:\n- SR^ = observed Sharpe ratio\n- SR* = benchmark Sharpe ratio\nSee https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1821643" },
-            { "Unrealized", "Unrealized definition" },
-            { "Fees", "Fees definition" },
-            { "Net Profit", "Net Profit definition" },
-            { "Return", "Return definition" },
-            { "Equity", "Equity definition" },
-            { "Holdings", "Holdings definition" },
-            { "Volume", "Volume definition" },
-            { "Total Trades","Total Trades definition" },
-            { "Average Win","Average Win definition" },
-            { "Average Loss","Average Loss definition" },
-            { "Drawdown","Drawdown definition" },
-            { "Expectancy","Expectancy definition" },
-            { "Sharpe Ratio","Sharpe Ratio definition" },
-            { "Loss Rate","Loss Rate definition" },
-            { "Win Rate","Win Rate definition" },
-            { "Profit-Loss Ratio","Profit-Loss Ratio definition" },
-            { "Alpha","Alpha definition" },
-            { "Beta","Beta definition" },
-            { "Annual Standard Deviation","Annual Standard Deviation definition" },
-            { "Annual Variance","Annual Variance definition" },
-            { "Information Ratio","Information Ratio definition" },
-            { "Tracking Error","Tracking Error definition" },
-            { "Treynor Ratio","Treynor Ratio definition" },
-            { "Total Fees","Total Fees definition" },
-            { "Estimated Strategy Capacity","Estimated Strategy Capacity definition" },
-            { "Lowest Capacity Asset","Lowest Capacity Asset definition" },
-            { "Compounding Annual Return", "Compounding Annual Return definition" }
+            { "Unrealized", "Total unrealised profit in our portfolio from the individual security unrealized profits.\n\nAlgorithm.Portfolio.TotalFees" },
+            { "Fees", "Total fees paid during the algorithm operation across all securities in portfolio.\n\nAlgorithm.Portfolio.TotalFees" },
+            { "Return", "Return on investment, in percent\n(Total (end) Portfolio Value - Starting Portfolio Value) / Starting Portfolio Value" },
+            { "Equity", "Total portfolio value if we sold all holdings at current market rates.\nCash + Total Unrealised Profit + Total Unlevered Absolute Holdings Cost\n\nAlgorithm.Portfolio.TotalPortfolioValue" },
+            { "Holdings", "Absolute sum the individual items in portfolio.\n\nAlgorithm.Portfolio.TotalHoldingsValue" },
+            { "Volume", "Total sale volume since the start of algorithm operations.\n\nAlgorithm.Portfolio.TotalSaleVolume" },
+            { "Net Profit", "The total net profit percentage" }, // /!\ Different to the Runtime statistics definition...
+
+            { "Total Trades", "Total number of transactions/orders that were filled or partially filled" },
+            { "Average Win", "The average rate of return for winning trades" },
+            { "Average Loss", "The average rate of return for losing trades" },
+            { "Drawdown", "Drawdown maximum percentage" },
+            { "Expectancy", "The expected value of the rate of return" },
+            { "Sharpe Ratio", "Sharpe ratio with respect to risk free rate: measures excess of return per unit of risk\n\nWith risk defined as the algorithm's volatility" },
+            { "Loss Rate", "The ratio of the number of losing trades to the total number of trades\n\nIf the total number of trades is zero, LossRate is set to zero" },
+            { "Win Rate", "The ratio of the number of winning trades to the total number of trades\n\nIf the total number of trades is zero, WinRate is set to zero" },
+            { "Profit-Loss Ratio", "The ratio of the average win rate to the average loss rate\n\nIf the average loss rate is zero, ProfitLossRatio is set to 0" },
+            { "Alpha", "Algorithm 'Alpha' statistic - abnormal returns over the risk free rate and the relationshio (beta) with the benchmark returns" },
+            { "Beta", "Algorithm 'Beta' statistic - the covariance between the algorithm and benchmark performance, divided by benchmark's variance" },
+            { "Annual Standard Deviation", "Annualized standard deviation" },
+            { "Annual Variance", "Annualized variance statistic calculation using the daily performance variance and trading days per year" },
+            { "Information Ratio", "Information ratio - risk adjusted return\n\n(risk = tracking error volatility, a volatility measures that considers the volatility of both algo and benchmark)" },
+            { "Tracking Error", "Tracking error volatility (TEV) statistic - a measure of how closely a portfolio follows the index to which it is benchmarked\n\nIf algo = benchmark, TEV = 0" },
+            { "Treynor Ratio", "Treynor ratio statistic is a measurement of the returns earned in excess of that which could have been earned on an investment that has no diversifiable risk" },
+            { "Total Fees", "Total fees paid during the algorithm operation across all securities in portfolio" },
+            { "Estimated Strategy Capacity", "The total capacity of the strategy at a point in time" },
+            { "Lowest Capacity Asset", "Provide a reference to the lowest capacity symbol used in scaling down the capacity for debugging" },
+            { "Compounding Annual Return", "Annual compounded returns statistic based on the final-starting capital and years\n\nAlso known as Compound Annual Growth Rate (CAGR)" }
         };
 
         private readonly IStatisticsFormatter _statisticsFormatter;

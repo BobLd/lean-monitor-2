@@ -31,14 +31,14 @@ namespace Panoptes.ViewModels.Panels
         {
             // Definitions seats in QuantConnect.Lean.Engine.Results.BaseResultsHandler -> GetAlgorithmRuntimeStatistics()
             { "Probabilistic Sharpe Ratio", "Probability that the observed Sharpe ratio is greater than or equal to\nthe benchmark Sharpe ratio.\nPSR(SR*) = Prob[SR* ≤ SR^], with:\n- SR^ = observed Sharpe ratio\n- SR* = benchmark Sharpe ratio\nSee https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1821643" },
-            { "Unrealized", "Total unrealised profit in our portfolio from the individual security unrealized profits.\n\nAlgorithm.Portfolio.TotalFees" },
-            { "Fees", "Total fees paid during the algorithm operation across all securities in portfolio.\n\nAlgorithm.Portfolio.TotalFees" },
-            { "Net Profit", "Sum of all gross profit across all securities in portfolio.\n\u26A0 'Net Profit' is an error in naming by QC team.\n\nAlgorithm.Portfolio.TotalProfit" }, // Wrong naming by QC, this is GROSS profit, cf. BaseResultsHandler.GetAlgorithmRuntimeStatistics(...) line 672 Algorithm.Portfolio.TotalProfit
-            { "Return", "Return on investment, in percent.\n(Total (end) Portfolio Value - Starting Portfolio Value) / Starting Portfolio Value" },
-            { "Equity", "Total portfolio value if we sold all holdings at current market rates.\nCash + Total Unrealised Profit + Total Unlevered Absolute Holdings Cost\n\nAlgorithm.Portfolio.TotalPortfolioValue" },
-            { "Holdings", "Absolute sum the individual items in portfolio.\n\nAlgorithm.Portfolio.TotalHoldingsValue" },
-            { "Volume", "Total sale volume since the start of algorithm operations.\n\nAlgorithm.Portfolio.TotalSaleVolume" },
-            { "Capacity", "Capacity definition." }
+            { "Unrealized", "Total unrealised profit in our portfolio from the individual security unrealized profits\n\nAlgorithm.Portfolio.TotalUnrealizedProfit" },
+            { "Fees", "Total fees paid during the algorithm operation across all securities in portfolio\n\nAlgorithm.Portfolio.TotalFees" },
+            { "Net Profit", "Sum of all gross profit across all securities in portfolio\n\u26A0 'Net Profit' is an error in naming by QC team\n\nAlgorithm.Portfolio.TotalProfit" }, // Wrong naming by QC, this is GROSS profit, cf. BaseResultsHandler.GetAlgorithmRuntimeStatistics(...) line 672 Algorithm.Portfolio.TotalProfit
+            { "Return", "Return on investment, in percent\n(Total (end) Portfolio Value - Starting Portfolio Value) / Starting Portfolio Value" },
+            { "Equity", "Total portfolio value if we sold all holdings at current market rates\nCash + Total Unrealised Profit + Total Unlevered Absolute Holdings Cost\n\nAlgorithm.Portfolio.TotalPortfolioValue" },
+            { "Holdings", "Absolute sum the individual items in portfolio\n\nAlgorithm.Portfolio.TotalHoldingsValue" },
+            { "Volume", "Total sale volume since the start of algorithm operations\n\nAlgorithm.Portfolio.TotalSaleVolume" },
+            { "Capacity", "The total capacity of the strategy at a point in time" }
         };
 
         private readonly IStatisticsFormatter _statisticsFormatter;

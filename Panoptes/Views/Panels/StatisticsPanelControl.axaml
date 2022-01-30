@@ -25,7 +25,18 @@
 					</DataTemplate>
 				</DataGridTemplateColumn.CellTemplate>
 			</DataGridTemplateColumn>
-			<DataGridTextColumn Header="Value" Binding="{Binding Value, Mode=OneWay}" CellStyleClasses="posNegColor"/>
-		</DataGrid.Columns>
+
+			<DataGridTemplateColumn Header="Value" CellStyleClasses="posNegColor">
+				<DataGridTemplateColumn.CellTemplate>
+					<DataTemplate>
+						<Label Content="{Binding Value, Mode=OneWay}">
+							<ToolTip.Tip>
+								<TextBlock Text="{Binding Definition}"/>
+							</ToolTip.Tip>
+						</Label>
+					</DataTemplate>
+				</DataGridTemplateColumn.CellTemplate>
+			</DataGridTemplateColumn>
+	</DataGrid.Columns>
 	</DataGrid>
 </UserControl>

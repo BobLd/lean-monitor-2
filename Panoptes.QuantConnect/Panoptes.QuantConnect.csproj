@@ -1,17 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <DebugType>embedded</DebugType>
-    <Version>0.0.0.1-beta2</Version>
-    <Authors>Panoptes</Authors>
-    <Company>Panoptes</Company>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<DebugType>embedded</DebugType>
+		<Version>0.0.0.1-beta2</Version>
+		<Authors>Panoptes</Authors>
+		<Company>Panoptes</Company>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="QuantConnect.Common" Version="2.5.13532" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="QuantConnect.Common" Version="2.5.13532" />
+	</ItemGroup>
 
 </Project>
