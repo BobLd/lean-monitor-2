@@ -25,6 +25,8 @@
 	<TrimmableAssembly Include="QLNet" />
 	<TrimmableAssembly Include="MathNet.Numerics" />
 	<TrimmableAssembly Include="Python.Runtime" />
+	<TrimmableAssembly Include="McMaster.Extensions.CommandLineUtils" />
+	<TrimmableAssembly Include="System.Security.Cryptography.Pkcs" />	  
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Resources\icon\logo_plain.ico" />
