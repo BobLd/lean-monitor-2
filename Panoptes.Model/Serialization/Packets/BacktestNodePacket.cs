@@ -21,10 +21,8 @@ using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text.Json.Serialization;
 using PacketType = QuantConnect.Packets.PacketType;
-using Breakpoint = QuantConnect.Packets.Breakpoint;
 
 namespace Panoptes.Model.Serialization.Packets
 {
@@ -76,8 +74,8 @@ namespace Panoptes.Model.Serialization.Packets
         /// <summary>
         /// The initial breakpoints for debugging, if any
         /// </summary>
-        [JsonPropertyName("aBreakpoints")]
-        public List<Breakpoint> Breakpoints = new List<Breakpoint>();
+        //[JsonPropertyName("aBreakpoints")]
+        //public List<Breakpoint> Breakpoints = new List<Breakpoint>();
 
         /// <summary>
         /// The initial Watchlist for debugging, if any
@@ -88,7 +86,8 @@ namespace Panoptes.Model.Serialization.Packets
         /// <summary>
         /// True, if this is a debugging backtest
         /// </summary>
-        public bool IsDebugging => Breakpoints.Any();
+        [JsonPropertyName("bDebugging")]
+        public bool IsDebugging;
 
         /// <summary>
         /// Optional initial cash amount if set

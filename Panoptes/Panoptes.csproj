@@ -32,10 +32,10 @@
 		<AvaloniaResource Include="Resources\icon\logo_plain.ico" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="0.10.12" />
-		<PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.12" />
-		<PackageReference Include="Avalonia.Desktop" Version="0.10.12" />
-		<PackageReference Include="Avalonia.Diagnostics" Version="0.10.12" Condition=" '$(Configuration)' == 'Debug' " />
+		<PackageReference Include="Avalonia" Version="0.10.15" />
+		<PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.15" />
+		<PackageReference Include="Avalonia.Desktop" Version="0.10.15" />
+		<PackageReference Include="Avalonia.Diagnostics" Version="0.10.15" Condition=" '$(Configuration)' == 'Debug' " />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
 		<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Preview1" />

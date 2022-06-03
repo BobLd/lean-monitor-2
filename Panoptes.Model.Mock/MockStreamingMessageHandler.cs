@@ -101,7 +101,6 @@ namespace Panoptes.Model.Mock
             if (type == typeof(NotificationEmail) || type == typeof(NotificationWeb) || type == typeof(NotificationSms) || type == typeof(NotificationTelegram))
             {
                 Trace.TraceError("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
-                //Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
                 return;
             }
             notification.Send();
