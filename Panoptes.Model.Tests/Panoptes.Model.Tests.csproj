@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <Version>0.0.0.1-beta2</Version>
+    <Version>0.0.0.1-beta3</Version>
 	<Authors>Panoptes</Authors>
 	<Company>Panoptes</Company>
 	<PackageProjectUrl>https://github.com/BobLd/lean-monitor-2</PackageProjectUrl>

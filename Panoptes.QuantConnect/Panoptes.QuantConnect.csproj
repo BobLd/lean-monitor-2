@@ -5,7 +5,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<DebugType>embedded</DebugType>
-		<Version>0.0.0.1-beta2</Version>
+		<Version>0.0.0.1-beta3</Version>
 		<Authors>Panoptes</Authors>
 		<Company>Panoptes</Company>
 	</PropertyGroup>
