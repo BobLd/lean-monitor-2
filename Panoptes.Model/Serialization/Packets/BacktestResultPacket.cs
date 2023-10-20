@@ -214,7 +214,7 @@ namespace Panoptes.Model.Serialization.Packets
             return new BacktestResultPacket(job, new BacktestResult(new BacktestResultParameters(
                 new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
                 new Dictionary<string, string>(), new Dictionary<string, string>(), new Dictionary<string, AlgorithmPerformance>(),
-                new List<OrderEvent>(), new AlgorithmPerformance(), new AlphaRuntimeStatistics()
+                new List<OrderEvent>(), new AlgorithmPerformance(),  new AlgorithmConfiguration()
             )), DateTime.UtcNow, DateTime.UtcNow);
         }
     } // End Queue Packet:

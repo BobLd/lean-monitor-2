@@ -151,7 +151,7 @@ namespace Panoptes.Model.Serialization.Packets
                 new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
                 new Dictionary<string, Holding>(), new CashBook(), new Dictionary<string, string>(),
                 new Dictionary<string, string>(), new List<OrderEvent>(), new Dictionary<string, string>(),
-                new AlphaRuntimeStatistics())));
+                new AlgorithmConfiguration())));
         }
     } // End Queue Packet:
 
