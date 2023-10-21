@@ -13,7 +13,7 @@
 		</Style>
 	</UserControl.Styles>
 
-	<DataGrid IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False" Items="{Binding ProfitLoss}">
+	<DataGrid IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False" ItemsSource="{Binding ProfitLoss}">
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="Date" Binding="{Binding DateTime, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Profit / Loss" Binding="{Binding Profit, StringFormat={}\{0:0.0######\}, Mode=OneWay}" CellStyleClasses="posNegColor"/>

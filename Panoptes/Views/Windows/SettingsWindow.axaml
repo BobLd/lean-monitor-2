@@ -19,8 +19,8 @@
 				<Border BorderBrush="{StaticResource ThemeBorderLowBrush}" BorderThickness="1">
 					<Grid RowDefinitions="Auto,Auto,Auto,Auto">
 						<TextBlock Grid.Row="0" Text="{Binding SelectedTimeZone}"/>
-						<ComboBox Grid.Row="1" Items="{Binding TimeZones}" SelectedItem="{Binding SelectedTimeZone}"/>
-						<ComboBox Grid.Row="2" Items="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" SelectedIndex="0"/>
+						<ComboBox Grid.Row="1" ItemsSource="{Binding TimeZones}" SelectedItem="{Binding SelectedTimeZone}"/>
+						<ComboBox Grid.Row="2" ItemsSource="{Binding Grids}" SelectedItem="{Binding SelectedGrid}" SelectedIndex="0"/>
 					</Grid>
 				</Border>
 			</TabItem>

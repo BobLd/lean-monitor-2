@@ -32,7 +32,7 @@ namespace Panoptes
             {
                 throw new ArgumentNullException("Could not find 'IMessenger' service in 'App.Current.Services'.");
             }
-            _messenger.Register<MainWindow, ShowNewSessionWindowMessage>(this, async (r, _) => await r.ShowWindowDialog<NewSessionWindow>().ConfigureAwait(false));
+            _messenger.Register<MainWindow, ShowNewSessionWindowMessage>(this, async (r, _) => await r.ShowWindowDialog<NewSessionWindow>());
 
             InitializeComponent();
 
@@ -46,7 +46,7 @@ namespace Panoptes
             AvaloniaXamlLoader.Load(this);
         }
 
-        private void OnClosing(object? sender, CancelEventArgs e)
+        private void OnClosing(object? sender, WindowClosingEventArgs e)
         {
             try
             {
@@ -79,7 +79,7 @@ namespace Panoptes
             // Nothing
         }
 
-        private Task ShowWindowDialog<T>() where T : Window
+        private DispatcherOperation ShowWindowDialog<T>() where T : Window
         {
             return Dispatcher.UIThread.InvokeAsync(() =>
             {

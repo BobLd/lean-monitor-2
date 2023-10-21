@@ -14,26 +14,28 @@
 
 	<Window.Styles>
 		<!--https://github.com/AvaloniaUI/Avalonia/blob/master/samples/RenderDemo/Pages/AnimationsPage.xaml-->
-		<Style Selector="DrawingPresenter.Opacity">
-			<Style.Animations>
-				<Animation Duration="0:0:2.0" IterationCount="Infinite" PlaybackDirection="Alternate">
-					<KeyFrame Cue="0%">
-						<Setter Property="Opacity" Value="0.2"/>
-					</KeyFrame>
-					<KeyFrame Cue="100%">
-						<Setter Property="Opacity" Value="1.0"/>						
-					</KeyFrame>
-				</Animation>
-			</Style.Animations>
-		</Style>
-	</Window.Styles>
+        <Style Selector="Image.Opacity">
+            <Style.Animations>
+                <Animation Duration="0:0:2.0" IterationCount="Infinite" PlaybackDirection="Alternate">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.2"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1.0"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+  </Window.Styles>
 	
 	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderLowBrush}">
 		<Grid RowDefinitions="24,*,Auto">
 			<Label Name="_statusLabel" Grid.Row="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Stretch"/>
-			<DrawingPresenter Grid.Row="1" Drawing="{StaticResource Logo}" Classes="Opacity" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-			
-			<TextBox Name="_errorTextBlock" Grid.Row="1" Margin="0" Padding="0" IsReadOnly="True" IsEnabled="False" IsVisible="False"
+            <Image Grid.Row="1" Source="{StaticResource Logo}" Classes="Opacity" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+      <TextBox Name="_errorTextBlock" Grid.Row="1" Margin="0" Padding="0" IsReadOnly="True" IsEnabled="False" IsVisible="False"
 					 HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource ErrorBrush}"/>
 
 			<Grid Grid.Row="2" VerticalAlignment="Bottom">

@@ -1,5 +1,6 @@
 ﻿using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Panoptes.Model.Statistics;
 using System;
 using System.Globalization;
@@ -14,7 +15,7 @@ namespace Panoptes.Views.Converters
 
         public PositiveNegativeNumberConverter()
         {
-            if (App.Current.Styles.TryGetResource("ThemeForegroundBrush", out var b) && b != null)
+            if (App.Current.Styles.TryGetResource("ThemeForegroundBrush", ThemeVariant.Default, out var b) && b != null)
             {
                 _defaultBrush = (IBrush)b;
             }

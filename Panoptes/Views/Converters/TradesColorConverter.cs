@@ -1,5 +1,6 @@
 ﻿using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Avalonia.Styling;
 using QuantConnect.Orders;
 using System;
 using System.Globalization;
@@ -12,7 +13,7 @@ namespace Panoptes.Views.Converters
 
         public TradesColorConverter()
         {
-            if (App.Current.Styles.TryGetResource("ThemeForegroundBrush", out var b) && b != null)
+            if (App.Current.Styles.TryGetResource("ThemeForegroundBrush", ThemeVariant.Dark, out var b) && b != null)
             {
                 _defaultBrush = (IBrush)b;
             }
