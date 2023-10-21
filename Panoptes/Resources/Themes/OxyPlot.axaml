@@ -47,8 +47,12 @@
 		<Setter Property="Background" Value="#E0FFFFA0" />
 		<Setter Property="BorderBrush" Value="Black" />
 		<Setter Property="BorderThickness" Value="1" />
-		<Setter Property="LineStroke" Value="#80000000" />
-		<Setter Property="HorizontalLineVisibility" Value="true" />
+        <Setter Property="LineStroke">
+            <Setter.Value>
+                <SolidColorBrush Color="#80000000"/>
+            </Setter.Value>
+        </Setter>
+    <Setter Property="HorizontalLineVisibility" Value="true" />
 		<Setter Property="VerticalLineVisibility" Value="true" />
 		<Setter Property="Distance" Value="7" />
 		<Setter Property="CornerRadius" Value="0" />

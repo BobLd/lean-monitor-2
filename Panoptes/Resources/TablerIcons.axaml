@@ -3,7 +3,12 @@
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
-			<DrawingPresenter Width="120" Height="120" Drawing="{StaticResource TablerIcons.ChartCandle2}" />
+            <Image Width="120" Height="120">
+                <Image.Source>
+                    <DrawingImage Drawing="{StaticResource TablerIcons.ChartCandle2}"/>
+                </Image.Source>
+            </Image>
+
         </Border>
     </Design.PreviewWith>
 

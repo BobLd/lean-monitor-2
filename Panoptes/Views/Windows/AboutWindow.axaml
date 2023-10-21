@@ -12,8 +12,9 @@
 	
 	<Border BorderThickness="1" BorderBrush="{StaticResource ThemeBorderHighBrush}">
 		<Grid ColumnDefinitions="220,Auto">
-			<DrawingPresenter Grid.Column="0" Drawing="{StaticResource Logo}" Margin="10" VerticalAlignment="Center"/>
-			<Grid Grid.Column="1" VerticalAlignment="Center" RowDefinitions="Auto,Auto,5,Auto,Auto, Auto">
+            <Image Grid.Column="0" Source="{StaticResource Logo}" Margin="10" VerticalAlignment="Center"/>
+
+      <Grid Grid.Column="1" VerticalAlignment="Center" RowDefinitions="Auto,Auto,5,Auto,Auto, Auto">
 				<TextBlock Grid.Row="0" Text="Panoptes - LEAN Algorithm Monitor"/>
 				<TextBlock Grid.Row="1" TextWrapping="WrapWithOverflow" MaxWidth="380" FontSize="11"
 						   Text="Panoptes is an open-source Desktop tool for Windows, Linux and MacOS to browse QuantConnect Lean engine's backtest and monitor live performances. It is updated and ported from mirthestam's lean-monitor project."/>

@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Panoptes.Model;
 using System;
 using System.Globalization;
+using Avalonia.Styling;
 
 namespace Panoptes.Views.Converters
 {
@@ -15,22 +16,22 @@ namespace Panoptes.Views.Converters
 
         public LogPanelLogoTypeConverter()
         {
-            if (App.Current.Styles.TryGetResource("TablerIcons.InfoCircle", out var log) && log != null)
+            if (App.Current.Styles.TryGetResource("TablerIcons.InfoCircle", ThemeVariant.Dark,  out var log) && log != null)
             {
                 Log = (DrawingGroup)log;
             }
 
-            if (App.Current.Styles.TryGetResource("TablerIcons.Bug", out var debug) && debug != null)
+            if (App.Current.Styles.TryGetResource("TablerIcons.Bug", ThemeVariant.Dark, out var debug) && debug != null)
             {
                 Debug = (DrawingGroup)debug;
             }
 
-            if (App.Current.Styles.TryGetResource("TablerIcons.CircleX", out var error) && error != null)
+            if (App.Current.Styles.TryGetResource("TablerIcons.CircleX", ThemeVariant.Dark, out var error) && error != null)
             {
                 Error = (DrawingGroup)error;
             }
 
-            if (App.Current.Styles.TryGetResource("Logo", out var monitor) && monitor != null)
+            if (App.Current.Styles.TryGetResource("Logo", ThemeVariant.Dark, out var monitor) && monitor != null)
             {
                 Monitor = (DrawingGroup)monitor;
             }

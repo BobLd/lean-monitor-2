@@ -19,7 +19,7 @@
 			  HeadersVisibility="Column" AutoGenerateColumns="False"
 			  DoubleTapped="OnDataGridDoubleTapped" SelectedItem="{Binding SelectedItem}"
 			  CanUserResizeColumns="True" CanUserReorderColumns="True"
-			  AlternatingRowBackground="Transparent" RowBackground="Transparent"
+			  RowBackground="Transparent"
 			  ToolTip.ShowDelay="2000" ToolTip.Tip="List of orders.&#x0a;Double-click on an order for full details">
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}"/>

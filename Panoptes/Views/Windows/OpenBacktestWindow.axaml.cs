@@ -12,7 +12,6 @@ namespace Panoptes.Views.Windows
     {
         private readonly IMessenger _messenger;
 
-        private readonly Label _loadingLabel;
 
         public OpenBacktestWindow()
         {
@@ -26,7 +25,7 @@ namespace Panoptes.Views.Windows
             {
                 if (m.IsSuccess)
                 {
-                    Dispatcher.UIThread.InvokeAsync(() => r.Close()).ConfigureAwait(false).GetAwaiter().GetResult();
+                    Dispatcher.UIThread.InvokeAsync(() => r.Close()).GetAwaiter().GetResult();
                 }
                 else
                 {
