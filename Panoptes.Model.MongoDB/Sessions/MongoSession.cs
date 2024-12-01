@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using Panoptes.Model.Serialization.Packets;
+using QuantConnect.Packets;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.Stream;
 using System;
 using System.ComponentModel;
-using System.Text.Json;
+using Newtonsoft.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using PacketType = QuantConnect.Packets.PacketType;
@@ -57,7 +57,7 @@ namespace Panoptes.Model.MongoDB.Sessions
             await base.InitializeAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        private static bool CheckliveResultPacket(LiveResultPacket liveResultPacket)
+        private static bool CheckLiveResultPacket(LiveResultPacket liveResultPacket)
         {
             bool cashOk = liveResultPacket.Results.Cash?.Count > 0;
             bool holdingsOk = liveResultPacket.Results.Holdings?.Count > 0;
@@ -73,8 +73,6 @@ namespace Panoptes.Model.MongoDB.Sessions
                 var collection = _client.GetDatabase(DatabaseName).GetCollection<MongoDbPacket>(CollectionName); // backtest or live + algo name / id
                 var builder = Builders<MongoDbPacket>.Filter;
 
-                //https://stackoverflow.com/questions/8749971/can-i-query-mongodb-objectid-by-date
-                //var dateFilter = builder.Gte(x => x.Id, new ObjectId(DateTime.UtcNow.AddDays(-1), 0, 0, 0)); // last 24h
                 var sort = Builders<MongoDbPacket>.Sort.Descending("_id");
 
                 // Live node LiveNode
@@ -121,8 +119,8 @@ namespace Panoptes.Model.MongoDB.Sessions
                         {
                             if (liveResultPacket == null)
                             {
-                                liveResultPacket = JsonSerializer.Deserialize<LiveResultPacket>(packet.Message, _options);
-                                if (CheckliveResultPacket(liveResultPacket))
+                                liveResultPacket = JsonConvert.DeserializeObject<LiveResultPacket>(packet.Message, _jsonSettings);
+                                if (CheckLiveResultPacket(liveResultPacket))
                                 {
                                     liveResultContinue = false;
                                     break;
@@ -130,14 +128,14 @@ namespace Panoptes.Model.MongoDB.Sessions
                             }
                             else
                             {
-                                if (CheckliveResultPacket(liveResultPacket))
+                                if (CheckLiveResultPacket(liveResultPacket))
                                 {
                                     liveResultContinue = false;
                                     break;
                                 }
                                 else
                                 {
-                                    var liveResultPacketLocal = JsonSerializer.Deserialize<LiveResultPacket>(packet.Message, _options);
+                                    var liveResultPacketLocal = JsonConvert.DeserializeObject<LiveResultPacket>(packet.Message, _jsonSettings);
 
                                     // Update cash
                                     if ((liveResultPacket.Results.Cash == null || liveResultPacket.Results.Cash.Count == 0) &&
@@ -154,7 +152,7 @@ namespace Panoptes.Model.MongoDB.Sessions
                                     }
                                 }
 
-                                if (CheckliveResultPacket(liveResultPacket))
+                                if (CheckLiveResultPacket(liveResultPacket))
                                 {
                                     liveResultContinue = false;
                                     break;
@@ -164,7 +162,7 @@ namespace Panoptes.Model.MongoDB.Sessions
                     }
                 }
 
-                if (liveResultFilter != null)
+                if (liveResultPacket != null)
                 {
                     _packetQueue.Add(liveResultPacket, cancellationToken);
                 }

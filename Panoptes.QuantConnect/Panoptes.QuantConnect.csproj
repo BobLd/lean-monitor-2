@@ -1,17 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<DebugType>embedded</DebugType>
-		<Version>0.0.0.1-beta2</Version>
+		<Version>0.0.1.16753</Version>
 		<Authors>Panoptes</Authors>
 		<Company>Panoptes</Company>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
 	<ItemGroup>
-		<PackageReference Include="QuantConnect.Common" Version="2.5.14003" />
+		<PackageReference Include="QuantConnect.Common" Version="2.5.16753" />
 	</ItemGroup>
 
 </Project>

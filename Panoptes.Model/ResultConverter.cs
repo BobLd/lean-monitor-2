@@ -1,11 +1,10 @@
-﻿using Panoptes.Model.Serialization.Packets;
+using Panoptes.Model.Charting;
 using QuantConnect;
-using QuantConnect.Orders;
+using QuantConnect.Packets;
 using QuantConnect.Statistics;
+using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
-using BacktestResultParameters = QuantConnect.Packets.BacktestResultParameters;
-using LiveResultParameters = QuantConnect.Packets.LiveResultParameters;
 
 namespace Panoptes.Model
 {
@@ -22,31 +21,39 @@ namespace Panoptes.Model
             return new Result
             {
                 ResultType = ResultType.Backtest,
-                Charts = new Dictionary<string, Charting.ChartDefinition>(backtestResult.Charts.MapToChartDefinitionDictionary()),
-                Orders = new Dictionary<int, Order>(backtestResult.Orders ?? new Dictionary<int, Order>()),
-                ProfitLoss = new Dictionary<DateTime, decimal>(backtestResult.ProfitLoss ?? new Dictionary<DateTime, decimal>()),
-                Statistics = new Dictionary<string, string>(backtestResult.Statistics ?? new Dictionary<string, string>()),
-                RuntimeStatistics = new Dictionary<string, string>(backtestResult.RuntimeStatistics ?? new Dictionary<string, string>()),
-                //ServerStatistics = new Dictionary<string, string>(backtestResult.ServerStatistics ?? new Dictionary<string, string>()), // No server stats in backtest?
-                RollingWindow = new Dictionary<string, AlgorithmPerformance>(backtestResult.RollingWindow ?? new Dictionary<string, AlgorithmPerformance>()),
+                Charts = backtestResult.Charts.MapToChartDefinitionDictionary(),
+                Orders = backtestResult.Orders,
+                ProfitLoss = backtestResult.ProfitLoss,
+                Statistics = backtestResult.Statistics,
+                RuntimeStatistics = backtestResult.RuntimeStatistics,
+                RollingWindow = backtestResult.RollingWindow,
                 OrderEvents = backtestResult.OrderEvents,
             };
         }
 
         public Result FromLiveResult(LiveResult liveResult)
         {
+            var cashBook = new CashBook();
+            if (liveResult.Cash != null)
+            {
+                foreach (var kvp in liveResult.Cash)
+                {
+                    cashBook.Add(kvp.Key, kvp.Value);
+                }
+            }
+
             return new Result
             {
                 ResultType = ResultType.Live,
-                Charts = new Dictionary<string, Charting.ChartDefinition>(liveResult.Charts.MapToChartDefinitionDictionary() ?? new Dictionary<string, Charting.ChartDefinition>()),
-                Orders = new Dictionary<int, Order>(liveResult.Orders ?? new Dictionary<int, Order>()),
-                ProfitLoss = new Dictionary<DateTime, decimal>(liveResult.ProfitLoss ?? new Dictionary<DateTime, decimal>()),
-                Statistics = new Dictionary<string, string>(liveResult.Statistics ?? new Dictionary<string, string>()),
-                RuntimeStatistics = new Dictionary<string, string>(liveResult.RuntimeStatistics ?? new Dictionary<string, string>()),
-                ServerStatistics = new Dictionary<string, string>(liveResult.ServerStatistics ?? new Dictionary<string, string>()),
+                Charts = liveResult.Charts.MapToChartDefinitionDictionary(),
+                Orders = liveResult.Orders,
+                ProfitLoss = liveResult.ProfitLoss,
+                Statistics = liveResult.Statistics,
+                RuntimeStatistics = liveResult.RuntimeStatistics,
+                ServerStatistics = liveResult.ServerStatistics,
                 OrderEvents = liveResult.OrderEvents,
-                Holdings = new Dictionary<string, Holding>(liveResult.Holdings ?? new Dictionary<string, Holding>()),
-                Cash = liveResult.Cash,
+                Holdings = liveResult.Holdings,
+                Cash = cashBook,
                 AccountCurrency = liveResult.AccountCurrency,
                 AccountCurrencySymbol = liveResult.AccountCurrencySymbol
             };
@@ -57,9 +64,16 @@ namespace Panoptes.Model
             if (result == null) throw new ArgumentNullException(nameof(result));
             if (result.ResultType != ResultType.Backtest) throw new ArgumentException("Result is not of type Backtest", nameof(result));
 
-            // Total performance is always null in the original data holder
+            var backtestResultParameters = new BacktestResultParameters(
+                result.Charts.MapToChartDictionary(),
+                result.Orders,
+                result.ProfitLoss,
+                result.Statistics,
+                result.RuntimeStatistics,
+                result.RollingWindow != null ? new Dictionary<string, AlgorithmPerformance>(result.RollingWindow) : null,
+                null,
+                null);
 
-            var backtestResultParameters = new BacktestResultParameters(result.Charts.MapToChartDictionary(), result.Orders, result.ProfitLoss, result.Statistics, result.RuntimeStatistics, result.RollingWindow, null, null);
             return new BacktestResult(backtestResultParameters);
         }
 
@@ -68,10 +82,17 @@ namespace Panoptes.Model
             if (result == null) throw new ArgumentNullException(nameof(result));
             if (result.ResultType != ResultType.Live) throw new ArgumentException("Result is not of type Live", nameof(result));
 
-            var liveResultParameters = new LiveResultParameters(result.Charts.MapToChartDictionary(),
-                result.Orders, result.ProfitLoss, result.Holdings,
-                null, result.Statistics, result.RuntimeStatistics, // result.CashBook
-                null, result.ServerStatistics);
+            var liveResultParameters = new LiveResultParameters(
+                result.Charts.MapToChartDictionary(),
+                result.Orders,
+                result.ProfitLoss,
+                result.Holdings,
+                null,
+                result.Statistics,
+                result.RuntimeStatistics,
+                null,
+                result.ServerStatistics);
+
             return new LiveResult(liveResultParameters);
         }
     }

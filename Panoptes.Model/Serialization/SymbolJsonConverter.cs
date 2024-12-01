@@ -1,81 +1,53 @@
-﻿using QuantConnect;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using QuantConnect;
 using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Panoptes.Model.Serialization
 {
     // https://github.com/QuantConnect/Lean/blob/master/Common/SymbolJsonConverter.cs
     public sealed class SymbolJsonConverter : JsonConverter<Symbol>
     {
-        public override Symbol Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override Symbol ReadJson(JsonReader reader, Type objectType, Symbol existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            switch (reader.TokenType)
+            if (reader.TokenType == JsonToken.String)
             {
-                case JsonTokenType.String:
-                    var symbolStr = reader.GetString();
-                    var sid = SecurityIdentifier.Parse(symbolStr);
-                    return new Symbol(sid, sid.Symbol);
-
-                case JsonTokenType.None:
-                    break;
-                case JsonTokenType.StartObject:
-                    var jobject = JsonDocument.ParseValue(ref reader);
-                    if (jobject.RootElement.TryGetProperty("type", out var type))
-                    {
-                        //   return BuildSymbolFromUserFriendlyValue(jobject);
-                        throw new NotImplementedException();
-                    }
-                    return ReadSymbolFromJson(jobject);
-
-                case JsonTokenType.EndObject:
-                    break;
-                case JsonTokenType.StartArray:
-                    break;
-                case JsonTokenType.EndArray:
-                    break;
-                case JsonTokenType.PropertyName:
-                    break;
-                case JsonTokenType.Comment:
-                    break;
-
-                case JsonTokenType.Number:
-                    break;
-                case JsonTokenType.True:
-                    break;
-                case JsonTokenType.False:
-                    break;
-                case JsonTokenType.Null:
-                    break;
-                default:
-                    break;
+                var symbolStr = reader.Value.ToString();
+                var sid = SecurityIdentifier.Parse(symbolStr);
+                return new Symbol(sid, sid.Symbol);
             }
-            throw new NotImplementedException();
+            else if (reader.TokenType == JsonToken.StartObject)
+            {
+                JObject jobject = JObject.Load(reader);
+                if (jobject.TryGetValue("type", StringComparison.OrdinalIgnoreCase, out var typeToken))
+                {
+                    throw new NotImplementedException("Parsing based on 'type' is not implemented.");
+                }
+                return ReadSymbolFromJson(jobject);
+            }
+
+            throw new JsonSerializationException($"Unexpected token {reader.TokenType} when parsing Symbol.");
         }
 
-        public override void Write(Utf8JsonWriter writer, Symbol value, JsonSerializerOptions options)
+        public override void WriteJson(JsonWriter writer, Symbol value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            writer.WriteValue(value.ID.ToString());
         }
 
-        private Symbol ReadSymbolFromJson(JsonDocument jObject)
+        private Symbol ReadSymbolFromJson(JObject jObject)
         {
-            JsonElement symbolId;
-            JsonElement value;
-
-            if (jObject.RootElement.TryGetProperty("ID", out symbolId)
-                && jObject.RootElement.TryGetProperty("Value", out value))
+            if (jObject.TryGetValue("ID", StringComparison.OrdinalIgnoreCase, out var symbolIdToken) &&
+                jObject.TryGetValue("Value", StringComparison.OrdinalIgnoreCase, out var valueToken))
             {
                 Symbol underlyingSymbol = null;
-                JsonElement underlying;
-                if (jObject.RootElement.TryGetProperty("Underlying", out underlying))
+                if (jObject.TryGetValue("Underlying", StringComparison.OrdinalIgnoreCase, out var underlyingToken))
                 {
-                    throw new NotImplementedException();
-                    //underlyingSymbol = ReadSymbolFromJson(underlying as JsonDocument);
+                    // Implement parsing for underlying symbol if necessary
+                    throw new NotImplementedException("Parsing of 'Underlying' symbol is not implemented.");
                 }
 
-                return new Symbol(SecurityIdentifier.Parse(symbolId.ToString()), value.ToString());
-                //return new Symbol(SecurityIdentifier.Parse(symbolId.ToString()), value.ToString(), underlyingSymbol);
+                var sid = SecurityIdentifier.Parse(symbolIdToken.ToString());
+                return new Symbol(sid, valueToken.ToString());
             }
             return null;
         }

@@ -3,19 +3,20 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <DebugType>embedded</DebugType>
-    <Version>0.0.0.1-beta2</Version>
+    <Version>0.0.1.16753</Version>
 	<Authors>Panoptes</Authors>
 	<Company>Panoptes</Company>
 	<PackageProjectUrl>https://github.com/BobLd/lean-monitor-2</PackageProjectUrl>
 	<Description>Windows/Linux/MacOS Desktop App to browse QuantConnect Lean engine's backtest and monitor live performances.</Description>
 	<RepositoryUrl>https://github.com/BobLd/lean-monitor-2</RepositoryUrl>
 	<RepositoryType>git</RepositoryType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
-    <PackageReference Include="OxyPlot.Core" Version="2.1.0" />
-    <PackageReference Include="Serilog" Version="2.11.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+    <PackageReference Include="OxyPlot.Core" Version="2.1.2" />
+    <PackageReference Include="Serilog" Version="2.12.0" />
   </ItemGroup>
 
   <ItemGroup>

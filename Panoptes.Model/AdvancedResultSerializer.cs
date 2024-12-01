@@ -1,30 +1,30 @@
 ﻿using Microsoft.Extensions.Logging;
 using Panoptes.Model.Serialization;
-using Panoptes.Model.Serialization.Packets;
+using QuantConnect.Packets;
 using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace Panoptes.Model
 {
-    // TODO: check https://devblogs.microsoft.com/dotnet/try-the-new-system-text-json-source-generator/
     public sealed class AdvancedResultSerializer : IResultSerializer
     {
         private readonly IResultConverter _resultConverter;
 
-        private readonly JsonSerializerOptions _options;
+        private readonly JsonSerializerSettings _settings;
         private readonly ILogger _logger;
 
         public AdvancedResultSerializer(IResultConverter resultConverter, ILogger<AdvancedResultSerializer> logger)
         {
             _logger = logger;
             _resultConverter = resultConverter;
-            _options = DefaultJsonSerializerOptions.Default;
+            _settings = DefaultJsonSerializerSettings.Default;
         }
 
         public async Task<Result> DeserializeAsync(string pathToResult, CancellationToken cancellationToken)
@@ -35,16 +35,19 @@ namespace Panoptes.Model
             BacktestResult backtestResult;
             try
             {
-                var sw = new System.Diagnostics.Stopwatch();
+                var sw = new Stopwatch();
                 string orderEventsPath = GetOrderEvents(pathToResult);
                 if (File.Exists(orderEventsPath))
                 {
                     var orderFileSizeMb = Global.GetFileSize(orderEventsPath);
                     _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening Order events file '{orderEventsPath}' with size {fileSizeMb:0.0000}MB.", orderEventsPath, orderFileSizeMb);
                     sw.Start();
-                    using (var orderEventsStream = File.Open(orderEventsPath, FileMode.Open))
+                    using (var orderEventsStream = File.OpenRead(orderEventsPath))
+                    using (var streamReader = new StreamReader(orderEventsStream))
+                    using (var jsonReader = new JsonTextReader(streamReader))
                     {
-                        orderEvents = await JsonSerializer.DeserializeAsync<List<OrderEvent>>(orderEventsStream, _options, cancellationToken).ConfigureAwait(false);
+                        var serializer = JsonSerializer.Create(_settings);
+                        orderEvents = serializer.Deserialize<List<OrderEvent>>(jsonReader);
                     }
                     sw.Stop();
                     _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening Order events file done in {ElapsedMilliseconds}ms.", sw.ElapsedMilliseconds);
@@ -53,24 +56,30 @@ namespace Panoptes.Model
                 var fileSizeMb = Global.GetFileSize(pathToResult);
                 _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening main backtest file '{pathToResult}' with size {fileSizeMb:0.0000}MB.", pathToResult, fileSizeMb);
                 sw.Restart();
-                using (var backtestResultStream = File.Open(pathToResult, FileMode.Open))
+                using (var backtestResultStream = File.OpenRead(pathToResult))
+                using (var streamReader = new StreamReader(backtestResultStream))
+                using (var jsonReader = new JsonTextReader(streamReader))
                 {
-                    backtestResult = await JsonSerializer.DeserializeAsync<BacktestResult>(backtestResultStream, _options, cancellationToken).ConfigureAwait(false);
+                    var serializer = JsonSerializer.Create(_settings);
+                    backtestResult = serializer.Deserialize<BacktestResult>(jsonReader);
                     if (backtestResult.OrderEvents != null)
                     {
-                        throw new ArgumentException();
+                        throw new ArgumentException("OrderEvents should be null before assignment.");
                     }
 
                     backtestResult.OrderEvents = orderEvents;
-                    sw.Stop();
-                    _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening main backtest done in {ElapsedMilliseconds}ms.", sw.ElapsedMilliseconds);
-                    return _resultConverter.FromBacktestResult(backtestResult);
                 }
+                sw.Stop();
+                _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Opening main backtest done in {ElapsedMilliseconds}ms.", sw.ElapsedMilliseconds);
+                return _resultConverter.FromBacktestResult(backtestResult);
             }
             catch (TaskCanceledException)
             {
                 _logger.LogInformation("AdvancedResultSerializer.DeserializeAsync: Deserialization was canceled.");
-                orderEvents.Clear();
+                if (orderEvents != null)
+                {
+                    orderEvents.Clear();
+                }
                 backtestResult = null;
                 throw;
             }
@@ -87,58 +96,66 @@ namespace Panoptes.Model
 
         public Result Deserialize(string pathToResult)
         {
-            throw new NotImplementedException("AdvancedResultSerializer.Deserialize()");
+            throw new NotImplementedException("AdvancedResultSerializer.Deserialize() is not implemented.");
         }
 
         public string Serialize(Result result)
         {
-            throw new NotImplementedException("AdvancedResultSerializer.Serialize()");
+            throw new NotImplementedException("AdvancedResultSerializer.Serialize() is not implemented.");
         }
+
         public Task<string> SerializeAsync(Result result, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException("AdvancedResultSerializer.SerializeAsync()");
+            throw new NotImplementedException("AdvancedResultSerializer.SerializeAsync() is not implemented.");
         }
 
         public async IAsyncEnumerable<(DateTime, string)> GetBacktestLogs(string pathToResult, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            // https://oleh-zheleznyak.blogspot.com/2020/07/enumeratorcancellation.html
             string logPath = GetLogs(pathToResult);
             if (File.Exists(logPath))
             {
                 var logsFileSizeMb = Global.GetFileSize(logPath);
-                _logger.LogInformation("AdvancedResultSerializer.TryGetBacktestLogs: Opening logs file '{logPath}' with size {fileSizeMb:0.0000}MB.", logPath, logsFileSizeMb);
+                _logger.LogInformation("AdvancedResultSerializer.GetBacktestLogs: Opening logs file '{logPath}' with size {fileSizeMb:0.0000}MB.", logPath, logsFileSizeMb);
 
                 string previousLine = null;
                 DateTime previousDate = default;
 
-                foreach (var line in await File.ReadAllLinesAsync(logPath, cancellationToken).ConfigureAwait(false))
+                using (var streamReader = new StreamReader(logPath))
                 {
-                    if (cancellationToken.IsCancellationRequested) yield break;
-
-                    if (line.Length > 19 && DateTime.TryParse(line.AsSpan(0, 19), out var currentDate))
+                    string line;
+                    while ((line = await streamReader.ReadLineAsync().ConfigureAwait(false)) != null)
                     {
-                        currentDate = DateTime.SpecifyKind(currentDate, DateTimeKind.Utc);
-                        // Line starts with a date, this is a new log
-                        if (!string.IsNullOrEmpty(previousLine))
+                        if (cancellationToken.IsCancellationRequested) yield break;
+
+                        if (line.Length > 19 && DateTime.TryParse(line.Substring(0, 19), out var currentDate))
                         {
-                            yield return (previousDate, previousLine);
-                            previousLine = null;
-                            previousDate = default;
+                            currentDate = DateTime.SpecifyKind(currentDate, DateTimeKind.Utc);
+                            // Line starts with a date, this is a new log
+                            if (!string.IsNullOrEmpty(previousLine))
+                            {
+                                yield return (previousDate, previousLine);
+                                previousLine = null;
+                                previousDate = default;
+                            }
+                            previousLine = line;
+                            previousDate = currentDate;
                         }
-                        previousLine = line;
-                        previousDate = currentDate;
+                        else
+                        {
+                            // Not a new log, the log continues
+                            previousLine += "\n" + line;
+                        }
                     }
-                    else
-                    {
-                        // Not a new log, the log continues
-                        previousLine += "\n" + line;
-                    }
-                }
 
-                if (!string.IsNullOrEmpty(previousLine))
-                {
-                    yield return (previousDate, previousLine);
+                    if (!string.IsNullOrEmpty(previousLine))
+                    {
+                        yield return (previousDate, previousLine);
+                    }
                 }
+            }
+            else
+            {
+                _logger.LogWarning("AdvancedResultSerializer.GetBacktestLogs: Log file '{logPath}' does not exist.", logPath);
             }
         }
 
@@ -150,8 +167,9 @@ namespace Panoptes.Model
 
         private static string GetLogs(string pathToResult)
         {
+            // The log file always has the pattern *-log.txt
             return Path.Combine(Path.GetDirectoryName(pathToResult),
-                    Path.ChangeExtension($"{Path.GetFileNameWithoutExtension(pathToResult)}-log", Path.GetExtension(pathToResult)));
+                $"{Path.GetFileNameWithoutExtension(pathToResult)}-log.txt");
         }
     }
 }

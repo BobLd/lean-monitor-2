@@ -31,7 +31,7 @@ namespace Panoptes.ViewModels.Panels
 
         private readonly BackgroundWorker _pnlBgWorker;
 
-        private readonly BlockingCollection<Dictionary<DateTime, decimal>> _pnlQueue = new BlockingCollection<Dictionary<DateTime, decimal>>();
+        private readonly BlockingCollection<IDictionary<DateTime, decimal>> _pnlQueue = new BlockingCollection<IDictionary<DateTime, decimal>>();
 
         private ObservableCollection<ProfitLossItemViewModel> _profitLoss = new ObservableCollection<ProfitLossItemViewModel>();
 
@@ -106,7 +106,7 @@ namespace Panoptes.ViewModels.Panels
         {
             while (!_pnlBgWorker.CancellationPending)
             {
-                var pnls = _pnlQueue.Take(); // Need cancelation token
+                var pnls = _pnlQueue.Take(); // Need cancellation token
                 foreach (var item in pnls.OrderBy(o => o.Key).Select(p => new ProfitLossItemViewModel { DateTime = p.Key, Profit = p.Value }))
                 {
                     if (_profitLossDico.ContainsKey(item.DateTime))

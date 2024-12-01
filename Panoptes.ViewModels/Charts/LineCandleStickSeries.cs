@@ -1,5 +1,6 @@
-﻿using OxyPlot;
+using OxyPlot;
 using OxyPlot.Series;
+using OxyPlot.Axes;
 using Panoptes.Model;
 using Serilog;
 using System;
@@ -9,76 +10,69 @@ using System.Threading;
 
 namespace Panoptes.ViewModels.Charts
 {
-    /*
-     * TODO:
-     * - Check time when grouping is done
-     *     - For line - uses begining of period but displays last point of period...
-     */
+
+    #region Basics region
+
     public enum PlotSerieTypes : byte
     {
         Line = 0,
         Candles = 1,
     }
 
-    /// <summary>
-    /// Represents a "higher performance" ordered OHLC series for candlestick charts
-    /// <para>
-    /// Does the following:
-    /// - automatically calculates the appropriate bar width based on available screen + # of bars
-    /// - can render and pan within millions of bars, using a fast approach to indexing in series
-    /// - convenience methods
-    /// </para>
-    /// </summary>
     public sealed class LineCandleStickSeries : HighLowSeries
     {
-        private PlotSerieTypes _serieTypes;
-        private readonly object _lockSerieTypes;
+        private PlotSerieTypes _serieType;
+        private readonly object _lockSerieType;
 
         public PlotSerieTypes SerieType
         {
             get
             {
-                lock (_lockSerieTypes)
+                lock (_lockSerieType)
                 {
-                    return _serieTypes;
+                    return _serieType;
                 }
             }
 
             set
             {
-                lock (_lockSerieTypes)
+                lock (_lockSerieType)
                 {
-                    _serieTypes = value;
+                    _serieType = value;
                 }
             }
         }
 
         public TimeSpan Period { get; set; }
 
+        private TimeSpan? _minTs = null;
+        private TimeSpan? _maxTs = null;
+
         public void SetPeriod(TimeSpan ts)
         {
             if (Period.Equals(ts))
             {
-                Log.Debug("LineCandleStickSeries.SetPeriod({Tag}): Period is already {ts}.", Tag, ts);
+                Log.Debug("LineCandleStickSeries.SetPeriod({Tag}): Period is already {Period}.", Tag, ts);
                 return;
             }
 
             if (ts.Ticks < 0)
             {
-                throw new ArgumentException($"LineCandleStickSeries.SetPeriod({Tag}):TimeSpan must be positive.", nameof(ts));
+                throw new ArgumentException($"LineCandleStickSeries.SetPeriod({Tag}): TimeSpan must be positive.", nameof(ts));
             }
 
             Period = ts;
 
+            // Re-aggregate the data according to the new period
             UpdateLine(RawPoints, true);
-            UpdateCandles(RawPoints, true);
+            UpdateCandlesFromHighLowItems(RawCandles, true);
         }
 
         public bool CanDoTimeSpan(TimeSpan ts)
         {
-            if (_minTs == double.MaxValue) return false;
-            return ts > TimeSpan.FromDays(_minTs) &&
-                   ts < TimeSpan.FromDays(_maxTs);
+            if (!_minTs.HasValue || !_maxTs.HasValue) return false;
+            return ts >= _minTs.Value && 
+                   ts <= _maxTs.Value;
         }
 
         public OxyColor LineColor { get; set; }
@@ -88,7 +82,6 @@ namespace Panoptes.ViewModels.Charts
         /// Increasing this number will increase performance,
         /// but make the curve less accurate. The default is <c>2</c>.
         /// </summary>
-        /// <value>The minimum length of the segment.</value>
         public double MinimumSegmentLength { get; set; }
 
         /// <summary>
@@ -108,12 +101,16 @@ namespace Panoptes.ViewModels.Charts
         /// </summary>
         private double minDx;
 
+        #endregion
+
+        #region LineCandleStickSeries main region
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="CandleStickSeries"/> class.
+        /// Initializes a new instance of the <see cref="LineCandleStickSeries"/> class.
         /// </summary>
         public LineCandleStickSeries()
         {
-            _lockSerieTypes = new object();
+            _lockSerieType = new object();
             SerieType = PlotSerieTypes.Candles;
             MinimumSegmentLength = 2.0;
 
@@ -149,9 +146,9 @@ namespace Panoptes.ViewModels.Charts
         public double CandleWidth { get; set; }
 
         /// <summary>
-        /// Fast index of bar where max(bar[i].X) &lt;= x
+        /// Fast index of bar where max(bar[i].X) <= x
         /// </summary>
-        /// <returns>The index of the bar closest to X, where max(bar[i].X) &lt;= x.</returns>
+        /// <returns>The index of the bar closest to X, where max(bar[i].X) <= x.</returns>
         /// <param name="x">The x coordinate.</param>
         /// <param name="startIndex">starting index</param>
         public int FindByX(double x, int startIndex = -1)
@@ -235,6 +232,22 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
+        private readonly List<HighLowItem> _rawCandles = new List<HighLowItem>();
+
+        /// <summary>
+        /// Read-only copy of raw candles.
+        /// </summary>
+        public IReadOnlyList<HighLowItem> RawCandles
+        {
+            get
+            {
+                lock (_rawCandles)
+                {
+                    return _rawCandles.ToList();
+                }
+            }
+        }
+
         private readonly List<DataPoint> _points = new List<DataPoint>();
 
         /// <summary>
@@ -251,25 +264,94 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
-        private double _minTs = double.MaxValue;
-        private double _maxTs;
-
         private void UpdateMinMaxDeltaTime()
         {
-            if (_rawPoints.Count < 2) return;
+            TimeSpan? minInterval = null;
+            TimeSpan? maxInterval = null;
 
-            var ts = _rawPoints[_rawPoints.Count - 1].X - _rawPoints[_rawPoints.Count - 2].X;
-            if (ts == 0) return;
-
-            if (ts < 0)
+            if (SerieType == PlotSerieTypes.Line)
             {
-                throw new ArgumentException();
+                if (_rawPoints.Count < 2) return;
+
+                for (int i = 1; i < _rawPoints.Count; i++)
+                {
+                    var ts = TimeSpan.FromDays(_rawPoints[i].X - _rawPoints[i - 1].X);
+
+                    if (ts.TotalSeconds <= 0)
+                    {
+                        continue; // Ignore invalid time spans
+                    }
+
+                    minInterval = minInterval.HasValue ? TimeSpan.FromTicks(Math.Min(minInterval.Value.Ticks, ts.Ticks)) : ts;
+                }
+
+                var firstPoint = _rawPoints.First();
+                var lastPoint = _rawPoints.Last();
+                var totalInterval = TimeSpan.FromDays(lastPoint.X - firstPoint.X);
+
+                if (totalInterval.TotalDays >= 1)
+                {
+                    maxInterval = TimeSpan.FromDays(1);
+                }
+                else if (totalInterval.TotalHours >= 1)
+                {
+                    maxInterval = TimeSpan.FromHours(1);
+                }
+                else if (totalInterval.TotalMinutes >= 1)
+                {
+                    maxInterval = TimeSpan.FromMinutes(1);
+                }
+                else if (totalInterval.TotalSeconds >= 1)
+                {
+                    maxInterval = TimeSpan.FromSeconds(1);
+                }
+
+            }
+            else if (SerieType == PlotSerieTypes.Candles)
+            {
+                if (_rawCandles.Count < 2) return;
+
+                for (int i = 1; i < _rawCandles.Count; i++)
+                {
+                    var ts = TimeSpan.FromDays(_rawCandles[i].X - _rawCandles[i - 1].X);
+
+                    if (ts.TotalSeconds <= 0)
+                    {
+                        continue; // Ignore invalid time spans
+                    }
+
+                    minInterval = minInterval.HasValue ? TimeSpan.FromTicks(Math.Min(minInterval.Value.Ticks, ts.Ticks)) : ts;
+                }
+
+                var firstCandle = _rawCandles.First();
+                var lastCandle = _rawCandles.Last();
+                var totalInterval = TimeSpan.FromDays(lastCandle.X - firstCandle.X);
+
+                if (totalInterval.TotalDays >= 1)
+                {
+                    maxInterval = TimeSpan.FromDays(1);
+                }
+                else if (totalInterval.TotalHours >= 1)
+                {
+                    maxInterval = TimeSpan.FromHours(1);
+                }
+                else if (totalInterval.TotalMinutes >= 1)
+                {
+                    maxInterval = TimeSpan.FromMinutes(1);
+                }
+                else if (totalInterval.TotalSeconds >= 1)
+                {
+                    maxInterval = TimeSpan.FromSeconds(1);
+                }
+
+
             }
 
-            ts -= ts % Times.OneSecond.TotalDays; // Round to closest second
-
-            _minTs = Math.Min(_minTs, ts);
-            _maxTs += ts;
+            if (minInterval.HasValue && maxInterval.HasValue)
+            {
+                _minTs = minInterval;
+                _maxTs = maxInterval;
+            }
         }
 
         public void AddRange(IEnumerable<DataPoint> dataPoints)
@@ -293,49 +375,158 @@ namespace Panoptes.ViewModels.Charts
 
             // Update the line
             UpdateLine(newPoints, false);
-
-            // Udpate the candles
-            UpdateCandles(newPoints, false);
         }
 
-        /// <summary>
-        /// Update Candles
-        /// </summary>
-        /// <param name="newPoints">Must be distinct</param>
-        private void UpdateCandles(IReadOnlyList<DataPoint> newPoints, bool reset)
+        public void AddRange(IEnumerable<HighLowItem> highLowItems)
+        {
+            if (!highLowItems.Any()) return;
+
+            List<HighLowItem> newItems;
+
+            lock (_rawCandles)
+            {
+                // Get distinct new candles
+                newItems = highLowItems.Except(_rawCandles, new HighLowItemComparer()).OrderBy(x => x.X).ToList();
+
+                // Add new candles to the raw candles
+                foreach (var candle in newItems)
+                {
+                    _rawCandles.Add(candle);
+                    UpdateMinMaxDeltaTime();
+                }
+            }
+
+            // Update the candles
+            UpdateCandlesFromHighLowItems(newItems, false);
+
+            // Update the line with Close values from new candles
+            var newPoints = newItems.Select(c => new DataPoint(c.X, c.Close)).ToList();
+            AddRangeToRawPoints(newPoints);
+        }
+
+        private void AddRangeToRawPoints(IEnumerable<DataPoint> newPoints)
+        {
+            if (!newPoints.Any()) return;
+
+            List<DataPoint> distinctNewPoints;
+
+            lock (_rawPoints)
+            {
+                // Get distinct new data points
+                distinctNewPoints = newPoints.Except(_rawPoints).OrderBy(x => x.X).ToList();
+
+                // Add new data points to the raw data points
+                foreach (var point in distinctNewPoints)
+                {
+                    _rawPoints.Add(point);
+                    UpdateMinMaxDeltaTime();
+                }
+            }
+
+            // Update the line
+            UpdateLine(distinctNewPoints, false);
+        }
+
+        private void UpdateCandlesFromHighLowItems(IReadOnlyList<HighLowItem> newItems, bool reset)
         {
             lock (Items)
             {
                 if (reset)
                 {
                     Items.Clear();
+                    newItems = _rawCandles;
                 }
                 else if (Items.Count > 0)
                 {
                     // Check if last candle needs update
-                    var last = Items.Last();
-                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X));
-                    if (update.Any())
+                    var lastCandleTime = Times.OxyplotRoundDown(Items[^1].X, Period);
+                    var updateCandles = newItems.Where(c => Times.OxyplotRoundDown(c.X, Period).Equals(lastCandleTime)).ToList();
+                    if (updateCandles.Any())
                     {
-                        newPoints = newPoints.Except(update).ToList();
-                        last.Close = update.Last().Y;
-                        last.Low = Math.Min(last.Low, update.Min(x => x.Y));
-                        last.High = Math.Max(last.High, update.Max(x => x.Y));
-                        if (newPoints.Count == 0) return;
+                        var lastItemIndex = Items.Count - 1;
+                        var existingCandle = Items[lastItemIndex];
+
+                        var updatedCandle = new HighLowItem(
+                            lastCandleTime,
+                            Math.Max(existingCandle.High, updateCandles.Max(c => c.High)),
+                            Math.Min(existingCandle.Low, updateCandles.Min(c => c.Low)),
+                            existingCandle.Open,
+                            updateCandles.Last().Close);
+
+                        Items[lastItemIndex] = updatedCandle;
+
+                        newItems = newItems.Except(updateCandles).ToList();
                     }
                 }
 
-                // Add new candles
-                // need to check if there's more than 1 datapoint in each group...
-                var grp = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
-                                   .Select(g => new HighLowItem(g.Key,
-                                                                 g.Max(p => p.Y), g.Min(p => p.Y),
-                                                                 g.First().Y, g.Last().Y)).ToList();
-                Items.AddRange(grp);
+                if (newItems.Count == 0) return;
+
+                // Group candles by the new period
+                var groupedCandles = newItems
+                    .GroupBy(c => Times.OxyplotRoundDown(c.X, Period))
+                    .Select(g => new HighLowItem(
+                        g.Key,
+                        g.Max(c => c.High),
+                        g.Min(c => c.Low),
+                        g.First().Open,
+                        g.Last().Close))
+                    .ToList();
+
+                Items.AddRange(groupedCandles);
             }
         }
 
+        /// <summary>
+        /// Update Line
+        /// </summary>
+        /// <param name="newPoints">Must be distinct</param>
+        /// <param name="reset">Whether to reset the existing line</param>
+        private void UpdateLine(IReadOnlyList<DataPoint> newPoints, bool reset)
+        {
+            lock (_points)
+            {
+                if (reset)
+                {
+                    _points.Clear();
+
+                    // Use the Close values from the raw candles
+                    newPoints = _rawCandles.Select(c => new DataPoint(c.X, c.Close)).ToList();
+                }
+                else if (_points.Count > 0)
+                {
+                    // Check if last point needs update
+                    var lastPointTime = Times.OxyplotRoundDown(_points[^1].X, Period);
+                    var updatePoints = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(lastPointTime)).ToList();
+                    if (updatePoints.Any())
+                    {
+                        var lastItemIndex = _points.Count - 1;
+                        var newY = updatePoints.Last().Y; // Use Close value
+
+                        _points[lastItemIndex] = new DataPoint(lastPointTime, newY);
+
+                        newPoints = newPoints.Except(updatePoints).ToList();
+                    }
+                }
+
+                if (newPoints.Count == 0) return;
+
+                // Group and add new points
+                var groupedPoints = newPoints
+                    .GroupBy(p => Times.OxyplotRoundDown(p.X, Period))
+                    .Select(g => new DataPoint(
+                        g.Key,
+                        g.Last().Y)) // Use Close value
+                    .ToList();
+
+                _points.AddRange(groupedPoints);
+            }
+        }
+
+        #endregion
+
+
         #region Line series rendering
+
         /// <summary>
         /// Renders the series on the specified rendering context.
         /// </summary>
@@ -371,86 +562,7 @@ namespace Panoptes.ViewModels.Charts
         }
 
         /// <summary>
-	    /// Extracts a single contiguous line segment beginning with the element at the position of the enumerator when the method
-	    /// is called. Initial invalid data points are ignored.
-	    /// </summary>
-	    /// <param name="pointIdx">Current point index</param>
-	    /// <param name="previousContiguousLineSegmentEndPoint">Initially set to null, but I will update I won't give a broken line if this is null</param>
-	    /// <param name="xmax">Maximum visible X value</param>
-	    /// <param name="broken">place to put broken segment</param>
-	    /// <param name="contiguous">place to put contiguous segment</param>
-	    /// <param name="points">Points collection</param>
-	    /// <returns>
-	    ///   <c>true</c> if line segments are extracted, <c>false</c> if reached end.
-	    /// </returns>
-	    private bool ExtractNextContiguousLineSegment(IList<DataPoint> points, ref int pointIdx,
-            ref ScreenPoint? previousContiguousLineSegmentEndPoint, double xmax,
-            List<ScreenPoint> broken, List<ScreenPoint> contiguous)
-        {
-            DataPoint currentPoint = default(DataPoint);
-            bool hasValidPoint = false;
-
-            // Skip all undefined points
-            for (; pointIdx < points.Count; pointIdx++)
-            {
-                currentPoint = points[pointIdx];
-                if (currentPoint.X > xmax)
-                {
-                    return false;
-                }
-
-                if (hasValidPoint = this.IsValidPoint(currentPoint))
-                {
-                    break;
-                }
-            }
-
-            if (!hasValidPoint)
-            {
-                return false;
-            }
-
-            // First valid point
-            var screenPoint = this.Transform(currentPoint);
-
-            // Handle broken line segment if exists
-            if (previousContiguousLineSegmentEndPoint.HasValue)
-            {
-                broken.Add(previousContiguousLineSegmentEndPoint.Value);
-                broken.Add(screenPoint);
-            }
-
-            // Add first point
-            contiguous.Add(screenPoint);
-
-            // Add all points up until the next invalid one
-            int clipCount = 0;
-            for (pointIdx++; pointIdx < points.Count; pointIdx++)
-            {
-                currentPoint = points[pointIdx];
-                clipCount += currentPoint.X > xmax ? 1 : 0;
-                if (clipCount > 1)
-                {
-                    break;
-                }
-
-                if (!this.IsValidPoint(currentPoint))
-                {
-                    break;
-                }
-
-                screenPoint = this.Transform(currentPoint);
-                contiguous.Add(screenPoint);
-            }
-
-            previousContiguousLineSegmentEndPoint = screenPoint;
-
-            return true;
-        }
-
-        private readonly List<ScreenPoint> contiguousScreenPointsBuffer = new List<ScreenPoint>();
-        /// <summary>
-        /// Renders the points as line, broken line and markers.
+        /// Renders the points as line.
         /// </summary>
         /// <param name="rc">The rendering context.</param>
         /// <param name="points">The points to render.</param>
@@ -484,11 +596,73 @@ namespace Panoptes.ViewModels.Charts
             }
         }
 
-        /// <summary>
-        /// Renders the transformed points as a line (smoothed if <see cref="InterpolationAlgorithm"/> isn’t <c>null</c>) and markers (if <see cref="MarkerType"/> is not <c>None</c>).
-        /// </summary>
-        /// <param name="rc">The render context.</param>
-        /// <param name="pointsToRender">The points to render.</param>
+        private bool ExtractNextContiguousLineSegment(IList<DataPoint> points, ref int pointIdx,
+            ref ScreenPoint? previousContiguousLineSegmentEndPoint, double xmax,
+            List<ScreenPoint> broken, List<ScreenPoint> contiguous)
+        {
+            DataPoint currentPoint = default(DataPoint);
+            bool hasValidPoint = false;
+
+            // Skip all undefined points
+            for (; pointIdx < points.Count; pointIdx++)
+            {
+                currentPoint = points[pointIdx];
+                if (currentPoint.X > xmax)
+                {
+                    return false;
+                }
+
+                if (hasValidPoint = this.IsValidPoint(currentPoint))
+                {
+                    break;
+                }
+            }
+
+            if (!hasValidPoint)
+            {
+                return false;
+            }
+
+            // First valid point
+            var screenPoint = this.Transform(currentPoint);
+
+            // Handle broken line segment if exists
+            if (previousContiguousLineSegmentEndPoint.HasValue)
+            {
+                broken?.Add(previousContiguousLineSegmentEndPoint.Value);
+                broken?.Add(screenPoint);
+            }
+
+            // Add first point
+            contiguous.Add(screenPoint);
+
+            // Add all points up until the next invalid one
+            int clipCount = 0;
+            for (pointIdx++; pointIdx < points.Count; pointIdx++)
+            {
+                currentPoint = points[pointIdx];
+                clipCount += currentPoint.X > xmax ? 1 : 0;
+                if (clipCount > 1)
+                {
+                    break;
+                }
+
+                if (!this.IsValidPoint(currentPoint))
+                {
+                    break;
+                }
+
+                screenPoint = this.Transform(currentPoint);
+                contiguous.Add(screenPoint);
+            }
+
+            previousContiguousLineSegmentEndPoint = screenPoint;
+
+            return true;
+        }
+
+        private readonly List<ScreenPoint> contiguousScreenPointsBuffer = new List<ScreenPoint>();
+
         private void RenderLineAndMarkers(IRenderContext rc, IList<ScreenPoint> pointsToRender)
         {
             this.RenderLine(rc, pointsToRender);
@@ -496,17 +670,10 @@ namespace Panoptes.ViewModels.Charts
 
         private List<ScreenPoint> outputBuffer;
 
-        /// <summary>
-        /// Renders a continuous line.
-        /// </summary>
-        /// <param name="rc">The render context.</param>
-        /// <param name="pointsToRender">The points to render.</param>
         private void RenderLine(IRenderContext rc, IList<ScreenPoint> pointsToRender)
         {
             if (this.outputBuffer == null)
             {
-                // Does that makes sense? Size is only set once.
-                // Why do we want to keep track of that?
                 this.outputBuffer = new List<ScreenPoint>(pointsToRender.Count);
             }
 
@@ -521,43 +688,10 @@ namespace Panoptes.ViewModels.Charts
                 this.outputBuffer);
         }
 
-        /// <summary>
-        /// Update Line
-        /// </summary>
-        /// <param name="newPoints">Must be distinct</param>
-        private void UpdateLine(IReadOnlyList<DataPoint> newPoints, bool reset)
-        {
-            lock (_points)
-            {
-                if (reset)
-                {
-                    _points.Clear();
-                }
-                else if (_points.Count > 0)
-                {
-                    // Check if last point needs update
-                    var last = _points[_points.Count - 1];
-                    var update = newPoints.Where(p => Times.OxyplotRoundDown(p.X, Period).Equals(last.X)); // Need to do particular case for Period=0 (All)
-                    if (update.Any())
-                    {
-                        newPoints = newPoints.Except(update).ToList();
-                        _points[_points.Count - 1] = new DataPoint(last.X, update.Last().Y);
-                        if (newPoints.Count == 0) return;
-                    }
-                }
-
-                // Add new point
-                // need to check if there's more than 1 datapoint in each group...
-                var grouped = newPoints.GroupBy(p => Times.OxyplotRoundDown(p.X, Period)).Select(g => new DataPoint(g.Key, g.Last().Y));
-                _points.AddRange(grouped); // Need to do particular case for Period=0 (All)
-            }
-        }
         #endregion
 
-        /// <summary>
-        /// Renders the series on the specified rendering context.
-        /// </summary>
-        /// <param name="rc">The rendering context.</param>
+        #region Candle series rendering
+
         private void RenderCandlesSerie(IRenderContext rc)
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -596,9 +730,9 @@ namespace Panoptes.ViewModels.Charts
                 var candlewidth = XAxis.Transform(first.X + datacandlewidth) - XAxis.Transform(first.X);
 
                 // colors
-                var lineColor = GetSelectableColor(LineColor.ChangeIntensity(0.70));
-                var fillUp = GetSelectableFillColor(LineColor);
-                var fillDown = GetSelectableFillColor(OxyColors.Transparent);
+                var lineColor = GetSelectableColor(LineColor);
+                var fillUp = GetSelectableFillColor(IncreasingColor);
+                var fillDown = GetSelectableFillColor(DecreasingColor);
 
                 // determine render range
                 WindowStartIndex = UpdateWindowStartIndex(items, item => item.X, XAxis.ActualMinimum, WindowStartIndex);
@@ -672,7 +806,7 @@ namespace Panoptes.ViewModels.Charts
                     continue;
                 }
 
-                //Body
+                // Body
                 if (i % 2 == 0)
                 {
                     lines.AddRange(new[] { this.Transform(bar.X, bar.High), this.Transform(bar.X, bar.Low) });
@@ -888,6 +1022,8 @@ namespace Panoptes.ViewModels.Charts
             upRects.Clear();
             downRects.Clear();
         }
+
+        #endregion
 
         /// <summary>
         /// Renders the legend symbol for the series on the specified rendering context.
@@ -1124,6 +1260,19 @@ namespace Panoptes.ViewModels.Charts
                 {
                     minDx = 1;
                 }
+            }
+        }
+
+        internal sealed class HighLowItemComparer : IEqualityComparer<HighLowItem>
+        {
+            public bool Equals(HighLowItem x, HighLowItem y)
+            {
+                return x.X == y.X && x.Open == y.Open && x.High == y.High && x.Low == y.Low && x.Close == y.Close;
+            }
+
+            public int GetHashCode(HighLowItem obj)
+            {
+                return (obj.X, obj.Open, obj.High, obj.Low, obj.Close).GetHashCode();
             }
         }
     }

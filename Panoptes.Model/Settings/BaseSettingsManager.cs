@@ -123,7 +123,7 @@ namespace Panoptes.Model.Settings
         /// <inheritdoc/>
         public void SetSoundsActivated(bool enable)
         {
-            PanoptesSounds.CanPlaySounds = enable;
+            //PanoptesSounds.CanPlaySounds = enable;
             UserSettings.SoundsActivated = enable;
         }
 

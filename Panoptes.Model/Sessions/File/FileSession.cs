@@ -1,9 +1,9 @@
-﻿using Panoptes.Model.Serialization.Packets;
+﻿using QuantConnect.Packets;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using PacketType = QuantConnect.Packets.PacketType;
+using Newtonsoft.Json;
 
 namespace Panoptes.Model.Sessions.File
 {
@@ -37,7 +37,7 @@ namespace Panoptes.Model.Sessions.File
 
             if (_syncContext == null)
             {
-                throw new NullReferenceException($"FileSession: {SynchronizationContext.Current} is null, please make sure the seesion was created in UI thread.");
+                throw new NullReferenceException($"FileSession: {SynchronizationContext.Current} is null, please make sure the session was created in UI thread.");
             }
 
             _resultSerializer = resultSerializer;

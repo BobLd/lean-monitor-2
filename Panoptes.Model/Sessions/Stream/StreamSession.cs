@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using NetMQ;
 using NetMQ.Sockets;
-using Panoptes.Model.Serialization.Packets;
+using Newtonsoft.Json;
+using QuantConnect.Packets;
 using System;
 using System.ComponentModel;
 using System.Text;
-using System.Text.Json;
 
 namespace Panoptes.Model.Sessions.Stream
 {
@@ -14,9 +14,11 @@ namespace Panoptes.Model.Sessions.Stream
         public StreamSession(ISessionHandler sessionHandler, IResultConverter resultConverter,
             StreamSessionParameters parameters, ILogger logger)
            : base(sessionHandler, resultConverter, parameters, logger)
-        { }
+        {
 
-        private readonly TimeSpan timeOut = TimeSpan.FromMilliseconds(500);
+        }
+
+        private readonly TimeSpan _timeOut = TimeSpan.FromMilliseconds(500);
 
         protected override void EventsListener(object sender, DoWorkEventArgs e)
         {
@@ -24,25 +26,52 @@ namespace Panoptes.Model.Sessions.Stream
             {
                 using (var pullSocket = new PullSocket($">tcp://{_host}:{_port}"))
                 {
-                    while (!_eternalQueueListener.CancellationPending)
+                    _logger.LogInformation("EventsListener: Connected to {Host}:{Port}", _host, _port);
+
+                    while (!_eternalQueueListener.CancellationPending && !_cts.Token.IsCancellationRequested)
                     {
                         var message = new NetMQMessage();
-                        if (!pullSocket.TryReceiveMultipartMessage(timeOut, ref message))
+                        if (!pullSocket.TryReceiveMultipartMessage(_timeOut, ref message))
                         {
                             continue;
                         }
 
+                        if (message.FrameCount != 1)
+                        {
+                            _logger.LogWarning("EventsListener: Received message with unexpected FrameCount {FrameCount}", message.FrameCount);
+                            continue;
+                        }
                         // There should only be 1 part messages
-                        if (message.FrameCount != 1) continue;
-
                         var payload = message[0].ConvertToString(Encoding.UTF8);
-                        var packet = JsonSerializer.Deserialize<Packet>(payload, _options);
+
+                        _logger.LogDebug("EventsListener: Received payload: {Payload}", payload);
+
+                        Packet packet;
+                        try
+                        {
+                            packet = JsonConvert.DeserializeObject<Packet>(payload, _jsonSettings);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "EventsListener: Error deserializing Packet.");
+                            continue;
+                        }
+
+                        if (packet == null)
+                        {
+                            _logger.LogWarning("EventsListener: Deserialized packet is null.");
+                            continue;
+                        }
+
+                        _logger.LogDebug("EventsListener: Deserialized packet of type {PacketType}", packet.Type);
+
                         HandlePacketEventsListener(payload, packet.Type);
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "EventsListener: Exception occurred.");
                 throw;
             }
             finally

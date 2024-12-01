@@ -44,35 +44,31 @@ namespace Panoptes.Model
 
         private static void Update(SeriesDefinition relativeBenchmarkSeries, SeriesDefinition benchmarkSeries, SeriesDefinition equitySeries, DateTimeOffset lastUpdate)
         {
-            benchmarkSeries = benchmarkSeries.Since(lastUpdate);
+            var newBenchmarkValues = benchmarkSeries.Values.Where(v => v.X > lastUpdate).ToList();
 
-            var benchmarkValues = benchmarkSeries.Values;
-
-            if (benchmarkValues.Count == 0) return;
+            if (newBenchmarkValues.Count == 0) return;
 
             var relValues = new List<InstantChartPoint>();
 
-            // This assumes the ParseBenchmark is called after the ParseEquity method.
             var equityOpenValue = equitySeries.Values[0].Y;
 
-            relValues.Add(new InstantChartPoint(benchmarkValues[0].X, equityOpenValue));
-            for (var i = 1; i < benchmarkValues.Count; i++)
+            relValues.Add(new InstantChartPoint(newBenchmarkValues[0].X, equityOpenValue));
+
+            for (var i = 1; i < newBenchmarkValues.Count; i++)
             {
-                var originalX = benchmarkValues[i].X;
-                var x = DateTimeOffset.FromUnixTimeMilliseconds(originalX.ToUnixTimeMilliseconds()); //Instant.FromUnixTimeTicks(originalX.ToUnixTimeTicks()); // TODO: Instant is struct. Clone it?
+                var x = newBenchmarkValues[i].X;
 
                 decimal y;
 
-                var curBenchmarkValue = benchmarkValues[i].Y;
-                var prefBenchmarkValue = benchmarkValues[i - 1].Y;
-                if (prefBenchmarkValue == 0 || curBenchmarkValue == 0)
+                var curBenchmarkValue = newBenchmarkValues[i].Y;
+                var prevBenchmarkValue = newBenchmarkValues[i - 1].Y;
+                if (prevBenchmarkValue == 0 || curBenchmarkValue == 0)
                 {
-                    // TODO: Cannot divide by 0. Investigate how this can happen
                     y = relValues[i - 1].Y;
                 }
                 else
                 {
-                    y = relValues[i - 1].Y * (curBenchmarkValue / prefBenchmarkValue);
+                    y = relValues[i - 1].Y * (curBenchmarkValue / prevBenchmarkValue);
                 }
                 relValues.Add(new InstantChartPoint(x, y));
             }

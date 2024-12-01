@@ -19,7 +19,7 @@ namespace Panoptes.ViewModels.Panels
             /// <summary>
             /// Add runtime statistics.
             /// </summary>
-            RuntimeStatisticsAdd = 0,
+            RuntimeStatisticAdd = 0,
 
             /// <summary>
             /// Clear observable collections.
@@ -45,7 +45,7 @@ namespace Panoptes.ViewModels.Panels
 
         private readonly BackgroundWorker _statisticsBgWorker;
 
-        private readonly BlockingCollection<Dictionary<string, string>> _statisticsQueue = new BlockingCollection<Dictionary<string, string>>();
+        private readonly BlockingCollection<IDictionary<string, string>> _statisticsQueue = new BlockingCollection<IDictionary<string, string>>();
 
         private readonly Dictionary<string, StatisticViewModel> _statisticsDico = new Dictionary<string, StatisticViewModel>();
 
@@ -68,7 +68,7 @@ namespace Panoptes.ViewModels.Panels
             {
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
-                    case ActionsThreadUI.RuntimeStatisticsAdd:
+                    case ActionsThreadUI.RuntimeStatisticAdd:
                         if (e.UserState is not StatisticViewModel item)
                         {
                             throw new ArgumentException($"RuntimeStatisticsPanelViewModel: Expecting {nameof(e.UserState)} of type 'StatisticViewModel' but received '{e.UserState.GetType()}'", nameof(e));
@@ -124,7 +124,8 @@ namespace Panoptes.ViewModels.Panels
         {
             while (!_statisticsBgWorker.CancellationPending)
             {
-                foreach (var stat in _statisticsQueue.Take()) // Need cancelation token
+                var stats = _statisticsQueue.Take(); // Need cancellation token
+                foreach (var stat in stats)
                 {
                     if (!_statisticsDico.ContainsKey(stat.Key))
                     {
@@ -141,7 +142,7 @@ namespace Panoptes.ViewModels.Panels
                             Definition = definition
                         };
                         _statisticsDico.Add(stat.Key, vm);
-                        _statisticsBgWorker.ReportProgress((int)ActionsThreadUI.RuntimeStatisticsAdd, vm);
+                        _statisticsBgWorker.ReportProgress((int)ActionsThreadUI.RuntimeStatisticAdd, vm);
                     }
                     else
                     {

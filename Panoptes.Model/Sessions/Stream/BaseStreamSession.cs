@@ -1,13 +1,18 @@
 ﻿using Microsoft.Extensions.Logging;
-using Panoptes.Model.Serialization;
-using Panoptes.Model.Serialization.Packets;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using QuantConnect.Packets;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Serialization;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using PacketType = QuantConnect.Packets.PacketType;
+
+
 
 namespace Panoptes.Model.Sessions.Stream
 {
@@ -15,6 +20,8 @@ namespace Panoptes.Model.Sessions.Stream
     {
         protected readonly ILogger _logger;
 
+        private int counter = 0;
+        private int counter_qp = 0;
         protected readonly ISessionHandler _sessionHandler;
         protected readonly IResultConverter _resultConverter;
 
@@ -31,8 +38,9 @@ namespace Panoptes.Model.Sessions.Stream
         protected readonly string _host;
         protected readonly int _port;
         protected readonly bool _closeAfterCompleted;
-
-        protected JsonSerializerOptions _options;
+        protected JsonSerializerSettings _jsonSettings;
+        protected OrderEventJsonConverter _orderEventJsonConverter;
+        protected string _algorithmId;
 
         public string Name => $"{_host}:{_port}";
 
@@ -43,16 +51,13 @@ namespace Panoptes.Model.Sessions.Stream
 
             if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
-            // Allow proper decoding of orders.
-            _options = DefaultJsonSerializerOptions.Default;
-
             _sessionHandler = sessionHandler;
             _resultConverter = resultConverter;
 
             _host = parameters.Host;
             if (!int.TryParse(parameters.Port, out var port))
             {
-                throw new ArgumentOutOfRangeException("The port should be an integer.", nameof(port));
+                throw new ArgumentOutOfRangeException(nameof(port), "The port should be an integer.");
             }
             _port = port;
             _closeAfterCompleted = parameters.CloseAfterCompleted;
@@ -61,8 +66,15 @@ namespace Panoptes.Model.Sessions.Stream
 
             if (_syncContext == null)
             {
-                throw new NullReferenceException($"BaseStreamSession: {SynchronizationContext.Current} is null, please make sure the seesion was created in UI thread.");
+                throw new NullReferenceException("BaseStreamSession: SynchronizationContext.Current is null, please make sure the session was created in UI thread.");
             }
+
+            _jsonSettings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.None, 
+                Converters = { new OrderJsonConverter() }
+            };
+            // OrderEventJsonConverter initialized after receiving AlgorithmId
         }
 
         public virtual void Initialize()
@@ -146,13 +158,15 @@ namespace Panoptes.Model.Sessions.Stream
             {
                 while (!_queueReader.CancellationPending && !_cts.Token.IsCancellationRequested)
                 {
-                    var p = _packetQueue.Take(_cts.Token);
-                    HandlePacketQueueReader(p);
+                    var packet = _packetQueue.Take(_cts.Token);
+                    HandlePacketQueueReader(packet);
                 }
             }
             catch (OperationCanceledException)
-            { }
-            catch (Exception)
+            {
+                _logger.LogInformation("QueueReader operation was cancelled.");
+            }
+            catch (Exception ex)
             {
                 throw;
             }
@@ -162,13 +176,11 @@ namespace Panoptes.Model.Sessions.Stream
             }
         }
 
-        /// <summary>
-        /// Handle the packet by parsing it and sending it through the <see cref="ISessionHandler"/>.
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <returns>Returns true if the packet was handled, otherwise false.</returns>
         protected bool HandlePacketQueueReader(Packet packet)
         {
+
+            _logger.LogDebug("HandlePacketQueueReader: Handling packet of type '{PacketType}'", packet.Type.ToString());
+
             switch (packet.Type)
             {
                 case PacketType.AlgorithmStatus:
@@ -177,19 +189,23 @@ namespace Panoptes.Model.Sessions.Stream
 
                 case PacketType.LiveNode:
                     _syncContext.Send(_ => _sessionHandler.HandleLiveNode((LiveNodePacket)packet), null);
-                    return false;
+                    break;
+
+                case PacketType.AlgorithmNameUpdate:
+                    //TODO
+                    break;
 
                 case PacketType.AlgorithmNode:
                     var algorithmNodePacket = (AlgorithmNodePacket)packet;
                     //TODO
-                    return false;
+                    break;
 
                 case PacketType.LiveResult:
-                    HandleLiveResultPacketQR(packet);
+                    HandleLiveResultPacket(packet);
                     break;
 
                 case PacketType.BacktestResult:
-                    HandleBacktestResultPacketQR(packet);
+                    HandleBacktestResultPacket(packet);
                     break;
 
                 case PacketType.Log:
@@ -209,36 +225,46 @@ namespace Panoptes.Model.Sessions.Stream
                     break;
 
                 default:
-                    _logger.LogWarning("BaseStreamSession.HandlePacketQueueReader: Unknown packet '{packet}'", packet);
+                    _logger.LogWarning("HandlePacketQueueReader: Unknown packet '{Packet}'", packet);
                     return false;
             }
 
             return true;
         }
 
-        private void HandleBacktestResultPacketQR(Packet packet)
+        private void HandleBacktestResultPacket(Packet packet)
         {
-            var backtestResultEventModel = (BacktestResultPacket)packet;
-            var backtestResultUpdate = _resultConverter.FromBacktestResult(backtestResultEventModel.Results);
+            var backtestResultPacket = (BacktestResultPacket)packet;
+            var backtestResultUpdate = _resultConverter.FromBacktestResult(backtestResultPacket.Results);
 
             var context = new ResultContext
             {
                 Name = Name,
                 Result = backtestResultUpdate,
-                Progress = backtestResultEventModel.Progress
+                Progress = backtestResultPacket.Progress
             };
-            _syncContext.Send(_ => _sessionHandler.HandleResult(context), null);
+            _syncContext.Post(_ =>
+            {
+                try
+                {
+                    _sessionHandler.HandleResult(context);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error handling result context");
+                }
+            }, null);
 
-            if (backtestResultEventModel.Progress == 1 && _closeAfterCompleted)
+            if (backtestResultPacket.Progress == 1 && _closeAfterCompleted)
             {
                 _syncContext.Send(_ => Unsubscribe(), null);
             }
         }
 
-        private void HandleLiveResultPacketQR(Packet packet)
+        private void HandleLiveResultPacket(Packet packet)
         {
-            var liveResultEventModel = (LiveResultPacket)packet;
-            var liveResultUpdate = _resultConverter.FromLiveResult(liveResultEventModel.Results);
+            var liveResultPacket = (LiveResultPacket)packet;
+            var liveResultUpdate = _resultConverter.FromLiveResult(liveResultPacket.Results);
 
             var context = new ResultContext
             {
@@ -251,74 +277,97 @@ namespace Panoptes.Model.Sessions.Stream
         #endregion
 
         #region Events Listener
-        /// <summary>
-        /// Implement it and use <see cref="HandlePacketEventsListener(string, PacketType)"/>.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+
         protected abstract void EventsListener(object sender, DoWorkEventArgs e);
 
-        /// <summary>
-        /// Deserialize the packet and add it to the packet queue.
-        /// </summary>
-        /// <param name="payload"></param>
-        /// <param name="packetType"></param>
-        /// <returns>Returns true if the packet was handled, otherwise false.</returns>
         protected bool HandlePacketEventsListener(string payload, PacketType packetType)
         {
-            // TODO: check https://devblogs.microsoft.com/dotnet/try-the-new-system-text-json-source-generator/
             try
             {
                 switch (packetType)
                 {
                     case PacketType.AlgorithmStatus:
-                        _packetQueue.Add(JsonSerializer.Deserialize<AlgorithmStatusPacket>(payload, _options));
+                        var algorithmStatusPacket = JsonConvert.DeserializeObject<AlgorithmStatusPacket>(payload, _jsonSettings);
+                        _packetQueue.Add(algorithmStatusPacket);
+                        break;
+                    
+                    case PacketType.AlgorithmNameUpdate:
+                        var algorithmNameUpdatePacket = JsonConvert.DeserializeObject<AlgorithmNameUpdatePacket>(payload, _jsonSettings);
+                        _algorithmId = algorithmNameUpdatePacket.AlgorithmId;
+                        InitializeOrderEventJsonConverter();
+                        _packetQueue.Add(algorithmNameUpdatePacket);
                         break;
 
                     case PacketType.LiveNode:
-                        _packetQueue.Add(JsonSerializer.Deserialize<LiveNodePacket>(payload, _options));
+                        var liveNodePacket = JsonConvert.DeserializeObject<LiveNodePacket>(payload, _jsonSettings);
+                        _packetQueue.Add(liveNodePacket);
                         break;
 
                     case PacketType.AlgorithmNode:
-                        _packetQueue.Add(JsonSerializer.Deserialize<AlgorithmNodePacket>(payload, _options));
+                        var algorithmNodePacket = JsonConvert.DeserializeObject<AlgorithmNodePacket>(payload, _jsonSettings);
+                        _algorithmId = algorithmNodePacket.AlgorithmId;
+                        InitializeOrderEventJsonConverter();
+                        _packetQueue.Add(algorithmNodePacket);
                         break;
 
                     case PacketType.LiveResult:
-                        _packetQueue.Add(JsonSerializer.Deserialize<LiveResultPacket>(payload, _options));
+                        var liveResultPacket = JsonConvert.DeserializeObject<LiveResultPacket>(payload, _jsonSettings);
+                        _packetQueue.Add(liveResultPacket);
                         break;
 
                     case PacketType.BacktestResult:
-                        _packetQueue.Add(JsonSerializer.Deserialize<BacktestResultPacket>(payload, _options));
+                        var backtestResultPacket = JsonConvert.DeserializeObject<BacktestResultPacket>(payload, _jsonSettings);
+                        _packetQueue.Add(backtestResultPacket);
                         break;
 
                     case PacketType.OrderEvent:
-                        _packetQueue.Add(JsonSerializer.Deserialize<OrderEventPacket>(payload, _options));
+                        var orderEventPacket = JsonConvert.DeserializeObject<OrderEventPacket>(payload, _jsonSettings);
+                        _packetQueue.Add(orderEventPacket);
                         break;
 
                     case PacketType.Log:
-                        _packetQueue.Add(JsonSerializer.Deserialize<LogPacket>(payload, _options));
+                        var logPacket = JsonConvert.DeserializeObject<LogPacket>(payload, _jsonSettings);
+                        _packetQueue.Add(logPacket);
                         break;
 
                     case PacketType.Debug:
-                        _packetQueue.Add(JsonSerializer.Deserialize<DebugPacket>(payload, _options));
+                        var debugPacket = JsonConvert.DeserializeObject<DebugPacket>(payload, _jsonSettings);
+                        _packetQueue.Add(debugPacket);
                         break;
 
                     case PacketType.HandledError:
-                        _packetQueue.Add(JsonSerializer.Deserialize<HandledErrorPacket>(payload, _options));
+                        var handledErrorPacket = JsonConvert.DeserializeObject<HandledErrorPacket>(payload, _jsonSettings);
+                        _packetQueue.Add(handledErrorPacket);
                         break;
 
                     default:
-                        _logger.LogWarning("BaseStreamSession.HandlePacketEventsListener: Unknown packet type '{packetType}'.", packetType);
+                        _logger.LogWarning("HandlePacketEventsListener: Unknown packet type '{PacketType}'.", packetType);
                         return false;
                 }
                 return true;
             }
             catch (ObjectDisposedException)
             {
-                _logger.LogWarning("BaseStreamSession.HandlePacketEventsListener: Queue is disposed.");
+                _logger.LogWarning("HandlePacketEventsListener: Queue is disposed.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "HandlePacketEventsListener: Error deserializing packet of type '{PacketType}': {Payload}", packetType, payload/*.Substring(0, Math.Min(payload.Length, 100))*/);
                 return false;
             }
         }
+
+        private void InitializeOrderEventJsonConverter()
+        {
+            if (_orderEventJsonConverter == null && !string.IsNullOrEmpty(_algorithmId))
+            {
+                _orderEventJsonConverter = new OrderEventJsonConverter(_algorithmId);
+                _jsonSettings.Converters.Add(_orderEventJsonConverter);
+                _logger.LogDebug("Initialized OrderEventJsonConverter with AlgorithmId: {AlgorithmId}", _algorithmId);
+            }
+        }
+
         #endregion
 
         public virtual void Dispose()
@@ -335,11 +384,7 @@ namespace Panoptes.Model.Sessions.Stream
         private SessionState _state = SessionState.Unsubscribed;
         public SessionState State
         {
-            get
-            {
-                return _state;
-            }
-
+            get => _state;
             protected set
             {
                 _state = value;

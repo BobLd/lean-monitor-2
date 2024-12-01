@@ -174,7 +174,7 @@ namespace Panoptes.ViewModels.Panels
                 var fullList = _ordersDic.Values.AsParallel().Where(o => _filterDateRange(o.CreatedTime, fromDate, toDate)).ToList();
 
                 // careful with concurrency
-                var currentHistoOrders = _ordersHistory.ToArray();
+                var currentHistoOrders = OrdersHistory.ToArray();
                 return ((IReadOnlyList<OrderViewModel>)fullList.Except(currentHistoOrders).ToList(),
                         (IReadOnlyList<OrderViewModel>)currentHistoOrders.Except(fullList).ToList());
             });
@@ -229,14 +229,26 @@ namespace Panoptes.ViewModels.Panels
             Name = "Trades";
             Messenger.Register<TradesPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
-                if (m.ResultContext.Result.Orders.Count == 0) return;
+                if (m?.ResultContext?.Result?.Orders == null || m.ResultContext.Result.Orders.Count == 0)
+                {
+                    Logger.LogWarning("TradesPanelViewModel: Received SessionUpdateMessage with null or empty Orders.");
+                    return;
+                }
+
                 r._resultsQueue.Add(new QueueElement() { Element = m.ResultContext.Result });
             });
+
             Messenger.Register<TradesPanelViewModel, OrderEventMessage>(this, (r, m) =>
             {
-                if (m.Value.Event == null) return;
+                if (m?.Value?.Event == null)
+                {
+                    Logger.LogWarning("TradesPanelViewModel: Received OrderEventMessage with null Event.");
+                    return;
+                }
+
                 r._resultsQueue.Add(new QueueElement() { Element = m });
             });
+
             Messenger.Register<TradesPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
             Messenger.Register<TradesPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
             Messenger.Register<TradesPanelViewModel, TradeFilterMessage>(this, async (r, m) => await r.ApplyFiltersHistoryOrders(m.FromDate, m.ToDate).ConfigureAwait(false));
@@ -246,51 +258,59 @@ namespace Panoptes.ViewModels.Panels
             _resultBgWorker.DoWork += ResultQueueReader;
             _resultBgWorker.ProgressChanged += (s, e) =>
             {
-                switch ((ActionsThreadUI)e.ProgressPercentage)
+                try
                 {
-                    case ActionsThreadUI.OrderFinishUpdate:
-                        if (e.UserState is not OrderViewModel update)
-                        {
-                            throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
-                        }
-                        update.FinaliseUpdateInThreadUI();
-                        break;
+                    switch ((ActionsThreadUI)e.ProgressPercentage)
+                    {
+                        case ActionsThreadUI.OrderFinishUpdate:
+                            if (e.UserState is not OrderViewModel update)
+                            {
+                                throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                            }
+                            update.FinaliseUpdateInThreadUI();
+                            break;
 
-                    case ActionsThreadUI.OrderFinishUpdateAddAll:
-                        if (e.UserState is not OrderViewModel updateAdd)
-                        {
-                            throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
-                        }
-                        updateAdd.FinaliseUpdateInThreadUI();
+                        case ActionsThreadUI.OrderFinishUpdateAddAll:
+                            if (e.UserState is not OrderViewModel updateAdd)
+                            {
+                                throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                            }
+                            updateAdd.FinaliseUpdateInThreadUI();
 
-                        // Could optimise the below, check don't need to be done in UI thread
-                        AddOrderToToday(updateAdd);
-                        AddOrderToHistory(updateAdd);
-                        break;
+                            // Could optimise the below, check don't need to be done in UI thread
+                            AddOrderToToday(updateAdd);
+                            AddOrderToHistory(updateAdd);
+                            break;
 
-                    case ActionsThreadUI.OrderRemoveHistory:
-                        if (e.UserState is not OrderViewModel remove)
-                        {
-                            throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
-                        }
-                        _ordersHistory.Remove(remove);
-                        break;
+                        case ActionsThreadUI.OrderRemoveHistory:
+                            if (e.UserState is not OrderViewModel remove)
+                            {
+                                throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                            }
+                            OrdersHistory.Remove(remove);
+                            break;
 
-                    case ActionsThreadUI.OrderAddHistory:
-                        if (e.UserState is not OrderViewModel add)
-                        {
-                            throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
-                        }
-                        _ordersHistory.Add(add);
-                        break;
+                        case ActionsThreadUI.OrderAddHistory:
+                            if (e.UserState is not OrderViewModel add)
+                            {
+                                throw new ArgumentException($"TradesPanelViewModel: Expecting {nameof(e.UserState)} of type 'OrderViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                            }
+                            OrdersHistory.Add(add);
+                            break;
 
-                    case ActionsThreadUI.Clear:
-                        OrdersToday.Clear();
-                        OrdersHistory.Clear();
-                        break;
+                        case ActionsThreadUI.Clear:
+                            OrdersToday.Clear();
+                            OrdersHistory.Clear();
+                            break;
 
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(e), "TradesPanelViewModel: Unknown 'ProgressPercentage' passed.");
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(e), "TradesPanelViewModel: Unknown 'ProgressPercentage' passed.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "TradesPanelViewModel: Error in ProgressChanged handler.");
+                    throw;
                 }
             };
 
@@ -304,8 +324,12 @@ namespace Panoptes.ViewModels.Panels
             // Trade selected message received from another ViewModel
             if (_ordersDic.TryGetValue(m.Value[0], out var ovm)) // TODO: support multiple orders id
             {
-                // We don't wnat to send another message of trade selected
+                // We don't want to send another message of trade selected
                 SetSelectedItem(ovm);
+            }
+            else
+            {
+                Logger.LogWarning("TradesPanelViewModel: Selected order with ID {OrderId} not found.", m.Value[0]);
             }
         }
 
@@ -315,8 +339,9 @@ namespace Panoptes.ViewModels.Panels
             {
                 case TimerMessage.TimerEventType.NewDay:
                     // TODO
-                    // - Clear 'Today' order (now yesterday's one)
+                    // - Clear 'Today' orders (now yesterday's ones)
                     Logger.LogDebug("TradesPanelViewModel: NewDay @ {DateTimeUtc:O}", timerMessage.DateTimeUtc);
+                    OrdersToday.Clear();
                     break;
 
                 default:
@@ -340,7 +365,7 @@ namespace Panoptes.ViewModels.Panels
                     default:
                         return;
                 }
-             });
+            });
         }
 
         private void Clear()
@@ -364,10 +389,15 @@ namespace Panoptes.ViewModels.Panels
         {
             while (!_resultBgWorker.CancellationPending)
             {
-                var qe = _resultsQueue.Take(); // Need cancelation token
+                var qe = _resultsQueue.Take(); // Consider using cancellation tokens for graceful shutdown
+
                 if (qe.Element is Result result) // Process Order
                 {
-                    if (result.Orders.Count == 0) continue;
+                    if (result.Orders == null || result.Orders.Count == 0)
+                    {
+                        Logger.LogWarning("TradesPanelViewModel: Received Result with null or empty Orders.");
+                        continue;
+                    }
 
                     // Update orders
                     foreach (var order in _ordersDic.Values)
@@ -380,9 +410,9 @@ namespace Panoptes.ViewModels.Panels
                     }
 
                     // Create new orders
-                    for (int i = 0; i < result.Orders.Count; i++)
+                    foreach (var orderPair in result.Orders)
                     {
-                        var ovm = new OrderViewModel(result.Orders.ElementAt(i).Value, SettingsManager.SelectedTimeZone);
+                        var ovm = new OrderViewModel(orderPair.Value, SettingsManager.SelectedTimeZone);
 
                         PanoptesSounds.PlayNewOrder(); // Sound alert 
 
@@ -395,8 +425,14 @@ namespace Panoptes.ViewModels.Panels
                             }
                         }
 
-                        _ordersDic.TryAdd(ovm.Id, ovm);
-                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderFinishUpdateAddAll, ovm);
+                        if (_ordersDic.TryAdd(ovm.Id, ovm))
+                        {
+                            _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderFinishUpdateAddAll, ovm);
+                        }
+                        else
+                        {
+                            Logger.LogWarning("TradesPanelViewModel: Failed to add OrderViewModel with ID {OrderId} to _ordersDic.", ovm.Id);
+                        }
                     }
                 }
                 else if (qe.Element is OrderEventMessage m) // Process OrderEvent
@@ -406,12 +442,23 @@ namespace Panoptes.ViewModels.Panels
                         _resultBgWorker.ReportProgress((int)ActionsThreadUI.OrderFinishUpdate, ovm);
                     }
                 }
+                else
+                {
+                    Logger.LogWarning("TradesPanelViewModel: Received unknown QueueElement type.");
+                }
             }
         }
 
         private bool ParseOrderEvent(OrderEventMessage result, out OrderViewModel orderViewModel)
         {
             var orderEvent = result.Value.Event;
+            if (orderEvent == null)
+            {
+                Logger.LogWarning("TradesPanelViewModel: Received OrderEventMessage with null Event.");
+                orderViewModel = null;
+                return false;
+            }
+
             if (!_orderEventsDic.ContainsKey(orderEvent.OrderId))
             {
                 _orderEventsDic.TryAdd(orderEvent.OrderId, new List<OrderEvent>());
@@ -424,6 +471,7 @@ namespace Panoptes.ViewModels.Panels
                 return orderViewModel.Update(orderEvent);
             }
 
+            Logger.LogWarning("TradesPanelViewModel: Received OrderEvent for unknown Order ID {OrderId}.", orderEvent.OrderId);
             return false;
         }
 

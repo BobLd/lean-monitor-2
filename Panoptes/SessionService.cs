@@ -4,7 +4,7 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using Panoptes.Model;
 using Panoptes.Model.Messages;
 using Panoptes.Model.MongoDB.Sessions;
-using Panoptes.Model.Serialization.Packets;
+using QuantConnect.Packets;
 using Panoptes.Model.Sessions;
 using Panoptes.Model.Sessions.File;
 using Panoptes.Model.Sessions.Stream;
@@ -294,11 +294,11 @@ namespace Panoptes
                     throw new ArgumentException("SessionService.Open: Host is required.", nameof(parameters));
                 }
 
-                // Open a new session and open it
+                // Open a new session and open it 
 #if DEBUG
                 var mockMessageHandler = new Model.Mock.MockStreamingMessageHandler(streamParameters);
                 Task.Run(() => mockMessageHandler.Initialize(), cancellationToken);
-#endif
+#endif      
                 await Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters, _logger)).ConfigureAwait(false);
             }
             else if (parameters is FileSessionParameters fileParameters)

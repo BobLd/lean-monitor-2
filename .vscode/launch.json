@@ -1,0 +1,12 @@
+{
+   "version": "0.2.0",
+   "configurations": [
+      {
+         "name": "C#: Panoptes Debug",
+         "type": "dotnet",
+         "request": "launch",
+         "projectPath": "${workspaceFolder}/Panoptes/Panoptes.csproj"
+      }
+
+   ]
+}

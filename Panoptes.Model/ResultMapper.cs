@@ -11,33 +11,68 @@ namespace Panoptes.Model
     {
         public static Dictionary<string, ChartDefinition> MapToChartDefinitionDictionary(this IDictionary<string, Chart> sourceDictionary)
         {
-            return sourceDictionary == null ?
-                new Dictionary<string, ChartDefinition>() :
-                sourceDictionary.ToDictionary(entry => entry.Key, entry => MapToChartDefinition(entry.Value));
+            return sourceDictionary == null
+                ? new Dictionary<string, ChartDefinition>()
+                : sourceDictionary.ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value.MapToChartDefinition());
         }
 
         public static Dictionary<string, Chart> MapToChartDictionary(this IDictionary<string, ChartDefinition> sourceDictionary)
         {
-            return sourceDictionary.ToDictionary(entry => entry.Key, entry => MapToChart(entry.Value));
+            return sourceDictionary.ToDictionary(
+                entry => entry.Key,
+                entry => entry.Value.MapToChart());
         }
 
-        private static InstantChartPoint MapToTimeStampChartPoint(this ChartPoint point)
+        private static IInstantChartPoint MapToTimeStampChartPoint(this ISeriesPoint point)
         {
-            return new InstantChartPoint
+            if (point is ChartPoint chartPoint)
             {
-                X = DateTimeOffset.FromUnixTimeSeconds(point.x), //Instant.FromUnixTimeSeconds(point.x),
-                Y = point.y
-            };
+                return new InstantChartPoint
+                {
+                    X = new DateTimeOffset(chartPoint.Time),
+                    Y = chartPoint.y ?? 0m
+                };
+            }
+            else if (point is Candlestick candlestick)
+            {
+                return new InstantCandlestickPoint
+                {
+                    X = new DateTimeOffset(candlestick.Time),
+                    Open = candlestick.Open ?? 0m,
+                    High = candlestick.High ?? 0m,
+                    Low = candlestick.Low ?? 0m,
+                    Close = candlestick.Close ?? 0m
+                    // Volume = candlestick.Volume ?? 0m
+                };
+            }
+            throw new NotSupportedException($"Unsupported ISeriesPoint type: {point.GetType().Name}");
         }
 
-        private static ChartPoint MapToChartPoint(this InstantChartPoint point)
+        private static ISeriesPoint MapToSeriesPoint(this IInstantChartPoint point)
         {
-            return new ChartPoint
+            if (point is InstantChartPoint chartPoint)
             {
-                // QuantConnect chartpoints are always in Unix TimeStamp (seconds)
-                x = point.X.ToUnixTimeSeconds(),
-                y = point.Y
-            };
+                return new ChartPoint
+                {
+                    Time = chartPoint.X.DateTime,
+                    y = chartPoint.Y
+                };
+            }
+            else if (point is InstantCandlestickPoint candlestickPoint)
+            {
+                return new Candlestick
+                {
+                    Time = candlestickPoint.X.DateTime,
+                    Open = candlestickPoint.Open,
+                    High = candlestickPoint.High,
+                    Low = candlestickPoint.Low,
+                    Close = candlestickPoint.Close
+                    // Volume = candlestickPoint.Volume
+                };
+            }
+            throw new NotSupportedException($"Unsupported IInstantChartPoint type: {point.GetType().Name}");
         }
 
         private static ChartDefinition MapToChartDefinition(this Chart sourceChart)
@@ -51,49 +86,66 @@ namespace Panoptes.Model
 
         private static Chart MapToChart(this ChartDefinition sourceChart)
         {
-            return new Chart
+            var chart = new Chart
             {
-                Name = sourceChart.Name,
-                Series = sourceChart.Series.MapToSeriesDictionary()
+                Name = sourceChart.Name
             };
+
+            foreach (var seriesDefinition in sourceChart.Series)
+            {
+                chart.Series.Add(seriesDefinition.Key, seriesDefinition.Value.MapToBaseSeries());
+            }
+
+            return chart;
         }
 
-        private static Dictionary<string, SeriesDefinition> MapToSeriesDefinitionDictionary(this IDictionary<string, Series> sourceSeries)
+        private static Dictionary<string, SeriesDefinition> MapToSeriesDefinitionDictionary(this IDictionary<string, BaseSeries> sourceSeries)
         {
-            return sourceSeries.ToDictionary(entry => entry.Key, entry => entry.Value.MapToSeriesDefinition());
+            var result = new Dictionary<string, SeriesDefinition>();
+
+            foreach (var kvp in sourceSeries)
+            {
+                var seriesDefinition = kvp.Value.MapToSeriesDefinition();
+                result[kvp.Key] = seriesDefinition;
+            }
+
+            return result;
         }
 
-        private static Dictionary<string, Series> MapToSeriesDictionary(this IDictionary<string, SeriesDefinition> sourceSeries)
+        private static SeriesDefinition MapToSeriesDefinition(this BaseSeries sourceSeries)
         {
-            return sourceSeries.ToDictionary(entry => entry.Key, entry => entry.Value.MapToSeries());
+            var seriesDefinition = new SeriesDefinition
+            {
+                Name = sourceSeries.Name,
+                Unit = sourceSeries.Unit,
+                Index = sourceSeries.Index,
+                SeriesType = sourceSeries.SeriesType,
+                Values = sourceSeries.Values.Select(v => v.MapToTimeStampChartPoint()).ToList()
+            };
+
+            if (sourceSeries is Series series)
+            {
+                seriesDefinition.Color = series.Color;
+                seriesDefinition.ScatterMarkerSymbol = series.ScatterMarkerSymbol;
+            }
+
+            return seriesDefinition;
         }
 
-        private static SeriesDefinition MapToSeriesDefinition(this Series sourceSeries)
+        private static BaseSeries MapToBaseSeries(this SeriesDefinition sourceSeries)
         {
-            return new SeriesDefinition
+            var series = new Series(
+                name: sourceSeries.Name,
+                type: sourceSeries.SeriesType,
+                index: sourceSeries.Index,
+                unit: sourceSeries.Unit)
             {
                 Color = sourceSeries.Color,
-                Index = sourceSeries.Index,
-                Name = sourceSeries.Name,
                 ScatterMarkerSymbol = sourceSeries.ScatterMarkerSymbol,
-                SeriesType = sourceSeries.SeriesType,
-                Unit = sourceSeries.Unit,
-                Values = sourceSeries.Values.ConvertAll(v => v.MapToTimeStampChartPoint())
+                Values = sourceSeries.Values.Select(v => v.MapToSeriesPoint()).ToList()
             };
-        }
 
-        private static Series MapToSeries(this SeriesDefinition sourceSeries)
-        {
-            return new Series
-            {
-                Color = sourceSeries.Color,
-                Index = sourceSeries.Index,
-                Name = sourceSeries.Name,
-                ScatterMarkerSymbol = sourceSeries.ScatterMarkerSymbol,
-                SeriesType = sourceSeries.SeriesType,
-                Unit = sourceSeries.Unit,
-                Values = sourceSeries.Values.ConvertAll(v => v.MapToChartPoint())
-            };
+            return series;
         }
     }
 }

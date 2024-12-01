@@ -3,9 +3,8 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Panoptes.Model.Settings.Json
 {
@@ -16,20 +15,20 @@ namespace Panoptes.Model.Settings.Json
 
         private readonly string _filePath;
 
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
+        private readonly JsonSerializerSettings _jsonSerializerSettings;
 
         public JsonSettingsManager(IMessenger messenger, ILogger<JsonSettingsManager> logger) : base(messenger, logger)
         {
             _filePath = Path.Combine(Global.ProcessDirectory, UserSettingsFileName);
-            _jsonSerializerOptions = new JsonSerializerOptions()
+            _jsonSerializerSettings = new JsonSerializerSettings()
             {
                 Converters =
                 {
                     new TimeZoneInfoJsonConverter(),
                     new GridsColumnsJsonConverter()
                 },
-                WriteIndented = true,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                Formatting = Formatting.Indented,
+                NullValueHandling = NullValueHandling.Ignore
             };
 
 #if DEBUG
@@ -38,7 +37,6 @@ namespace Panoptes.Model.Settings.Json
 #endif
         }
 
-        /// <inheritdoc/>
         public override async Task InitialiseAsync()
         {
             if (IsInitialised)
@@ -60,10 +58,11 @@ namespace Panoptes.Model.Settings.Json
 
             try
             {
-                // load settings from json
-                using (var settingsFile = File.Open(_filePath, FileMode.Open))
+                // Load settings from JSON
+                using (var settingsFile = File.OpenText(_filePath))
                 {
-                    UserSettings = await JsonSerializer.DeserializeAsync<UserSettings>(settingsFile, _jsonSerializerOptions).ConfigureAwait(false);
+                    var json = await settingsFile.ReadToEndAsync().ConfigureAwait(false);
+                    UserSettings = JsonConvert.DeserializeObject<UserSettings>(json, _jsonSerializerSettings);
                     CheckVersion();
                 }
             }
@@ -76,7 +75,6 @@ namespace Panoptes.Model.Settings.Json
             _logger.LogInformation("JsonSettingsManager.InitialiseAsync: Initialising done.");
         }
 
-        /// <inheritdoc/>
         public override async Task SaveAsync()
         {
             _logger.LogInformation("JsonSettingsManager.Save: Saving...");
@@ -87,20 +85,20 @@ namespace Panoptes.Model.Settings.Json
                 return;
             }
 
-            // Need to check if initialising
-
-            using (var settingsFile = File.Open(_filePath, FileMode.Create))
+            try
             {
-                try
+                var json = JsonConvert.SerializeObject(UserSettings, _jsonSerializerSettings);
+                using (var settingsFile = File.CreateText(_filePath))
                 {
-                    await JsonSerializer.SerializeAsync(settingsFile, UserSettings, _jsonSerializerOptions).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    var columns = UserSettings.GridsColumns.Select(d => string.Join(":", d.Key, string.Join(",", d.Value))).ToArray();
-                    _logger.LogError(ex, "JsonSettingsManager.SaveAsync: {columns}", columns);
+                    await settingsFile.WriteAsync(json).ConfigureAwait(false);
                 }
             }
+            catch (Exception ex)
+            {
+                var columns = UserSettings.GridsColumns.Select(d => string.Join(":", d.Key, string.Join(",", d.Value))).ToArray();
+                _logger.LogError(ex, "JsonSettingsManager.SaveAsync: {columns}", columns);
+            }
+
             _logger.LogInformation("JsonSettingsManager.Save: Saving done.");
         }
     }

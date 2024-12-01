@@ -1,19 +1,19 @@
 ﻿using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Panoptes.Model.Settings.Json
 {
     internal sealed class TimeZoneInfoJsonConverter : JsonConverter<TimeZoneInfo>
     {
-        public override TimeZoneInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override TimeZoneInfo ReadJson(JsonReader reader, Type objectType, TimeZoneInfo existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return TimeZoneInfo.FindSystemTimeZoneById(reader.GetString());
+            var timeZoneId = reader.Value as string;
+            return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
         }
 
-        public override void Write(Utf8JsonWriter writer, TimeZoneInfo value, JsonSerializerOptions options)
+        public override void WriteJson(JsonWriter writer, TimeZoneInfo value, JsonSerializer serializer)
         {
-            writer.WriteStringValue(value.Id);
+            writer.WriteValue(value.Id);
         }
     }
 }

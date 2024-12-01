@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ApplicationIcon>Resources\icon\logo_plain.ico</ApplicationIcon>
-		<Version>0.0.0.1-beta2</Version>
+		<Version>0.0.1.16753</Version>
 		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 		<NeutralLanguage>en</NeutralLanguage>
 		<DebugType>embedded</DebugType>
@@ -16,6 +16,7 @@
 		<RepositoryUrl>https://github.com/BobLd/lean-monitor-2</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<Authors>Panoptes</Authors>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Remove="Resources\icon\logo_plain.ico" />
@@ -32,13 +33,13 @@
 		<AvaloniaResource Include="Resources\icon\logo_plain.ico" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="0.10.15" />
-		<PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.15" />
-		<PackageReference Include="Avalonia.Desktop" Version="0.10.15" />
-		<PackageReference Include="Avalonia.Diagnostics" Version="0.10.15" Condition=" '$(Configuration)' == 'Debug' " />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
-		<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-Preview1" />
+		<PackageReference Include="Avalonia" Version="0.10.19" />
+		<PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.19" />
+		<PackageReference Include="Avalonia.Desktop" Version="0.10.19" />
+		<PackageReference Include="Avalonia.Diagnostics" Version="0.10.19" Condition=" '$(Configuration)' == 'Debug' " />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
+		<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
 		<PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
 		<PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" Condition=" '$(Configuration)' == 'Debug' " />

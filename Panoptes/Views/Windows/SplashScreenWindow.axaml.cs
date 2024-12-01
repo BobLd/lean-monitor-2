@@ -31,11 +31,41 @@ namespace Panoptes.Views.Windows
 
             _loadingLabel = this.Get<Label>("_loadingLabel");
             _loadingLabel.Content = $"v{Global.AppVersion}";
+
+            this.Opened += SplashScreenWindow_Opened;
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+        }
+
+        private void SplashScreenWindow_Opened(object? sender, EventArgs e)
+        {
+            CenterWindowOnPrimaryScreen();
+        }
+
+        private void CenterWindowOnPrimaryScreen()
+        {
+            var primaryScreen = Screens.Primary;
+
+            if (primaryScreen == null)
+            {
+                this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                return;
+            }
+
+            var screenBounds = primaryScreen.Bounds;
+
+            double windowWidth = this.Width;
+            double windowHeight = this.Height;
+
+            double left = screenBounds.X + (screenBounds.Width - windowWidth) / 2;
+            double top = screenBounds.Y + (screenBounds.Height - windowHeight) / 2;
+
+            this.Position = new PixelPoint(
+                (int)Math.Round(left),
+                (int)Math.Round(top));
         }
     }
 }

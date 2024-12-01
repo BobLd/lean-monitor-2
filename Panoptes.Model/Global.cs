@@ -47,23 +47,17 @@ namespace Panoptes.Model
         {
             try
             {
-                // https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file
-                var fvi = FileVersionInfo.GetVersionInfo(Environment.ProcessPath);
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
 
-#pragma warning disable CS8603 // Possible null reference return.
-                if (fvi != null)
-                {
-                    if (fvi.FileVersion == fvi.ProductVersion)
-                    {
-                        return fvi.FileVersion;
-                    }
-                    else
-                    {
-                        return $"{fvi.FileVersion} ({fvi.ProductVersion})";
-                    }
-                }
-                return null;
-#pragma warning restore CS8603 // Possible null reference return.
+                // Get the File Version
+                var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+                var fileVersion = fvi.FileVersion;
+
+                // Alternatively, get the Assembly Version
+                var assemblyVersion = assembly.GetName().Version.ToString();
+
+                // Choose which version to return
+                return fileVersion ?? assemblyVersion;
             }
             catch (Exception e)
             {

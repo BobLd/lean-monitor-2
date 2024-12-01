@@ -5,9 +5,9 @@ namespace Panoptes.Model
 {
     public static class PanoptesSounds
     {
-        private static readonly SoundPlayer player = new SoundPlayer(@"C:\Users\Bob\Downloads\tests_test-audio_wav_mono_16bit_44100.wav");
+        //private static readonly SoundPlayer player = new SoundPlayer(@"C:\Users\Bob\Downloads\tests_test-audio_wav_mono_16bit_44100.wav");
 
-        private static bool _canPlaySounds;
+        private static bool _canPlaySounds = false; // Set default to false to disable sounds
         /// <summary>
         /// Deactivate when in backtest.
         /// </summary>
@@ -31,7 +31,7 @@ namespace Panoptes.Model
         public static void PlayNewOrder()
         {
             if (!CanPlaySounds) return;
-            SystemSounds.Hand.Play();
+           // SystemSounds.Hand.Play();
         }
     }
 }

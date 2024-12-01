@@ -8,16 +8,22 @@ namespace Panoptes.Model.Charting
     {
         public string Name { get; set; }
 
-        public List<InstantChartPoint> Values { get; set; } = new List<InstantChartPoint>();
+        public string Unit { get; set; }
 
-        public SeriesType SeriesType { get; set; } = SeriesType.Line;
+        public int Index { get; set; }
+
+        public SeriesType SeriesType { get; set; }
+
+        public List<IInstantChartPoint> Values { get; set; } = new List<IInstantChartPoint>();
+
+        public string IndexName { get; set; }
+
+        public int? ZIndex { get; set; }
+
+        public string Tooltip { get; set; }
 
         public Color Color { get; set; } = Color.CornflowerBlue;
 
-        public string Unit { get; set; } = "?";
-
         public ScatterMarkerSymbol ScatterMarkerSymbol { get; set; } = ScatterMarkerSymbol.None;
-
-        public int Index { get; set; }
     }
 }

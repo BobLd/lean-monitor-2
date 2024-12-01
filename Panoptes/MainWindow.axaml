@@ -1,129 +1,275 @@
 <Window x:Class="Panoptes.MainWindow"
-		xmlns="https://github.com/avaloniaui"
-		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:oxy="http://oxyplot.org/avalonia"
-		xmlns:sessions="clr-namespace:Panoptes.Model.Sessions;assembly=Panoptes.Model"
-		xmlns:charts1="clr-namespace:Panoptes.Views.Charts"
-		xmlns:panels="clr-namespace:Panoptes.Views.Panels"
-		xmlns:panels1="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
-		xmlns:viewModel="clr-namespace:Panoptes.ViewModels"
-		xmlns:qc="clr-namespace:QuantConnect;assembly=QuantConnect.Common"
-		Icon="/Resources/icon/logo_plain.ico"
-		DataContext="{Binding MainWindow, Source={StaticResource Locator}}"
-		Opened="OnOpened"
-		Closed="OnClosed"
-		Closing="OnClosing"
-		WindowStartupLocation="CenterOwner"
-		Title="{Binding Title}"
-		MinHeight="200"
-		mc:Ignorable="d"
-		d:DesignWidth="800" d:DesignHeight="450">
-	
-	<Window.Styles>
-		<Style Selector="DockPanel.statusBarColored">
-			<Setter Property="Background" Value="{Binding Path=AlgorithmStatus, Mode=OneWay, Converter={StaticResource StatusBarColorConverter}}"/>
-		</Style>
-	</Window.Styles>
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:oxy="http://oxyplot.org/avalonia"
+        xmlns:sessions="clr-namespace:Panoptes.Model.Sessions;assembly=Panoptes.Model"
+        xmlns:charts1="clr-namespace:Panoptes.Views.Charts"
+        xmlns:panels="clr-namespace:Panoptes.Views.Panels"
+        xmlns:panels1="clr-namespace:Panoptes.ViewModels.Panels;assembly=Panoptes.ViewModels"
+        xmlns:viewModel="clr-namespace:Panoptes.ViewModels"
+        xmlns:qc="clr-namespace:QuantConnect;assembly=QuantConnect.Common"
+        Icon="/Resources/icon/logo_plain.ico"
+        DataContext="{Binding MainWindow, Source={StaticResource Locator}}"
+        Opened="OnOpened"
+        Closed="OnClosed"
+        Closing="OnClosing"
+        WindowStartupLocation="CenterOwner"
+        Title="{Binding Title}"
+        MinHeight="200"
+        WindowState="Maximized"
+        mc:Ignorable="d"
+        d:DesignWidth="800" d:DesignHeight="450">
 
-	<Grid RowDefinitions="24,*,Auto">
-		<DockPanel Grid.Row="0">
-			<Menu DockPanel.Dock="Left">
-				<MenuItem Header="_File">
-					<MenuItem Header="_Open..." Command="{Binding OpenSessionCommand}" HotKey="Ctrl+O" /> <!--HotKey="Ctrl+O"-->
-					<Separator/>
-					<MenuItem Header="_Close" Command="{Binding CloseCommand}"/>
-					<Separator/>
-					<MenuItem Header="_Export..." Command="{Binding ExportCommand}"/>
-					<Separator/>
-					<MenuItem Header="E_xit" Command="{Binding ExitCommand}" HotKey="Alt+F"/> <!--HotKey="Alt+F4"-->
-				</MenuItem>
-				<MenuItem Header="_View">
-					<CheckBox Content="_Statistics" IsChecked="{Binding StatisticsPane.IsVisible, Mode=TwoWay}"/>
-					<CheckBox Content="_Runtime Statistics" IsChecked="{Binding RuntimeStatisticsPane.IsVisible, Mode=TwoWay}"/>
-					<Separator/>
-					<CheckBox Content="_Log" IsChecked="{Binding LogPane.IsVisible, Mode=TwoWay}"/>
-					<Separator/>
-					<CheckBox Content="_Profit &amp; Loss" IsChecked="{Binding ProfitLossPane.IsVisible, Mode=TwoWay}"/>
-					<CheckBox Content="_Orders" IsChecked="{Binding TradesPane.IsVisible, Mode=TwoWay}"/>
-					<CheckBox Content="_Holdings" IsChecked="{Binding HoldingsPane.IsVisible, Mode=TwoWay}"/>
-					<CheckBox Content="_Cash" IsChecked="{Binding CashBookPane.IsVisible, Mode=TwoWay}"/>		
-				</MenuItem>
-				<MenuItem Header="_Session" IsEnabled="{Binding IsSessionActive}">
-					<MenuItem Header="_Connect" Command="{Binding ConnectCommand}"/>
-					<MenuItem Header="_Disconnect" Command="{Binding DisconnectCommand}"/>
-				</MenuItem>
-				<MenuItem Header="_Tools">
-					<MenuItem Header="_Options..." Command="{Binding OptionsCommand}"/>
-				</MenuItem>
+    <Window.Styles>
+        <Style Selector="DockPanel.statusBarColored">
+            <Setter Property="Background" Value="{Binding Path=AlgorithmStatus, Mode=OneWay, Converter={StaticResource StatusBarColorConverter}}"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="24,*,Auto">
+        <DockPanel Grid.Row="0">
+            <Menu DockPanel.Dock="Left">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Open..." Command="{Binding OpenSessionCommand}" HotKey="Ctrl+O"/>
+                    <Separator/>
+                    <MenuItem Header="_Close" Command="{Binding CloseCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="_Export..." Command="{Binding ExportCommand}"/>
+                    <Separator/>
+                    <MenuItem Header="E_xit" Command="{Binding ExitCommand}" HotKey="Alt+F"/>
+                </MenuItem>
+                <MenuItem Header="_View">
+                    <CheckBox Content="_Statistics" IsChecked="{Binding StatisticsPane.IsVisible, Mode=TwoWay}"/>
+                    <CheckBox Content="_Runtime Statistics" IsChecked="{Binding RuntimeStatisticsPane.IsVisible, Mode=TwoWay}"/>
+                    <Separator/>
+                    <CheckBox Content="_Log" IsChecked="{Binding LogPane.IsVisible, Mode=TwoWay}"/>
+                    <Separator/>
+                    <CheckBox Content="_Profit &amp; Loss" IsChecked="{Binding ProfitLossPane.IsVisible, Mode=TwoWay}"/>
+                    <CheckBox Content="_Orders" IsChecked="{Binding TradesPane.IsVisible, Mode=TwoWay}"/>
+                    <CheckBox Content="_Holdings" IsChecked="{Binding HoldingsPane.IsVisible, Mode=TwoWay}"/>
+                    <CheckBox Content="_Cash" IsChecked="{Binding CashBookPane.IsVisible, Mode=TwoWay}"/>     
+                </MenuItem>
+                <MenuItem Header="_Session" IsEnabled="{Binding IsSessionActive}">
+                    <MenuItem Header="_Connect" Command="{Binding ConnectCommand}"/>
+                    <MenuItem Header="_Disconnect" Command="{Binding DisconnectCommand}"/>
+                </MenuItem>
+                <MenuItem Header="_Tools">
+                    <MenuItem Header="_Options..." Command="{Binding OptionsCommand}"/>
+                </MenuItem>
 				<!--
-				<MenuItem Header="_Window">
-					<MenuItem Header="_Save Window Layout" Command="{Binding SaveLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
-					<MenuItem Header="Revert Window Layout" Command="{Binding RestoreLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
-					<MenuItem Header="_Reset Window Layout" Command="{Binding ResetLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
-				</MenuItem>
+                <MenuItem Header="_Window">
+                    <MenuItem Header="_Save Window Layout" Command="{Binding SaveLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+                    <MenuItem Header="Revert Window Layout" Command="{Binding RestoreLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+                    <MenuItem Header="_Reset Window Layout" Command="{Binding ResetLayoutCommand}" CommandParameter="{Binding ElementName=DockingManager}"/>
+                </MenuItem>
 				-->
-				<MenuItem Header="_Help">
-					<MenuItem Header="_Charting documentation..." Click="BrowseChartingDocumentationMenuItem_OnClick"/>
-					<Separator/>
-					<MenuItem Header="_Monitor v2 GitHub project..." Click="BrowseMonitorGithubMenuItem_OnClick"/>
-					<MenuItem Header="_Monitor GitHub project..." Click="BrowseMonitorGithubOriginalMenuItem_OnClick"/>
-					<MenuItem Header="_LEAN Engine GitHub project..." Click="BrowseLeanGithubMenuItem_OnClick"/>
-					<Separator/>
-					<MenuItem Header="_About..." Click="ShowAboutButton_OnClick"/>
-				</MenuItem>
-			</Menu>
+                <MenuItem Header="_Help">
+                    <MenuItem Header="_Charting documentation..." Click="BrowseChartingDocumentationMenuItem_OnClick"/>
+                    <Separator/>
+                    <MenuItem Header="_Monitor v2 GitHub project..." Click="BrowseMonitorGithubMenuItem_OnClick"/>
+                    <MenuItem Header="_Monitor GitHub project..." Click="BrowseMonitorGithubOriginalMenuItem_OnClick"/>
+                    <MenuItem Header="_LEAN Engine GitHub project..." Click="BrowseLeanGithubMenuItem_OnClick"/>
+                    <Separator/>
+                    <MenuItem Header="_About..." Click="ShowAboutButton_OnClick"/>
+                </MenuItem>
+            </Menu>
 
-			<Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeLocal}" HorizontalAlignment="Right" ToolTip.Tip="{Binding SelectedTimeZone}"/>
-			<Label DockPanel.Dock="Right" Content=" Local:" HorizontalAlignment="Right" ToolTip.Tip="{Binding SelectedTimeZone}"/>
-			<Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeUtc}" HorizontalAlignment="Right" ToolTip.Tip="UTC"/>
-			<Label DockPanel.Dock="Right" Content="UTC:" HorizontalAlignment="Right" ToolTip.Tip="UTC"/>
-		</DockPanel>
+            <Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeLocal}" HorizontalAlignment="Right" ToolTip.Tip="{Binding SelectedTimeZone}"/>
+            <Label DockPanel.Dock="Right" Content=" Local:" HorizontalAlignment="Right" ToolTip.Tip="{Binding SelectedTimeZone}"/>
+            <Label DockPanel.Dock="Right" Content="{Binding CurrentDateTimeUtc}" HorizontalAlignment="Right" ToolTip.Tip="UTC"/>
+            <Label DockPanel.Dock="Right" Content="UTC:" HorizontalAlignment="Right" ToolTip.Tip="UTC"/>
+        </DockPanel>
 
-		<Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,337*" RowDefinitions="149*,113*,120*">
-			<panels:RuntimeStatisticsPanelControl DataContext="{Binding RuntimeStatisticsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <!-- Main Grid -->
+        <Grid Grid.Row="1" RowDefinitions="2*,5,*,5,*">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="240" MaxWidth="600"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="Auto" MinWidth="320" />
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="300*" />
+            </Grid.ColumnDefinitions>
+            
+            <panels:RuntimeStatisticsPanelControl 
+                DataContext="{Binding RuntimeStatisticsPane}" 
+                Grid.Column="0" 
+                Grid.Row="0" 
+                MinWidth="200"
+                MinHeight="200"
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Stretch"/>
+            <GridSplitter 
+                Grid.Column="1" 
+                Grid.Row="0" 
+                Width="5"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Stretch" 
+                ShowsPreview="True"/>
+            <charts1:OxyPlotSelectionControl 
+                DataContext="{Binding OxyPlotSelectionPane}" 
+                Grid.Column="2" 
+                Grid.ColumnSpan="3" 
+                Grid.Row="0" 
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Stretch"/>
 
-			<panels:StatisticsPanelControl DataContext="{Binding StatisticsPane}" Grid.Row="1" Grid.RowSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <GridSplitter 
+                Grid.Row="1" 
+                Grid.Column="0" 
+                Grid.ColumnSpan="5" 
+                Height="5" 
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Center" 
+                ShowsPreview="True"/>
 
-			<TabControl Padding="0" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" TabStripPlacement="Bottom">
-				<TabItem Name="_ordersTab" Header="Orders" IsVisible="{Binding TradesPane.IsVisible, Mode=OneWay}">
-					<panels:TradesPanelControl DataContext="{Binding TradesPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-				</TabItem>
-				<TabItem Name="_holdingsTab" Header="Holdings" IsVisible="{Binding HoldingsPane.IsVisible, Mode=OneWay}">
-					<panels:HoldingsPanelControl DataContext="{Binding HoldingsPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-				</TabItem>
-				<TabItem Name="_cashTab" Header="Cash" IsVisible="{Binding CashBookPane.IsVisible, Mode=OneWay}">
-					<panels:CashBookPanelControl DataContext="{Binding CashBookPane}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-				</TabItem>
-			</TabControl>
+            <panels:StatisticsPanelControl 
+                DataContext="{Binding StatisticsPane}" 
+                Grid.Column="0" 
+                Grid.Row="2" 
+                Grid.RowSpan="3" 
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Stretch"/>
+             <GridSplitter 
+                Grid.Column="1" 
+                Grid.Row="2" 
+                Width="5" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Stretch" 
+                ShowsPreview="True"/>
+            <panels:ProfitLossPanelControl 
+                DataContext="{Binding ProfitLossPane}" 
+                Grid.Column="2" 
+                Grid.Row="2" 
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Stretch"/>
+             <GridSplitter 
+                Grid.Column="3" 
+                Grid.Row="2" 
+                Width="5" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Stretch" 
+                ShowsPreview="True"/>
+            <panels:LogPanelControl 
+                DataContext="{Binding LogPane}" 
+                Grid.Column="4" 
+                Grid.Row="2" 
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Stretch"/>
 
-			<panels:ProfitLossPanelControl DataContext="{Binding ProfitLossPane}" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <Border 
+                Grid.Row="3" 
+                Grid.Column="1"
+                Height="5"
+                Width="5"
+                Background="{DynamicResource ThemeControlMidBrush}"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center" />
+            <GridSplitter 
+                Grid.Row="3" 
+                Grid.Column="2"
+                Height="5" 
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Center" 
+                ShowsPreview="True"/>
+            <Border 
+                Grid.Row="3" 
+                Grid.Column="3"
+                Height="5"
+                Width="5"
+                Background="{DynamicResource ThemeControlMidBrush}"
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center" />
+            <GridSplitter 
+                Grid.Row="3" 
+                Grid.Column="4"
+                Height="5" 
+                HorizontalAlignment="Stretch" 
+                VerticalAlignment="Center" 
+                ShowsPreview="True"/>
+            <!-- Третья строка: TabControl -->
+            <GridSplitter 
+                Grid.Column="1" 
+                Grid.Row="4" 
+                Width="5" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Stretch" 
+                ShowsPreview="True"/>
+            <TabControl 
+                Padding="0" 
+                Grid.Column="2" 
+                Grid.ColumnSpan="3" 
+                Grid.Row="4" 
+                TabStripPlacement="Bottom">
+                <TabItem Name="_ordersTab" Header="Orders" IsVisible="{Binding TradesPane.IsVisible, Mode=OneWay}">
+                    <panels:TradesPanelControl 
+                        DataContext="{Binding TradesPane}" 
+                        HorizontalAlignment="Stretch" 
+                        VerticalAlignment="Stretch"/>
+                </TabItem>
+                <TabItem Name="_holdingsTab" Header="Holdings" IsVisible="{Binding HoldingsPane.IsVisible, Mode=OneWay}">
+                    <panels:HoldingsPanelControl 
+                        DataContext="{Binding HoldingsPane}" 
+                        HorizontalAlignment="Stretch" 
+                        VerticalAlignment="Stretch"/>
+                </TabItem>
+                <TabItem Name="_cashTab" Header="Cash" IsVisible="{Binding CashBookPane.IsVisible, Mode=OneWay}">
+                    <panels:CashBookPanelControl 
+                        DataContext="{Binding CashBookPane}" 
+                        HorizontalAlignment="Stretch" 
+                        VerticalAlignment="Stretch"/>
+                </TabItem>
+            </TabControl>
+        </Grid>
 
-			<panels:LogPanelControl DataContext="{Binding LogPane}" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-
-			<charts1:OxyPlotSelectionControl DataContext="{Binding OxyPlotSelectionPane}" Grid.ColumnSpan="2" Grid.Column="1"/>
-		</Grid>
-		<!--StatusBar-->
-		<Border BorderThickness="{StaticResource ThemeBorderThickness}" BorderBrush="{StaticResource ThemeBorderLowBrush}" Grid.Row="2" Margin="0,3,0,0">
-			<DockPanel DataContext="{Binding StatusViewModel}" Grid.Row="2" Height="22" HorizontalAlignment="Stretch" Classes="statusBarColored">
-				<StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10" VerticalAlignment="Stretch">
-					<TextBlock Text="{Binding ProjectName}" VerticalAlignment="Center"/>
-					<TextBlock Text="{Binding SessionName}" VerticalAlignment="Center"/>
-					<!--<TextBlock Text="{Binding AlgorithmStatus}" VerticalAlignment="Center" Width="100"/>-->
-					<TextBlock Text="{Binding SessionState}" VerticalAlignment="Center"/>
-					<TextBlock Text="{Binding ServerStatistics}" VerticalAlignment="Center"/>
-				</StackPanel>
-				<!--
-				<ProgressBar DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Stretch" Opacity="0.5" BorderThickness="0" MinWidth="50" Width="120"
-							 Margin="0" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}"/>
-				-->
-				<Grid DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Stretch" MinWidth="50" Width="120" Margin="0">
-					<ProgressBar HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Opacity="0.5" BorderThickness="0" MinWidth="50" Width="120"
-								 Margin="0" Minimum="0" Maximum="1" IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}"/>
-					<Label HorizontalAlignment="Center" VerticalAlignment="Center" Content="{Binding AlgorithmStatus}"/>
-				</Grid>
-			</DockPanel>
-		</Border>
-	</Grid>
+        <!-- Status bar -->
+        <Border 
+            BorderThickness="{StaticResource ThemeBorderThickness}" 
+            BorderBrush="{StaticResource ThemeBorderLowBrush}" 
+            Grid.Row="2" 
+            Margin="0,3,0,0">
+            <DockPanel 
+                DataContext="{Binding StatusViewModel}" 
+                Grid.Row="2" 
+                Height="22" 
+                HorizontalAlignment="Stretch" 
+                Classes="statusBarColored">
+                <StackPanel 
+                    DockPanel.Dock="Left" 
+                    Orientation="Horizontal" 
+                    Spacing="10" 
+                    VerticalAlignment="Stretch">
+                    <TextBlock Text="{Binding ProjectName}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding SessionName}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding SessionState}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ServerStatistics}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Grid 
+                    DockPanel.Dock="Right" 
+                    HorizontalAlignment="Right" 
+                    VerticalAlignment="Stretch" 
+                    MinWidth="50" 
+                    Width="120" 
+                    Margin="0">
+                    <ProgressBar 
+                        HorizontalAlignment="Stretch" 
+                        VerticalAlignment="Stretch" 
+                        Opacity="0.5" 
+                        BorderThickness="0" 
+                        MinWidth="50" 
+                        Width="120"
+                        Margin="0" 
+                        Minimum="0" 
+                        Maximum="1" 
+                        IsIndeterminate="{Binding IsProgressIndeterminate}" 
+                        Value="{Binding Progress}"/>
+                    <Label 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center" 
+                        Content="{Binding AlgorithmStatus}"/>
+                </Grid>
+            </DockPanel>
+        </Border>
+    </Grid>
 </Window>

@@ -1,9 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Toolkit.Mvvm.Messaging;
-using Panoptes.Model.Messages;
-using Panoptes.Model.Settings;
-using QuantConnect;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +6,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Mvvm.Messaging;
+using Panoptes.Model.Messages;
+using Panoptes.Model.Settings;
+using QuantConnect;
 
 namespace Panoptes.ViewModels.Panels
 {
@@ -19,36 +19,35 @@ namespace Panoptes.ViewModels.Panels
         private enum ActionsThreadUI : byte
         {
             /// <summary>
-            /// Finish the holding update.
-            /// </summary>
-            HoldingFinishUpdate = 0,
-
-            /// <summary>
             /// Finish the holding update and add it.
             /// </summary>
-            HoldingFinishUpdateAdd = 1,
+            HoldingAdd = 0,
 
             /// <summary>
-            /// Remove holding from history.
+            /// Remove holding from the collection.
             /// </summary>
-            HoldingRemove = 2,
+            HoldingRemove = 1,
 
             /// <summary>
             /// Clear observable collections.
             /// </summary>
-            Clear = 3
+            Clear = 2
         }
 
+        private readonly ILogger _logger;
+        private readonly IMessenger _messenger;
+        private readonly ISettingsManager _settingsManager;
+
+        private readonly BackgroundWorker _holdingsBgWorker;
+        private readonly BlockingCollection<IDictionary<string, Holding>> _holdingsQueue = new BlockingCollection<IDictionary<string, Holding>>();
+
+        // Using ConcurrentDictionary for thread-safe operations
         private readonly ConcurrentDictionary<string, HoldingViewModel> _holdingsDic = new ConcurrentDictionary<string, HoldingViewModel>();
-
-        private readonly BackgroundWorker _resultBgWorker;
-
-        private readonly BlockingCollection<Dictionary<string, Holding>> _resultsQueue = new BlockingCollection<Dictionary<string, Holding>>();
 
         private ObservableCollection<HoldingViewModel> _currentHoldings = new ObservableCollection<HoldingViewModel>();
         public ObservableCollection<HoldingViewModel> CurrentHoldings
         {
-            get { return _currentHoldings; }
+            get => _currentHoldings;
             set
             {
                 _currentHoldings = value;
@@ -56,35 +55,24 @@ namespace Panoptes.ViewModels.Panels
             }
         }
 
-        private CancellationTokenSource _searchCts;
         private string _search;
         public string Search
         {
-            get { return _search; }
+            get => _search;
             set
             {
                 if (_search == value) return;
                 _search = value;
-                Logger.LogInformation("HoldingsPanelViewModel: Searching {_search}...", _search);
+                _logger.LogInformation("HoldingsPanelViewModel: Searching '{Search}'...", _search);
                 OnPropertyChanged();
-                if (_searchCts?.Token.CanBeCanceled == true && !_searchCts.Token.IsCancellationRequested)
-                {
-                    _searchCts.Cancel();
-                }
-                _searchCts = new CancellationTokenSource();
-                // We cancel here
-                Messenger.Send(new HoldingFilterMessage(Name, _search, _searchCts.Token));
+                ApplyFiltersHoldings(_search, CancellationToken.None);
             }
         }
 
         private bool _displayLoading;
         public bool DisplayLoading
         {
-            get
-            {
-                return _displayLoading;
-            }
-
+            get => _displayLoading;
             set
             {
                 if (_displayLoading == value) return;
@@ -96,134 +84,65 @@ namespace Panoptes.ViewModels.Panels
         private HoldingViewModel _selectedItem;
         public HoldingViewModel SelectedItem
         {
-            get { return _selectedItem; }
+            get => _selectedItem;
             set
             {
-                SetSelectedItem(value);
+                if (_selectedItem == value) return;
+                _selectedItem = value;
+                OnPropertyChanged();
 
-                if (_selectedItem == null) return; // We might want to be able to send null id
-                Logger.LogDebug("HoldingsPanelViewModel: Selected item '{Symbol}' and NOT (TODO?) sending message.", _selectedItem.Symbol);
-                //_messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Id }, false));
-            }
-        }
-
-        private void SetSelectedItem(HoldingViewModel hvm)
-        {
-            if (_selectedItem == hvm) return;
-            _selectedItem = hvm;
-            OnPropertyChanged(nameof(SelectedItem));
-        }
-
-        private readonly Func<HoldingViewModel, string, CancellationToken, bool> _filter = (hvm, search, ct) =>
-        {
-            ct.ThrowIfCancellationRequested();
-
-            if (string.IsNullOrEmpty(search)) return true;
-            // We might want to search in other fields than symbol
-            return hvm.Symbol.ToString().Contains(search, StringComparison.OrdinalIgnoreCase);
-        };
-
-        private Task<(IReadOnlyList<HoldingViewModel> Add, IReadOnlyList<HoldingViewModel> Remove)> GetFilteredHoldings(string search, CancellationToken cancellationToken)
-        {
-            return Task.Run(() =>
-            {
-                var fullList = _holdingsDic.Values.AsParallel().Where(h => _filter(h, search, cancellationToken)).ToList();
-
-                // careful with concurrency
-                var currentHoldings = _currentHoldings.ToArray();
-                return ((IReadOnlyList<HoldingViewModel>)fullList.Except(currentHoldings).ToList(),
-                        (IReadOnlyList<HoldingViewModel>)currentHoldings.Except(fullList).ToList());
-            }, cancellationToken);
-        }
-
-        private async Task ApplyFiltersHoldings(string search, CancellationToken cancellationToken)
-        {
-            try
-            {
-                DisplayLoading = true;
-                Logger.LogInformation("HoldingsPanelViewModel: Start applying '{search}' filters...", search);
-
-#if DEBUG
-                //await Task.Delay(2000, cancellationToken).ConfigureAwait(false);
-#endif
-
-                var (Add, Remove) = await GetFilteredHoldings(search, cancellationToken).ConfigureAwait(false);
-
-                foreach (var remove in Remove)
+                if (_selectedItem != null)
                 {
-                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingRemove, remove);
+                    _logger.LogDebug("HoldingsPanelViewModel: Selected item '{Symbol}' and sending message.", _selectedItem.Symbol);
+                    //TODO _messenger.Send(new TradeSelectedMessage(Name, new[] { _selectedItem.Symbol }, false));
                 }
-
-                foreach (var add in Add)
-                {
-                    _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingFinishUpdateAdd, add);
-                }
-
-                Logger.LogInformation("HoldingsPanelViewModel: Done applying '{search}' filters!", search);
-                DisplayLoading = false;
-            }
-            catch (OperationCanceledException)
-            {
-                Logger.LogInformation("HoldingsPanelViewModel: Cancelled applying '{search}' filters.", search);
-            }
-            catch (Exception ex)
-            {
-                DisplayLoading = false;
-                Logger.LogError(ex, "HoldingsPanelViewModel");
-            }
-        }
-
-        private void AddHolding(HoldingViewModel hvm)
-        {
-            if (_filter(hvm, Search, CancellationToken.None))
-            {
-                CurrentHoldings.Add(hvm);
             }
         }
 
         public HoldingsPanelViewModel(IMessenger messenger, ISettingsManager settingsManager, ILogger<HoldingsPanelViewModel> logger)
             : base(messenger, settingsManager, logger)
         {
+            _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+            _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
             Name = "Holdings";
-            Messenger.Register<HoldingsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
+
+            _messenger.Register<HoldingsPanelViewModel, SessionUpdateMessage>(this, (r, m) =>
             {
-                if (m.ResultContext.Result.Holdings.Count == 0) return;
-                r._resultsQueue.Add(m.ResultContext.Result.Holdings);
+                if (m.ResultContext.Result.Holdings == null || m.ResultContext.Result.Holdings.Count == 0) return;
+                r._holdingsQueue.Add(m.ResultContext.Result.Holdings);
             });
 
-            Messenger.Register<HoldingsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
-            Messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
-            Messenger.Register<HoldingsPanelViewModel, HoldingFilterMessage>(this, async (r, m) => await r.ApplyFiltersHoldings(m.Search, m.CancellationToken).ConfigureAwait(false));
+            _messenger.Register<HoldingsPanelViewModel, SessionClosedMessage>(this, (r, _) => r.Clear());
 
-            _resultBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
-            _resultBgWorker.DoWork += ResultQueueReader;
-            _resultBgWorker.ProgressChanged += (s, e) =>
+            _messenger.Register<HoldingsPanelViewModel, TimerMessage>(this, (r, m) => r.ProcessNewDay(m));
+
+            _holdingsBgWorker = new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
+            _holdingsBgWorker.DoWork += HoldingsQueueReader;
+            _holdingsBgWorker.ProgressChanged += (s, e) =>
             {
                 switch ((ActionsThreadUI)e.ProgressPercentage)
                 {
-                    case ActionsThreadUI.HoldingFinishUpdate:
-                        break;
-
-                    case ActionsThreadUI.HoldingFinishUpdateAdd:
-                        if (e.UserState is not HoldingViewModel add)
+                    case ActionsThreadUI.HoldingAdd:
+                        if (e.UserState is not HoldingViewModel holding)
                         {
-                            throw new ArgumentException($"HoldingsPanelViewModel: Expecting {nameof(e.UserState)} of type 'HoldingViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                            throw new ArgumentException($"HoldingsPanelViewModel: Expected 'HoldingViewModel' but received '{e.UserState?.GetType()}'", nameof(e));
                         }
-
-                        // Could optimise the below, check don't need to be done in UI thread
-                        AddHolding(add);
+                        AddHolding(holding);
                         break;
 
                     case ActionsThreadUI.HoldingRemove:
-                        if (e.UserState is not HoldingViewModel remove)
+                        if (e.UserState is not HoldingViewModel holdingToRemove)
                         {
-                            throw new ArgumentException($"HoldingsPanelViewModel: Expecting {nameof(e.UserState)} of type 'HoldingViewModel' but received '{e.UserState.GetType()}'", nameof(e));
+                            throw new ArgumentException($"HoldingsPanelViewModel: Expected 'HoldingViewModel' but received '{e.UserState?.GetType()}'", nameof(e));
                         }
-                        CurrentHoldings.Remove(remove);
+                        CurrentHoldings.Remove(holdingToRemove);
                         break;
 
                     case ActionsThreadUI.Clear:
                         CurrentHoldings.Clear();
+                        _holdingsDic.Clear();
                         break;
 
                     default:
@@ -231,13 +150,111 @@ namespace Panoptes.ViewModels.Panels
                 }
             };
 
-            _resultBgWorker.RunWorkerAsync();
+            _holdingsBgWorker.RunWorkerAsync();
         }
 
-        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
+        private void AddHolding(HoldingViewModel holding)
         {
-            Logger.LogDebug("HoldingsPanelViewModel.UpdateSettingsAsync: {type}.", type);
-            return Task.CompletedTask;
+            if (FilterHolding(holding, Search))
+            {
+                CurrentHoldings.Add(holding);
+            }
+        }
+
+        private bool FilterHolding(HoldingViewModel holding, string search)
+        {
+            if (string.IsNullOrEmpty(search)) return true;
+            return holding.Symbol.ToString().Contains(search, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async void ApplyFiltersHoldings(string search, CancellationToken cancellationToken)
+        {
+            try
+            {
+                DisplayLoading = true;
+                _logger.LogInformation("HoldingsPanelViewModel: Applying filters with search '{Search}'...", search);
+
+                var filteredHoldings = await GetFilteredHoldings(search, cancellationToken).ConfigureAwait(false);
+
+                // Remove holdings that don't match the filter
+                foreach (var holding in CurrentHoldings.ToArray())
+                {
+                    if (!filteredHoldings.Contains(holding))
+                    {
+                        _holdingsBgWorker.ReportProgress((int)ActionsThreadUI.HoldingRemove, holding);
+                    }
+                }
+
+                // Add holdings that match the filter but are not in the current collection
+                foreach (var holding in filteredHoldings)
+                {
+                    if (!CurrentHoldings.Contains(holding))
+                    {
+                        _holdingsBgWorker.ReportProgress((int)ActionsThreadUI.HoldingAdd, holding);
+                    }
+                }
+
+                _logger.LogInformation("HoldingsPanelViewModel: Filters applied.");
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("HoldingsPanelViewModel: Filter application canceled.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "HoldingsPanelViewModel: Error applying filters.");
+            }
+            finally
+            {
+                DisplayLoading = false;
+            }
+        }
+
+        private Task<List<HoldingViewModel>> GetFilteredHoldings(string search, CancellationToken cancellationToken)
+        {
+            return Task.Run(() =>
+            {
+                var holdings = _holdingsDic.Values;
+                var filtered = new List<HoldingViewModel>();
+                foreach (var holding in holdings)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (FilterHolding(holding, search))
+                    {
+                        filtered.Add(holding);
+                    }
+                }
+                return filtered;
+            }, cancellationToken);
+        }
+
+        private void HoldingsQueueReader(object sender, DoWorkEventArgs e)
+        {
+            while (!_holdingsBgWorker.CancellationPending)
+            {
+                var holdings = _holdingsQueue.Take(); // Blocking call, waits for new holdings
+                foreach (var kvp in holdings)
+                {
+                    var symbol = kvp.Key;
+                    var holding = kvp.Value;
+                    if (!_holdingsDic.ContainsKey(symbol))
+                    {
+                        var hvm = new HoldingViewModel(holding);
+                        _holdingsDic[symbol] = hvm;
+                        _holdingsBgWorker.ReportProgress((int)ActionsThreadUI.HoldingAdd, hvm);
+                    }
+                    else
+                    {
+                        var existingHvm = _holdingsDic[symbol];
+                        existingHvm.Update(holding);
+                        // If the holding is already displayed and the search filter is active, ensure it still matches
+                        if (!FilterHolding(existingHvm, Search))
+                        {
+                            _holdingsBgWorker.ReportProgress((int)ActionsThreadUI.HoldingRemove, existingHvm);
+                        }
+                    }
+                }
+            }
         }
 
         private void ProcessNewDay(TimerMessage timerMessage)
@@ -245,13 +262,12 @@ namespace Panoptes.ViewModels.Panels
             switch (timerMessage.Value)
             {
                 case TimerMessage.TimerEventType.NewDay:
-                    // TODO
-                    // - Clear 'Today' order (now yesterday's one)
-                    Logger.LogDebug("HoldingsPanelViewModel: NewDay @ {DateTimeUtc:O}", timerMessage.DateTimeUtc);
+                    _logger.LogDebug("HoldingsPanelViewModel: New day event at {DateTimeUtc:O}", timerMessage.DateTimeUtc);
+                    // Handle any necessary updates for a new day
                     break;
 
                 default:
-                    Logger.LogDebug("HoldingsPanelViewModel: {Value} @ {DateTimeUtc:O}", timerMessage.Value, timerMessage.DateTimeUtc);
+                    _logger.LogDebug("HoldingsPanelViewModel: Timer event '{Value}' at {DateTimeUtc:O}", timerMessage.Value, timerMessage.DateTimeUtc);
                     break;
             }
         }
@@ -260,42 +276,19 @@ namespace Panoptes.ViewModels.Panels
         {
             try
             {
-                Logger.LogInformation("HoldingsPanelViewModel: Clear");
-                _holdingsDic.Clear();
-                 // _resultsQueue ??
-                _resultBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
+                _logger.LogInformation("HoldingsPanelViewModel: Clearing holdings.");
+                _holdingsBgWorker.ReportProgress((int)ActionsThreadUI.Clear);
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "HoldingsPanelViewModel");
-                throw;
+                _logger.LogError(ex, "HoldingsPanelViewModel: Error during Clear.");
             }
         }
 
-        private void ResultQueueReader(object sender, DoWorkEventArgs e)
+        protected override Task UpdateSettingsAsync(UserSettings userSettings, UserSettingsUpdate type)
         {
-            while (!_resultBgWorker.CancellationPending)
-            {
-                var holdings = _resultsQueue.Take(); // Need cancelation token
-                if (holdings.Count == 0) continue;
-
-                for (int i = 0; i < holdings.Count; i++)
-                {
-                    var kvp = holdings.ElementAt(i);
-                    if (_holdingsDic.TryGetValue(kvp.Key, out var hvm))
-                    {
-                        // Update existing holding
-                        hvm.Update(kvp.Value);
-                    }
-                    else
-                    {
-                        // Create new holding
-                        hvm = new HoldingViewModel(kvp.Value);
-                        _holdingsDic.TryAdd(kvp.Key, hvm);
-                        _resultBgWorker.ReportProgress((int)ActionsThreadUI.HoldingFinishUpdateAdd, hvm);
-                    }
-                }
-            }
+            _logger.LogDebug("HoldingsPanelViewModel.UpdateSettingsAsync: {Type}.", type);
+            return Task.CompletedTask;
         }
     }
 }

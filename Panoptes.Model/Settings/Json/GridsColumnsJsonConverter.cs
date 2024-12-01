@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Panoptes.Model.Settings.Json
 {
@@ -9,119 +9,72 @@ namespace Panoptes.Model.Settings.Json
     // https://josef.codes/custom-dictionary-string-object-jsonconverter-for-system-text-json/
     internal sealed class GridsColumnsJsonConverter : JsonConverter<IDictionary<string, IReadOnlyList<Tuple<string, int>>>>
     {
-        #region Read
-        public override IDictionary<string, IReadOnlyList<Tuple<string, int>>> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override IDictionary<string, IReadOnlyList<Tuple<string, int>>> ReadJson(JsonReader reader, Type objectType, IDictionary<string, IReadOnlyList<Tuple<string, int>>> existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType != JsonTokenType.StartObject)
+            if (reader.TokenType != JsonToken.StartObject)
             {
-                throw new JsonException($"An error occured while trying to parse the datagrid columns. JsonTokenType was of type {reader.TokenType}, only objects are supported");
+                throw new JsonException($"An error occurred while trying to parse the datagrid columns. JsonTokenType was of type {reader.TokenType}, only objects are supported");
             }
 
             var dictionary = new Dictionary<string, IReadOnlyList<Tuple<string, int>>>();
-            while (reader.Read())
+            JObject jObject = JObject.Load(reader);
+
+            foreach (var property in jObject.Properties())
             {
-                if (reader.TokenType == JsonTokenType.EndObject)
-                {
-                    return dictionary;
-                }
-
-                if (reader.TokenType != JsonTokenType.PropertyName)
-                {
-                    throw new JsonException("An error occured while trying to parse the datagrid columns. JsonTokenType was not PropertyName");
-                }
-
-                var propertyName = reader.GetString();
-                if (string.IsNullOrWhiteSpace(propertyName))
-                {
-                    throw new JsonException("An error occured while trying to parse the datagrid columns. Failed to get property name");
-                }
-
-                reader.Read();
-
-                dictionary.Add(propertyName, GetTuples(ref reader, options));
+                var key = property.Name;
+                var valueToken = property.Value;
+                var tuples = GetTuples(valueToken);
+                dictionary.Add(key, tuples);
             }
 
             return dictionary;
         }
 
-        private static IReadOnlyList<Tuple<string, int>> GetTuples(ref Utf8JsonReader reader, JsonSerializerOptions options)
+        private static IReadOnlyList<Tuple<string, int>> GetTuples(JToken token)
         {
-            switch (reader.TokenType)
+            if (token.Type != JTokenType.Object)
             {
-                case JsonTokenType.StartObject:
-                    var list = new List<Tuple<string, int>>();
-                    string header = string.Empty;
-                    while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
-                    {
-                        switch (reader.TokenType)
-                        {
-                            case JsonTokenType.PropertyName:
-                                header = reader.GetString();
-                                break;
-
-                            case JsonTokenType.Number:
-                                if (reader.TryGetInt32(out int index))
-                                {
-                                    if (string.IsNullOrEmpty(header))
-                                    {
-                                        throw new JsonException("An error occured while trying to parse the datagrid columns. Could not get header value.", new ArgumentException("Header should not be null or empty.", nameof(header)));
-                                    }
-
-                                    list.Add(new Tuple<string, int>(header, index));
-                                    header = string.Empty;
-                                }
-                                break;
-                        }
-                    }
-                    return list;
-
-                default:
-                    throw new JsonException($"An error occured while trying to parse the datagrid columns. '{reader.TokenType}' is not supported");
+                throw new JsonException($"An error occurred while trying to parse the datagrid columns. '{token.Type}' is not supported");
             }
 
-            throw new NotImplementedException();
-        }
-        #endregion
+            var list = new List<Tuple<string, int>>();
+            var obj = (JObject)token;
+            foreach (var property in obj.Properties())
+            {
+                var header = property.Name;
+                if (property.Value.Type != JTokenType.Integer)
+                {
+                    throw new JsonException("An error occurred while trying to parse the datagrid columns. Expected integer value.");
+                }
+                var index = property.Value.Value<int>();
+                list.Add(new Tuple<string, int>(header, index));
+            }
 
-        #region Write
-        public override void Write(Utf8JsonWriter writer, IDictionary<string, IReadOnlyList<Tuple<string, int>>> value, JsonSerializerOptions options)
+            return list;
+        }
+
+        public override void WriteJson(JsonWriter writer, IDictionary<string, IReadOnlyList<Tuple<string, int>>> value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
 
             foreach (var kvp in value)
             {
-                HandleValue(writer, kvp.Key, kvp.Value);
+                writer.WritePropertyName(kvp.Key);
+                HandleValue(writer, kvp.Value, serializer);
             }
 
             writer.WriteEndObject();
         }
 
-        private static void HandleValue(Utf8JsonWriter writer, string key, object objectValue)
+        private static void HandleValue(JsonWriter writer, IReadOnlyList<Tuple<string, int>> list, JsonSerializer serializer)
         {
-            if (key != null)
+            writer.WriteStartObject();
+            foreach (var item in list)
             {
-                writer.WritePropertyName(key);
+                writer.WritePropertyName(item.Item1);
+                writer.WriteValue(item.Item2);
             }
-
-            switch (objectValue)
-            {
-                case IReadOnlyList<Tuple<string, int>> tuples:
-                    writer.WriteStartObject();
-                    foreach (var item in tuples)
-                    {
-                        HandleValue(writer, item.Item1, item.Item2);
-                    }
-                    writer.WriteEndObject();
-                    break;
-
-                case int intValue:
-                    writer.WriteNumberValue(intValue);
-                    break;
-
-                default:
-                    throw new JsonException($"An error occured while trying to parse the datagrid columns.", new NotImplementedException(objectValue.GetType().ToString()));
-            }
+            writer.WriteEndObject();
         }
-        #endregion
     }
 }

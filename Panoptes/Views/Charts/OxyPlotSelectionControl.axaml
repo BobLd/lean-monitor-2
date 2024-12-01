@@ -56,11 +56,6 @@
 
 		</StackPanel>
 
-		<!--Logo-->
-		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
-				Padding="50" MinWidth="80" MinHeight="80" Focusable="False" IsEnabled="False" Opacity="200">
-			<DrawingPresenter Drawing="{StaticResource Logo}" MinWidth="40" MinHeight="40" IsEnabled="False"/>
-		</Border>
 
 		<oxy:PlotView Model="{Binding SelectedSeries}" Grid.Row="1" HorizontalAlignment="Stretch"
 					  VerticalAlignment="Stretch" Background="Transparent" Foreground="White"

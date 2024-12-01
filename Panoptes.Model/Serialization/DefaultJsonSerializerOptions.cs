@@ -1,16 +1,18 @@
-﻿using System.Text.Json;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Panoptes.Model.Serialization;
 
 namespace Panoptes.Model.Serialization
 {
-    public static class DefaultJsonSerializerOptions
+    public static class DefaultJsonSerializerSettings
     {
-        public static readonly JsonSerializerOptions Default = new JsonSerializerOptions()
+        private static readonly OrderJsonConverter _orderJsonConverter = new OrderJsonConverter();
+
+        public static readonly JsonSerializerSettings Default = new JsonSerializerSettings()
         {
-            Converters =
+            Converters = new JsonConverter[]
             {
-                //new PacketJsonConverter(),
                 new OrderEventJsonConverter(),
-                new OrderJsonConverter(),
                 new TimeSpanJsonConverter(),
                 new SymbolJsonConverter(),
                 new ColorJsonConverter(),
@@ -20,10 +22,9 @@ namespace Panoptes.Model.Serialization
                 new LanguageJsonConverter(),
                 new ServerTypeJsonConverter()
             },
-            //PropertyNamingPolicy = new PacketJsonNamingPolicy(),
-            IncludeFields = true,
-            IgnoreNullValues = true,
-            NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString,
+            ContractResolver = new CustomContractResolver(_orderJsonConverter),
+            NullValueHandling = NullValueHandling.Ignore,
+            // Add other settings as required
         };
     }
 }

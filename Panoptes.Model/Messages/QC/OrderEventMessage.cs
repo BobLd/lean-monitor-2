@@ -1,5 +1,5 @@
 ﻿using Microsoft.Toolkit.Mvvm.Messaging.Messages;
-using Panoptes.Model.Serialization.Packets;
+using QuantConnect.Packets;
 using System;
 
 namespace Panoptes.Model.Messages
