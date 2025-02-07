@@ -9,7 +9,7 @@
 	<DataGrid x:Name="_dataGrid" IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False"
 			  CanUserResizeColumns="True" CanUserReorderColumns="True"
 			  DoubleTapped="OnDataGridDoubleTapped" HeadersVisibility="Column"
-			  AlternatingRowBackground="Transparent" RowBackground="Transparent" SelectedItem="{Binding SelectedItem}">
+			  RowBackground="Transparent" SelectedItem="{Binding SelectedItem}">
 		<DataGrid.Columns>
 			<DataGridTextColumn Header="Symbol" Binding="{Binding Symbol, Converter={StaticResource SymbolConverter}, Mode=OneWay}"/>
 			<DataGridTextColumn Header="Type" Binding="{Binding SecurityType, Mode=OneWay}"/>

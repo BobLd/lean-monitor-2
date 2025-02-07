@@ -10,20 +10,30 @@
 	<Grid RowDefinitions="Auto,*">
 		<StackPanel Margin="4" Orientation="Horizontal">
 			<Label Content="Series"></Label>
-			<ComboBox MinWidth="100" Items="{Binding PlotModels}" SelectedItem="{Binding SelectedSeries, Mode=TwoWay}" IsTextSearchEnabled="True"/>
+			<ComboBox MinWidth="100" ItemsSource="{Binding PlotModels}" SelectedItem="{Binding SelectedSeries, Mode=TwoWay}" IsTextSearchEnabled="True"/>
 			<Label Width="10"/>
 			<ToggleButton Padding="0" IsThreeState="False" ClickMode="Release" IsChecked="{Binding IsCandlePlotChecked, Mode=OneWay}"
 						  Command="{Binding PlotCandles}" ToolTip.Tip="Candles chart">
 				<ToggleButton.Content>
-					<DrawingPresenter Drawing="{StaticResource TablerIcons.ChartCandle2}"/>
-				</ToggleButton.Content>
+                    <Image>
+                        <Image.Source>
+                            <DrawingImage Drawing="{StaticResource TablerIcons.ChartCandle2}"/>
+                        </Image.Source>
+                    </Image>
+
+        </ToggleButton.Content>
 			</ToggleButton>
 
 			<ToggleButton Padding="0" IsChecked="{Binding IsLinePlotChecked, Mode=OneWay}"
 						  Command="{Binding PlotLines}" ToolTip.Tip="Line chart">
 				<ToggleButton.Content>
-					<DrawingPresenter Drawing="{StaticResource TablerIcons.ChartDots}"/>
-				</ToggleButton.Content>
+                    <Image>
+                        <Image.Source>
+                            <DrawingImage Drawing="{StaticResource TablerIcons.ChartDots}"/>
+                        </Image.Source>
+                    </Image>
+
+        </ToggleButton.Content>
 			</ToggleButton>
 			<Label Width="10"/>
 
@@ -59,8 +69,13 @@
 		<!--Logo-->
 		<Border Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
 				Padding="50" MinWidth="80" MinHeight="80" Focusable="False" IsEnabled="False" Opacity="200">
-			<DrawingPresenter Drawing="{StaticResource Logo}" MinWidth="40" MinHeight="40" IsEnabled="False"/>
-		</Border>
+            <Image MinWidth="40" MinHeight="40" IsEnabled="False">
+                <Image.Source>
+                    <DrawingImage Drawing="{StaticResource Logo}"/>
+                </Image.Source>
+            </Image>
+
+    </Border>
 
 		<oxy:PlotView Model="{Binding SelectedSeries}" Grid.Row="1" HorizontalAlignment="Stretch"
 					  VerticalAlignment="Stretch" Background="Transparent" Foreground="White"

@@ -32,14 +32,14 @@
 		<AvaloniaResource Include="Resources\icon\logo_plain.ico" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="0.10.19" />
-		<PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.19" />
-		<PackageReference Include="Avalonia.Desktop" Version="0.10.19" />
-		<PackageReference Include="Avalonia.Diagnostics" Version="0.10.19" Condition=" '$(Configuration)' == 'Debug' " />
+		<PackageReference Include="Avalonia" Version="11.0.5" />
+		<PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.5" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.0.5" />
+		<PackageReference Include="Avalonia.Diagnostics" Version="11.0.5" Condition=" '$(Configuration)' == 'Debug' " />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
 		<PackageReference Include="OxyPlot.Avalonia" Version="2.1.0" />
-		<PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
 		<PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
 		<PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" Condition=" '$(Configuration)' == 'Debug' " />
 		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />

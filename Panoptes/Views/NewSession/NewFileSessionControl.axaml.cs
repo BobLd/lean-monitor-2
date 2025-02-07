@@ -12,7 +12,6 @@ namespace Panoptes.Views.NewSession
 {
     public partial class NewFileSessionControl : UserControl
     {
-        private readonly TextBox _textBoxFileName;
         public NewFileSessionControl()
         {
             InitializeComponent();
@@ -39,9 +38,10 @@ namespace Panoptes.Views.NewSession
                     var result = await dialog.ShowAsync(desktop.MainWindow).ConfigureAwait(false);
                     if (result?.Length > 0)
                     {
-                        await Dispatcher.UIThread.InvokeAsync(() => _textBoxFileName.Text = result[0]).ConfigureAwait(false);
-                    }
-                    return;
+						await Dispatcher.UIThread.InvokeAsync(() => _textBoxFileName.Text = result[0]);
+
+					}
+					return;
                 }
 
                 // Other type of ApplicationLifetime

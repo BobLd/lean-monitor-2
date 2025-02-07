@@ -8,19 +8,22 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450">
 
 	<UserControl.Styles>
-		<Style Selector="DrawingPresenter.logoType">
-			<Setter Property="Drawing" Value="{Binding Path=EntryType, Mode=OneWay, Converter={StaticResource LogPanelLogoTypeConverter}}"/>
-		</Style>
-	</UserControl.Styles>
+        <Style Selector="Image.logoType">
+            <Setter Property="Source" Value="{Binding Path=EntryType, Mode=OneWay, Converter={StaticResource LogPanelLogoTypeConverter}}"/>
+        </Style>
+  </UserControl.Styles>
 
-	<DataGrid IsReadOnly="True" AutoGenerateColumns="False" Items="{Binding LogEntries}" CanUserResizeColumns="True">
+	<DataGrid IsReadOnly="True" AutoGenerateColumns="False" ItemsSource="{Binding LogEntries}" CanUserResizeColumns="True">
 		<DataGrid.Columns>
 			<DataGridTemplateColumn Header="Type" SortMemberPath="EntryType" MaxWidth="100">
 				<DataGridTemplateColumn.CellTemplate>
 					<DataTemplate>
 						<StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-							<DrawingPresenter Margin="1" Classes="logoType" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-							<Label Content="{Binding EntryType, Mode=OneWay}" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
+                            <Image Margin="1" Classes="logoType" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                <!-- Image.Source content goes here -->
+                            </Image>
+
+              <Label Content="{Binding EntryType, Mode=OneWay}" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
 						</StackPanel>
 					</DataTemplate>
 				</DataGridTemplateColumn.CellTemplate>

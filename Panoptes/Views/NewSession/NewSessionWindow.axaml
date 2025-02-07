@@ -36,7 +36,7 @@
 	</Window.DataTemplates>
 
 	<Grid RowDefinitions="*,36">
-		<TabControl Margin="5" Items="{Binding NewSessionViewModels}" SelectedItem="{Binding SelectedViewModel}"
+		<TabControl Margin="5" ItemsSource="{Binding NewSessionViewModels}" SelectedItem="{Binding SelectedViewModel}"
 					IsEnabled="{Binding IsAnyRunning, Converter={StaticResource InverseBooleanConverter}}">
 			<TabControl.ItemTemplate>
 				<DataTemplate>

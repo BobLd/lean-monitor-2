@@ -4,7 +4,11 @@
 		<Border Padding="5" Height="100" Width="100" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
 			<!-- Add Controls for Previewer Here -->
 
-			<DrawingPresenter Margin="0" Width="100" Height="100" Drawing="{StaticResource Logo}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+            <Image Margin="0" Width="100" Height="100" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <Image.Source>
+                    <DrawingImage Drawing="{StaticResource Logo}"/>
+                </Image.Source>
+            </Image>
 		</Border>
 	</Design.PreviewWith>
 

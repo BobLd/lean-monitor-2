@@ -1,5 +1,6 @@
 ﻿using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Avalonia.Styling;
 using QuantConnect;
 using System;
 using System.Globalization;
@@ -12,7 +13,7 @@ namespace Panoptes.Views.Converters
 
         public StatusBarColorConverter()
         {
-            if (App.Current.Styles.TryGetResource("ThemeControlTransparentBrush", out var b) && b != null)
+            if (App.Current.Styles.TryGetResource("ThemeControlTransparentBrush", ThemeVariant.Dark, out var b) && b != null)
             {
                 _defaultBrush = (IBrush)b;
             }

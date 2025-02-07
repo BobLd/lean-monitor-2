@@ -175,7 +175,7 @@ namespace Panoptes.Views.Charts
             }
         }
 
-        private readonly Dictionary<string, IControl> _extraTrackers = new Dictionary<string, IControl>();
+        private readonly Dictionary<string, Control> _extraTrackers = new Dictionary<string, Control>();
 
         private void HideExtraTrackers()
         {
@@ -209,7 +209,7 @@ namespace Panoptes.Views.Charts
                     {
                         foreach (var def in view.TrackerDefinitions)
                         {
-                            IControl currentExtraTracker = null;
+	                        Control currentExtraTracker = null;
                             if (_extraTrackers.ContainsKey(def.TrackerKey))
                             {
                                 currentExtraTracker = _extraTrackers[def.TrackerKey] as ContentControl;
@@ -219,7 +219,7 @@ namespace Panoptes.Views.Charts
                                 _extraTrackers.Add(def.TrackerKey, null);
                             }
 
-                            var extraTracker = def.TrackerTemplate.Build(new ContentControl()).Control;
+                            var extraTracker = def.TrackerTemplate.Build(new ContentControl()).Result;
                             extraTracker.DataContext = result;
 
                             if (!ReferenceEquals(extraTracker, currentExtraTracker))

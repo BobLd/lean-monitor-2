@@ -11,8 +11,8 @@
 		</Style>
 	</UserControl.Styles>
 
-	<DataGrid IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False" Items="{Binding Statistics}"
-			  AlternatingRowBackground="Transparent" RowBackground="Transparent">
+	<DataGrid IsReadOnly="True" GridLinesVisibility="None" AutoGenerateColumns="False" ItemsSource="{Binding Statistics}"
+			  RowBackground="Transparent">
 		<DataGrid.Columns>
 			<DataGridTemplateColumn Header="Name" SortMemberPath="Name">
 				<DataGridTemplateColumn.CellTemplate>

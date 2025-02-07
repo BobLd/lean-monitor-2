@@ -131,12 +131,12 @@ namespace Panoptes.ViewModels
             */
 
             Messenger.Register<MainWindowViewModel, SettingsMessage>(this, async (r, m) => await r.UpdateSettingsAsync(m.Value, m.Type).ConfigureAwait(false));
-            Messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, async (r, _) => await r.InvalidateCommands().ConfigureAwait(false));
+            Messenger.Register<MainWindowViewModel, SessionOpenedMessage>(this, async (r, _) => await r.InvalidateCommands());
             Messenger.Register<MainWindowViewModel, SessionClosedMessage>(this, async (r, _) =>
             {
                 r.SessionState = SessionState.Unsubscribed;
                 //r.Documents.Clear();
-                await r.InvalidateCommands().ConfigureAwait(false);
+                await r.InvalidateCommands();
             });
 
             Messenger.Register<MainWindowViewModel, SessionStateChangedMessage>(this, async (r, m) =>
@@ -252,7 +252,7 @@ namespace Panoptes.ViewModels
             */
         }
 
-        private Task InvalidateCommands()
+        private async Task<DispatcherOperation> InvalidateCommands()
         {
             OnPropertyChanged(nameof(IsSessionActive));
 

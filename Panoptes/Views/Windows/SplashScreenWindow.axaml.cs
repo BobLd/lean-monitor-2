@@ -11,8 +11,6 @@ namespace Panoptes.Views.Windows
     {
         private readonly IMessenger _messenger;
 
-        private readonly Label _statusLabel;
-        private readonly Label _loadingLabel;
 
         public SplashScreenWindow()
         {

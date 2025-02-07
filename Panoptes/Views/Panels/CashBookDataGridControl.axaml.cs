@@ -7,12 +7,12 @@ using Serilog;
 using System;
 using System.Collections;
 using System.Threading.Tasks;
+using Avalonia.Input;
 
 namespace Panoptes.Views.Panels
 {
     public partial class CashBookDataGridControl : UserControl
     {
-        private readonly DataGrid _dataGrid;
 
         public CashBookPanelViewModel ViewModel => (CashBookPanelViewModel)DataContext;
 
@@ -72,11 +72,11 @@ namespace Panoptes.Views.Panels
         /// </summary>
         public IEnumerable Items
         {
-            get { return _dataGrid.Items; }
-            set { _dataGrid.Items = value; }
+            get { return _dataGrid.ItemsSource; }
+            set { _dataGrid.ItemsSource = value; }
         }
 
-        private void OnDataGridDoubleTapped(object sender, RoutedEventArgs e)
+        private void OnDataGridDoubleTapped(object sender, TappedEventArgs e)
         {
             // Make sure the double-click happened on something that has CashViewModel
             if (e.Source is Control control && control.DataContext is not CashViewModel)

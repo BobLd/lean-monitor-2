@@ -285,7 +285,7 @@ namespace Panoptes
                 }
 
                 // Open a new session and open it
-                await Dispatcher.UIThread.InvokeAsync(() => session = new MongoSession(this, _resultConverter, mongoParameters, _logger)).ConfigureAwait(false);
+                await Dispatcher.UIThread.InvokeAsync(() => session = new MongoSession(this, _resultConverter, mongoParameters, _logger));
             }
             else if (parameters is StreamSessionParameters streamParameters)
             {
@@ -299,11 +299,11 @@ namespace Panoptes
                 var mockMessageHandler = new Model.Mock.MockStreamingMessageHandler(streamParameters);
                 Task.Run(() => mockMessageHandler.Initialize(), cancellationToken);
 #endif
-                await Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters, _logger)).ConfigureAwait(false);
+                await Dispatcher.UIThread.InvokeAsync(() => session = new StreamSession(this, _resultConverter, streamParameters, _logger));
             }
             else if (parameters is FileSessionParameters fileParameters)
             {
-                await Dispatcher.UIThread.InvokeAsync(() => session = new FileSession(this, _resultSerializer, fileParameters)).ConfigureAwait(false);
+                await Dispatcher.UIThread.InvokeAsync(() => session = new FileSession(this, _resultSerializer, fileParameters));
             }
             else
             {

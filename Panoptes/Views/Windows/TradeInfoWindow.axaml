@@ -166,8 +166,8 @@
 
 			<Border Grid.Column="2">
 				<!--Header="Broker ID"-->
-				<DataGrid Items="{Binding BrokerId}" IsReadOnly="True" AutoGenerateColumns="False" HeadersVisibility="None"
-						  AlternatingRowBackground="Transparent" RowBackground="Transparent" ToolTip.Tip="Brokerage Id for this order for when the brokerage splits orders into multiple pieces">
+				<DataGrid ItemsSource="{Binding BrokerId}" IsReadOnly="True" AutoGenerateColumns="False" HeadersVisibility="None"
+						  RowBackground="Transparent" ToolTip.Tip="Brokerage Id for this order for when the brokerage splits orders into multiple pieces">
 					<DataGrid.Columns>
 						<DataGridTemplateColumn Header="ID">
 							<DataGridTemplateColumn.CellTemplate>
@@ -188,10 +188,10 @@
 
 		<Border Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Margin="0">
 			<!--Header="Events"-->
-			<DataGrid Items="{Binding Events}" IsReadOnly="True" GridLinesVisibility="None"
+			<DataGrid ItemsSource="{Binding Events}" IsReadOnly="True" GridLinesVisibility="None"
 					  HeadersVisibility="Column" AutoGenerateColumns="False"
 					  CanUserResizeColumns="True" CanUserReorderColumns="True"
-					  AlternatingRowBackground="Transparent" RowBackground="Transparent"
+					  RowBackground="Transparent"
 					  ToolTip.Tip="Order events.">
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}"/>
