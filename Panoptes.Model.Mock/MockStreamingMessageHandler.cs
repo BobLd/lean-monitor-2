@@ -602,7 +602,7 @@ namespace Panoptes.Model.Mock
 
         private Chart GetChart(string name, params (string, SeriesType, ScatterMarkerSymbol?)[] series)
         {
-            var se = series.Select(s => GetSeries(name, s.Item1, s.Item2, s.Item3)).ToDictionary(k => k.Name, k => k);
+            var se = series.Select(s => GetSeries(name, s.Item1, s.Item2, s.Item3)).ToDictionary(k => k.Name, k => (BaseSeries) k);
             return new Chart(name)
             {
                 Series = se,
@@ -626,7 +626,7 @@ namespace Panoptes.Model.Mock
 
             var series = new Series(seriesName, seriesType)
             {
-                Values = new List<ChartPoint>()
+                Values = new List<ISeriesPoint>()
                 {
                     // Just one point for the moment
                     new ChartPoint(_currentTime,  _lastSeriesPoint[key])

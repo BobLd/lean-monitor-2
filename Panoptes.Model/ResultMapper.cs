@@ -21,16 +21,32 @@ namespace Panoptes.Model
             return sourceDictionary.ToDictionary(entry => entry.Key, entry => MapToChart(entry.Value));
         }
 
-        private static InstantChartPoint MapToTimeStampChartPoint(this ChartPoint point)
-        {
-            return new InstantChartPoint
-            {
-                X = DateTimeOffset.FromUnixTimeSeconds(point.x), //Instant.FromUnixTimeSeconds(point.x),
-                Y = point.y
-            };
-        }
+		private static InstantChartPoint MapToTimeStampChartPoint(this ISeriesPoint point)
+		{
+			if (point is ChartPoint chartPoint)
+			{
+				return new InstantChartPoint
+				{
+					X = DateTimeOffset.FromUnixTimeSeconds(chartPoint.x),
+					Y = chartPoint.y
+				};
+			}
+			else if (point is Candlestick candlestick)
+			{
+				decimal y = candlestick.Close;
 
-        private static ChartPoint MapToChartPoint(this InstantChartPoint point)
+				return new InstantChartPoint
+				{
+					X = DateTimeOffset.FromUnixTimeSeconds(candlestick.LongTime), 
+					Y = y
+				};
+			}
+
+			throw new NotImplementedException("Type not supported.");
+		}
+
+
+		private static ChartPoint MapToChartPoint(this InstantChartPoint point)
         {
             return new ChartPoint
             {
@@ -58,31 +74,43 @@ namespace Panoptes.Model
             };
         }
 
-        private static Dictionary<string, SeriesDefinition> MapToSeriesDefinitionDictionary(this IDictionary<string, Series> sourceSeries)
+        private static Dictionary<string, SeriesDefinition> MapToSeriesDefinitionDictionary(this IDictionary<string, BaseSeries> sourceSeries)
         {
-            return sourceSeries.ToDictionary(entry => entry.Key, entry => entry.Value.MapToSeriesDefinition());
+	        return sourceSeries.ToDictionary(
+		        entry => entry.Key,
+		        entry => entry.Value.MapToSeriesDefinition() 
+	        );
         }
 
-        private static Dictionary<string, Series> MapToSeriesDictionary(this IDictionary<string, SeriesDefinition> sourceSeries)
-        {
-            return sourceSeries.ToDictionary(entry => entry.Key, entry => entry.Value.MapToSeries());
-        }
 
-        private static SeriesDefinition MapToSeriesDefinition(this Series sourceSeries)
-        {
-            return new SeriesDefinition
-            {
-                Color = sourceSeries.Color,
-                Index = sourceSeries.Index,
-                Name = sourceSeries.Name,
-                ScatterMarkerSymbol = sourceSeries.ScatterMarkerSymbol,
-                SeriesType = sourceSeries.SeriesType,
-                Unit = sourceSeries.Unit,
-                Values = sourceSeries.Values.ConvertAll(v => v.MapToTimeStampChartPoint())
-            };
-        }
+		private static Dictionary<string, BaseSeries> MapToSeriesDictionary(this IDictionary<string, SeriesDefinition> sourceSeries)
+		{
+			return sourceSeries.ToDictionary(entry => entry.Key, entry => (BaseSeries)entry.Value.MapToSeries());
+		}
 
-        private static Series MapToSeries(this SeriesDefinition sourceSeries)
+
+		private static SeriesDefinition MapToSeriesDefinition(this BaseSeries sourceSeries)
+		{
+			var definition = new SeriesDefinition
+			{
+				Index = sourceSeries.Index,
+				Name = sourceSeries.Name,
+				SeriesType = sourceSeries.SeriesType,
+				Unit = sourceSeries.Unit,
+				Values = sourceSeries.Values.ConvertAll(v => v.MapToTimeStampChartPoint())
+			};
+
+			if (sourceSeries is Series series)
+			{
+				definition.Color = series.Color;
+				definition.ScatterMarkerSymbol = series.ScatterMarkerSymbol;
+			}
+
+			return definition;
+		}
+
+
+		private static Series MapToSeries(this SeriesDefinition sourceSeries)
         {
             return new Series
             {
@@ -92,8 +120,9 @@ namespace Panoptes.Model
                 ScatterMarkerSymbol = sourceSeries.ScatterMarkerSymbol,
                 SeriesType = sourceSeries.SeriesType,
                 Unit = sourceSeries.Unit,
-                Values = sourceSeries.Values.ConvertAll(v => v.MapToChartPoint())
-            };
+				Values = sourceSeries.Values.ConvertAll(v => (ISeriesPoint)v.MapToChartPoint())
+
+			};
         }
     }
 }

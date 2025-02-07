@@ -18,7 +18,10 @@ namespace Panoptes.Model.Serialization
                 new PacketTypeJsonConverter(),
                 new AlgorithmStatusJsonConverter(),
                 new LanguageJsonConverter(),
-                new ServerTypeJsonConverter()
+                new ServerTypeJsonConverter(),
+                new SeriesJsonConverter(),
+                new ChartPointJsonConverter(),
+                new CandlestickJsonConverter(),
             },
             //PropertyNamingPolicy = new PacketJsonNamingPolicy(),
             IncludeFields = true,
